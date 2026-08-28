@@ -23,7 +23,7 @@
 {#if node}
   <PageHeader title="{node.name} · Decomposition tree" />
   <PageBody>
-    <ContextBar {ancestors} currentLabel={node.name} />
+    <ContextBar {ancestors} />
 
     <div class="flex flex-col gap-4 pt-4">
     <a
