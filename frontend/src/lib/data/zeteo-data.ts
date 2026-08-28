@@ -60,9 +60,6 @@ export const leadingIndicators: LeadingIndicator[] = [
  * top-line numbers only (hasSummary) so the tree/tables aren't empty, per
  * docs/adr/0004-mock-data-depth.md.
  */
-/** Charter contracts as a share of total Freight & Charter Revenue — the "key child" shown under Revenue in the P&L. */
-const CHARTER_REVENUE_SHARE = 0.68;
-
 export const vdtNodes: Record<string, VdtNode> = {
   expenses: {
     id: 'expenses',
@@ -272,25 +269,11 @@ export const vdtNodes: Record<string, VdtNode> = {
     id: 'freight-charter-revenue',
     name: 'Freight & Charter Revenue',
     parentId: 'gross-profit',
-    childIds: ['charter-revenue'],
+    childIds: [], // populated below by buildMockSplit once its children exist
     actual: 1216.1,
     budget: 1118.0,
     priorYear: 1010.5,
     varPct: pct(1216.1, 1118.0),
-    direction: 'favourable',
-    unit: 'RM_M',
-    hasSummary: true,
-    hasFullData: false,
-  },
-  'charter-revenue': {
-    id: 'charter-revenue',
-    name: 'Charter Revenue',
-    parentId: 'freight-charter-revenue',
-    childIds: [],
-    actual: Number((1216.1 * CHARTER_REVENUE_SHARE).toFixed(1)),
-    budget: Number((1118.0 * CHARTER_REVENUE_SHARE).toFixed(1)),
-    priorYear: Number((1010.5 * CHARTER_REVENUE_SHARE).toFixed(1)),
-    varPct: pct(1216.1 * CHARTER_REVENUE_SHARE, 1118.0 * CHARTER_REVENUE_SHARE),
     direction: 'favourable',
     unit: 'RM_M',
     hasSummary: true,
@@ -585,12 +568,203 @@ vdtNodes['ga-combined'] = {
   hasFullData: false,
 };
 
+/**
+ * Splits a parent P&L line into mock sub-lines by revenue/cost share, with
+ * the last entry absorbing the rounding remainder so the children always
+ * foot exactly back to the parent's actual/budget/priorYear.
+ */
+function buildMockSplit(
+  parentId: string,
+  entries: { id: string; name: string; share: number }[],
+  direction: Direction
+): void {
+  const parent = vdtNodes[parentId];
+  let remActual = parent.actual;
+  let remBudget = parent.budget;
+  let remPriorYear = parent.priorYear ?? 0;
+  entries.forEach((e, i) => {
+    const isLast = i === entries.length - 1;
+    const actual = isLast ? Number(remActual.toFixed(1)) : Number((parent.actual * e.share).toFixed(1));
+    const budget = isLast ? Number(remBudget.toFixed(1)) : Number((parent.budget * e.share).toFixed(1));
+    const priorYear = isLast
+      ? Number(remPriorYear.toFixed(1))
+      : Number(((parent.priorYear ?? 0) * e.share).toFixed(1));
+    remActual = Number((remActual - actual).toFixed(1));
+    remBudget = Number((remBudget - budget).toFixed(1));
+    remPriorYear = Number((remPriorYear - priorYear).toFixed(1));
+    vdtNodes[e.id] = {
+      id: e.id,
+      name: e.name,
+      parentId,
+      childIds: [],
+      actual,
+      budget,
+      priorYear,
+      varPct: pct(actual, budget),
+      direction,
+      unit: 'RM_M',
+      hasSummary: true,
+      hasFullData: false,
+    };
+  });
+  parent.childIds = entries.map((e) => e.id);
+}
+
+/** Revenue and Voyage Expenses have no real sub-line data in the mock tree, so their
+ * breakdown below is an invented split by share — unlike Vessel Operating Cost, whose
+ * children (crew-cost, repairs-maintenance, fuel, third-party-services) are real. */
+const revenueSplit = [
+  { id: 'time-charter-revenue', name: 'Time Charter Revenue', share: 0.42 },
+  { id: 'spot-voyage-revenue', name: 'Spot/Voyage Freight Revenue', share: 0.2 },
+  { id: 'offshore-charter-revenue', name: 'Offshore (FPSO/FSO) Charter Revenue', share: 0.18 },
+  { id: 'marine-heavy-engineering-revenue', name: 'Marine & Heavy Engineering Revenue', share: 0.1 },
+  { id: 'demurrage-income', name: 'Demurrage & Freight Ancillary Income', share: 0.05 },
+  { id: 'technical-management-fee-revenue', name: 'Ship/Technical Management Fee Income', share: 0.05 },
+];
+buildMockSplit('freight-charter-revenue', revenueSplit, 'favourable');
+
+const voyageExpenseSplit = [
+  { id: 'bunker-fuel-cost', name: 'Bunker/Fuel Cost', share: 0.62 },
+  { id: 'port-canal-dues', name: 'Port & Canal Dues', share: 0.28 },
+  { id: 'brokerage-commissions', name: 'Brokerage & Commissions', share: 0.1 },
+];
+buildMockSplit('voyage-expenses', voyageExpenseSplit, 'adverse');
+
 export const pnlRows: PlLineItem[] = [
   { nodeId: 'freight-charter-revenue', label: 'Revenue', sign: 1, indent: 0, isSubtotal: true },
-  { nodeId: 'charter-revenue', label: 'Charter Revenue (key contracts)', sign: 1, indent: 1 },
+  { nodeId: 'time-charter-revenue', label: 'Time Charter Revenue', sign: 1, indent: 1, isSubtotal: true, group: 'freight-charter-revenue' },
+  {
+    nodeId: 'time-charter-rate',
+    label: 'Avg. Daily Charter Rate',
+    sign: 1,
+    indent: 1,
+    group: 'time-charter-revenue',
+    kind: 'operational',
+    unit: 'usd-per-day',
+  },
+  {
+    nodeId: 'time-charter-utilization',
+    label: 'Utilization / On-hire Rate',
+    sign: 1,
+    indent: 1,
+    group: 'time-charter-revenue',
+    kind: 'operational',
+    unit: 'percent',
+  },
+  {
+    nodeId: 'time-charter-offhire-days',
+    label: 'Off-hire Days (fleet)',
+    sign: 1,
+    indent: 1,
+    group: 'time-charter-revenue',
+    kind: 'operational',
+    unit: 'days',
+  },
+  { nodeId: 'spot-voyage-revenue', label: 'Spot/Voyage Revenue', sign: 1, indent: 1, isSubtotal: true, group: 'freight-charter-revenue' },
+  {
+    nodeId: 'spot-voyage-rate',
+    label: 'Avg. Spot/Voyage TCE Rate',
+    sign: 1,
+    indent: 1,
+    group: 'spot-voyage-revenue',
+    kind: 'operational',
+    unit: 'usd-per-day',
+  },
+  {
+    nodeId: 'spot-voyage-days',
+    label: 'Spot Voyage Days (fleet)',
+    sign: 1,
+    indent: 1,
+    group: 'spot-voyage-revenue',
+    kind: 'operational',
+    unit: 'days',
+  },
+  { nodeId: 'offshore-charter-revenue', label: 'FPSO/FSO Charter Revenue', sign: 1, indent: 1, isSubtotal: true, group: 'freight-charter-revenue' },
+  {
+    nodeId: 'offshore-charter-rate',
+    label: 'Avg. Daily Charter Rate',
+    sign: 1,
+    indent: 1,
+    group: 'offshore-charter-revenue',
+    kind: 'operational',
+    unit: 'usd-per-day',
+  },
+  {
+    nodeId: 'offshore-uptime',
+    label: 'Fleet Uptime / Availability',
+    sign: 1,
+    indent: 1,
+    group: 'offshore-charter-revenue',
+    kind: 'operational',
+    unit: 'percent',
+  },
+  { nodeId: 'marine-heavy-engineering-revenue', label: 'Marine & Heavy Eng. Revenue', sign: 1, indent: 1, isSubtotal: true, group: 'freight-charter-revenue' },
+  {
+    nodeId: 'marine-engineering-completion-rate',
+    label: 'Avg. Project Completion Rate',
+    sign: 1,
+    indent: 1,
+    group: 'marine-heavy-engineering-revenue',
+    kind: 'operational',
+    unit: 'percent',
+  },
+  {
+    nodeId: 'marine-engineering-active-projects',
+    label: 'Active Projects',
+    sign: 1,
+    indent: 1,
+    group: 'marine-heavy-engineering-revenue',
+    kind: 'operational',
+    unit: 'count',
+  },
+  { nodeId: 'demurrage-income', label: 'Demurrage & Ancillary Income', sign: 1, indent: 1, isSubtotal: true, group: 'freight-charter-revenue' },
+  {
+    nodeId: 'demurrage-days',
+    label: 'Demurrage Days Billed',
+    sign: 1,
+    indent: 1,
+    group: 'demurrage-income',
+    kind: 'operational',
+    unit: 'days',
+  },
+  {
+    nodeId: 'demurrage-rate',
+    label: 'Avg. Demurrage Rate',
+    sign: 1,
+    indent: 1,
+    group: 'demurrage-income',
+    kind: 'operational',
+    unit: 'usd-per-day',
+  },
+  { nodeId: 'technical-management-fee-revenue', label: 'Technical Mgmt Fee Income', sign: 1, indent: 1, isSubtotal: true, group: 'freight-charter-revenue' },
+  {
+    nodeId: 'technical-management-vessels',
+    label: 'Vessels Under Management',
+    sign: 1,
+    indent: 1,
+    group: 'technical-management-fee-revenue',
+    kind: 'operational',
+    unit: 'count',
+  },
+  {
+    nodeId: 'technical-management-fee-per-vessel',
+    label: 'Avg. Fee per Vessel',
+    sign: 1,
+    indent: 1,
+    group: 'technical-management-fee-revenue',
+    kind: 'operational',
+    unit: 'usd-per-month',
+  },
   { nodeId: 'cost-of-revenue', label: 'Cost of Revenue', sign: -1, indent: 0, isSubtotal: true },
-  { nodeId: 'voyage-expenses', label: 'Voyage Expenses (bunker, port & canal dues, commissions)', sign: -1, indent: 1 },
-  { nodeId: 'vessel-operating-cost', label: 'Vessel Operating Costs (crew, R&M, insurance, stores)', sign: -1, indent: 1 },
+  { nodeId: 'voyage-expenses', label: 'Voyage Expenses', sign: -1, indent: 1, isSubtotal: true, group: 'cost-of-revenue' },
+  { nodeId: 'bunker-fuel-cost', label: 'Bunker/Fuel Cost', sign: -1, indent: 1, group: 'voyage-expenses' },
+  { nodeId: 'port-canal-dues', label: 'Port & Canal Dues', sign: -1, indent: 1, group: 'voyage-expenses' },
+  { nodeId: 'brokerage-commissions', label: 'Brokerage & Commissions', sign: -1, indent: 1, group: 'voyage-expenses' },
+  { nodeId: 'vessel-operating-cost', label: 'Vessel Operating Costs', sign: -1, indent: 1, isSubtotal: true, group: 'cost-of-revenue' },
+  { nodeId: 'crew-cost', label: 'Crew Cost', sign: -1, indent: 1, group: 'vessel-operating-cost' },
+  { nodeId: 'repairs-maintenance', label: 'Repairs & Maintenance', sign: -1, indent: 1, group: 'vessel-operating-cost' },
+  { nodeId: 'fuel', label: 'Vessel Fuel & Lubricants', sign: -1, indent: 1, group: 'vessel-operating-cost' },
+  { nodeId: 'third-party-services', label: 'Third-party Services', sign: -1, indent: 1, group: 'vessel-operating-cost' },
   { nodeId: 'gross-profit', label: 'Gross Profit', sign: 1, indent: 0, isSubtotal: true },
   { nodeId: 'ga-combined', label: 'General & Administrative Expenses', sign: -1, indent: 0 },
   { nodeId: 'profit-before-tax', label: 'Profit Before Tax', sign: 1, indent: 0, isSubtotal: true },
@@ -660,7 +834,6 @@ function monthlySubtotal(refs: { id: string; sign: 1 | -1 }[]): number[] {
 /** Monthly (Jan–Dec) actuals per P&L row, keyed by nodeId — powers the monthly columns in the Full P&L table. */
 export const monthlyPnl: Record<string, number[]> = {
   'freight-charter-revenue': monthlyRevenue,
-  'charter-revenue': monthlyRevenue.map((v) => Number((v * CHARTER_REVENUE_SHARE).toFixed(1))),
   'cost-of-revenue': monthlyCostOfRevenue,
   'voyage-expenses': monthlyVoyageExpenses,
   'vessel-operating-cost': monthlyVesselOperatingCost,
@@ -681,6 +854,64 @@ monthlyPnl['npat'] = monthlySubtotal(npatRefs);
 monthlyPnl['ga-combined'] = months.map((_, i) =>
   Number((monthlyPnl['gross-profit'][i] - monthlyPnl['profit-before-tax'][i]).toFixed(1))
 );
+
+/**
+ * Splits a parent's monthly series across sub-line items by share, month by
+ * month, with the last entry absorbing that month's rounding remainder so
+ * the children always sum back to the parent's monthly figure exactly.
+ */
+function splitMonthly(entries: { id: string; share: number }[], parentMonthly: number[]): void {
+  const series: number[][] = entries.map(() => []);
+  parentMonthly.forEach((total) => {
+    let remaining = total;
+    entries.forEach((e, i) => {
+      const isLast = i === entries.length - 1;
+      const value = isLast ? Number(remaining.toFixed(1)) : Number((total * e.share).toFixed(1));
+      remaining = Number((remaining - value).toFixed(1));
+      series[i].push(value);
+    });
+  });
+  entries.forEach((e, i) => {
+    monthlyPnl[e.id] = series[i];
+  });
+}
+
+splitMonthly(revenueSplit, monthlyRevenue);
+splitMonthly(voyageExpenseSplit, monthlyVoyageExpenses);
+
+/** Vessel Operating Cost's children are real (not invented) — split its monthly
+ * series using their actual real-value shares, rather than hand-picked shares. */
+const vesselOperatingCostSplit = ['crew-cost', 'repairs-maintenance', 'fuel', 'third-party-services'].map((id) => ({
+  id,
+  share: vdtNodes[id].actual / vdtNodes['vessel-operating-cost'].actual,
+}));
+splitMonthly(vesselOperatingCostSplit, monthlyVesselOperatingCost);
+
+/**
+ * Operational value drivers behind Time Charter Revenue (rate, utilization,
+ * off-hire days) — not GL amounts, so they live outside the RM_M rollup
+ * tree entirely. Illustrative trend only; not reconciled to the revenue
+ * figure above (that would require a real fleet-days model).
+ */
+monthlyPnl['time-charter-rate'] = [42, 43, 44, 45.5, 47, 48.5, 50, 51.5, 52.5, 53.5, 54.5, 56];
+monthlyPnl['time-charter-utilization'] = [96.2, 96.5, 96.8, 97.0, 97.2, 97.5, 97.6, 97.8, 98.0, 98.1, 98.3, 98.5];
+monthlyPnl['time-charter-offhire-days'] = [9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5];
+
+/** Same treatment for the rest of the Revenue lines — illustrative operational drivers only. */
+monthlyPnl['spot-voyage-rate'] = [30, 31, 33, 35, 36, 38, 40, 41, 42, 44, 45, 47];
+monthlyPnl['spot-voyage-days'] = [180, 182, 185, 188, 190, 193, 195, 197, 199, 201, 203, 205];
+
+monthlyPnl['offshore-charter-rate'] = [220, 222, 224, 226, 228, 230, 232, 234, 236, 238, 240, 242];
+monthlyPnl['offshore-uptime'] = [97.0, 97.2, 97.5, 97.6, 97.8, 98.0, 98.1, 98.2, 98.4, 98.5, 98.6, 98.8];
+
+monthlyPnl['marine-engineering-completion-rate'] = [40, 45, 50, 55, 58, 62, 66, 70, 74, 78, 82, 86];
+monthlyPnl['marine-engineering-active-projects'] = [5, 5, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8];
+
+monthlyPnl['demurrage-days'] = [12, 11, 13, 10, 9, 11, 10, 9, 8, 9, 8, 7];
+monthlyPnl['demurrage-rate'] = [18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 23];
+
+monthlyPnl['technical-management-vessels'] = [22, 22, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26];
+monthlyPnl['technical-management-fee-per-vessel'] = [45, 45, 46, 46, 47, 47, 48, 48, 49, 49, 50, 50];
 
 export function cumulative(values: number[]): number[] {
   let running = 0;
@@ -785,6 +1016,46 @@ export function getAncestors(id: string): VdtNode[] {
     current = parent;
   }
   return chain;
+}
+
+/**
+ * Re-scopes a node's actual/budget/priorYear to a single month, driven by the
+ * VDT Explorer's per-cell drill-in from the Financial Performance table.
+ * Budget/priorYear have no monthly curve of their own, so they're prorated by
+ * the month's share of the node's annual actual — direction is left as-is
+ * since inverting it correctly needs revenue-vs-cost context this data
+ * doesn't carry per node.
+ */
+export function getMonthlyNodeView(nodeId: string, monthIndex: number): VdtNode | undefined {
+  const node = vdtNodes[nodeId];
+  const monthly = monthlyPnl[nodeId];
+  if (!node) return undefined;
+  const actual = monthly?.[monthIndex];
+  if (actual === undefined) return node;
+  const share = node.actual !== 0 ? actual / node.actual : 0;
+  const budget = Number((node.budget * share).toFixed(1));
+  const priorYear = node.priorYear !== undefined ? Number((node.priorYear * share).toFixed(1)) : undefined;
+  return {
+    ...node,
+    actual,
+    budget,
+    priorYear,
+    varPct: pct(actual, budget),
+    trend: monthly,
+  };
+}
+
+/** Children ranked by variance magnitude for a specific month, mirroring assignRanks but computed live. */
+export function getMonthlyChildren(node: VdtNode, monthIndex: number): VdtNode[] {
+  const kids = getChildren(node).map((child) => getMonthlyNodeView(child.id, monthIndex) ?? child);
+  const ranked = [...kids].sort((a, b) => Math.abs(b.actual - b.budget) - Math.abs(a.actual - a.budget));
+  const maxAbs = Math.max(...ranked.map((n) => Math.abs(n.actual - n.budget)), 1);
+  return ranked.map((n, i) => ({
+    ...n,
+    varAbs: Number(Math.abs(n.actual - n.budget).toFixed(1)),
+    rank: i + 1,
+    contributionWidthPct: Math.round((Math.abs(n.actual - n.budget) / maxAbs) * 100),
+  }));
 }
 
 export function formatVar(varPct: number): string {

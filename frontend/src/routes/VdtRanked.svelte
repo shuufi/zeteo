@@ -1,36 +1,63 @@
 <script lang="ts">
-  import { link } from 'svelte-spa-router';
+  import { link, router } from 'svelte-spa-router';
   import PageHeader from '../lib/components/PageHeader.svelte';
   import PageBody from '../lib/components/PageBody.svelte';
   import ContextBar from '../lib/components/ContextBar.svelte';
   import Sparkline from '../lib/components/Sparkline.svelte';
   import ChipRow from '../lib/components/ChipRow.svelte';
   import NotYetModelled from '../lib/components/NotYetModelled.svelte';
-  import { getNode, getAncestors, getChildren, formatRm, formatVar } from '../lib/data/zeteo-data';
+  import {
+    getNode,
+    getAncestors,
+    getChildren,
+    getMonthlyNodeView,
+    getMonthlyChildren,
+    months,
+    formatRm,
+    formatVar,
+  } from '../lib/data/zeteo-data';
 
   let { params }: { params: { id: string } } = $props();
 
-  const node = $derived(getNode(params.id));
-  const ancestors = $derived(node ? getAncestors(node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}` })) : []);
-  const children = $derived(node ? getChildren(node) : []);
+  const monthIndex = $derived(months.indexOf(new URLSearchParams(router.querystring ?? '').get('month') ?? ''));
+  const selectedMonth = $derived(monthIndex >= 0 ? months[monthIndex] : null);
+  const monthQuery = $derived(selectedMonth ? `?month=${selectedMonth}` : '');
+
+  const baseNode = $derived(getNode(params.id));
+  const node = $derived(
+    baseNode && selectedMonth ? (getMonthlyNodeView(baseNode.id, monthIndex) ?? baseNode) : baseNode
+  );
+  const ancestors = $derived(
+    node ? getAncestors(node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}${monthQuery}` })) : []
+  );
   // Rank by explicit `rank` where set, else fall back to contribution magnitude —
   // every child renders in the table, not just ones a prior mock happened to rank.
   const rankedChildren = $derived(
-    [...children].sort((a, b) => {
-      if (a.rank !== undefined && b.rank !== undefined) return a.rank - b.rank;
-      if (a.rank !== undefined) return -1;
-      if (b.rank !== undefined) return 1;
-      return Math.abs(b.actual - b.budget) - Math.abs(a.actual - a.budget);
-    })
+    node
+      ? selectedMonth
+        ? getMonthlyChildren(node, monthIndex)
+        : [...getChildren(node)].sort((a, b) => {
+            if (a.rank !== undefined && b.rank !== undefined) return a.rank - b.rank;
+            if (a.rank !== undefined) return -1;
+            if (b.rank !== undefined) return 1;
+            return Math.abs(b.actual - b.budget) - Math.abs(a.actual - a.budget);
+          })
+      : []
   );
 </script>
 
 {#if node}
-  <PageHeader title={node.name} />
+  <PageHeader title={selectedMonth ? `${node.name} — ${selectedMonth}` : node.name} />
   <PageBody>
     <ContextBar {ancestors} />
 
     <div class="flex flex-col gap-4 pt-4">
+    {#if selectedMonth}
+      <div class="text-xs text-indigo-700 dark:text-indigo-300">
+        Scoped to {selectedMonth} ·
+        <a class="no-underline hover:underline" href="/vdt/{node.id}" use:link>view full year →</a>
+      </div>
+    {/if}
     <div class="flex gap-4">
       <div class="w-60 flex-none border-2 border-gray-900 dark:border-gray-50 rounded-lg p-4 bg-white dark:bg-gray-800">
         <div class="text-xs text-gray-500 dark:text-gray-400">{node.name}</div>
