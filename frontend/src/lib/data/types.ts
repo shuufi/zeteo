@@ -22,6 +22,8 @@ export interface KpiCard {
   trend?: number[];
 }
 
+export type OperationalUnit = 'usd-per-day' | 'usd-per-month' | 'percent' | 'days' | 'count';
+
 export interface PlLineItem {
   nodeId: string;
   label: string;
@@ -29,6 +31,11 @@ export interface PlLineItem {
   indent: 0 | 1;
   isSubtotal?: boolean;
   isFinal?: boolean;
+  /** nodeId of the collapsible group this row belongs to, if nested under one. */
+  group?: string;
+  /** Operational value driver (rate/utilization/off-hire days, etc.) rather than a GL amount in RM millions. */
+  kind?: 'operational';
+  unit?: OperationalUnit;
 }
 
 export interface BridgeStep {
