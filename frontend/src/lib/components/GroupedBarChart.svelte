@@ -1,6 +1,11 @@
 <script lang="ts">
-  import type { BarChartCategory } from '../data/types';
   import { formatRmAuto } from '../data/zeteo-data';
+
+  interface BarChartCategory {
+    label: string;
+    actual: number;
+    priorYear: number;
+  }
 
   let {
     categories = [],
