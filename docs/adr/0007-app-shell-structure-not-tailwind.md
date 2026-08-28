@@ -1,0 +1,5 @@
+# App-shell redesign adopts structure from app.sample.html, not its stack
+
+`frontend/src/app.sample.html` is a Tailwind Plus reference template (Tailwind CSS utility classes, `@tailwindplus/elements` web components for the dropdown/disclosure, light/dark via Tailwind's `dark:` variants). We rebuilt Zeteo's shell to match its *layout* — top navbar, page-title header band, main content — entirely in Svelte with June design tokens (CSS custom properties). No Tailwind CSS and no `@tailwindplus/elements` were added; the dropdown and mobile-menu behavior are hand-rolled Svelte (`clickOutside` action + local `$state`), consistent with `docs/adr/0003-june-tokens-as-visual-system.md`.
+
+**Status**: superseded by `0016-tailwind-css-migration.md` — Tailwind CSS and `@tailwindplus/elements` are now real dependencies. `BusinessPicker.svelte` keeps hand-rolled Svelte state (no tree/async-loading equivalent in the elements library) but its CSS moved to Tailwind utilities like everywhere else; NavBar's profile menu/mobile panel adopted `el-dropdown`/`el-menu`/`el-disclosure` outright.

@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Pin the indigo scale to its original sRGB hex values (Zeteo's brand accent,
+   validated in ADR 0011) instead of Tailwind v4's recomputed OKLCH indigo,
+   which renders more saturated. Every other color family keeps Tailwind's
+   own default. */
+@theme {
+  --color-indigo-100: #e0e7ff;
+  --color-indigo-200: #c7d2fe;
+  --color-indigo-400: #818cf8;
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #4f46e5;
+  --color-indigo-700: #4338ca;
+  --color-indigo-800: #3730a3;
+  --color-indigo-900: #312e81;
+  --color-indigo-950: #1e1b4b;
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  @apply bg-gray-100 text-gray-700 antialiased dark:bg-gray-900 dark:text-gray-300;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+h1, h2, h3 {
+  @apply text-gray-900 dark:text-gray-50;
+  margin: 0;
+}
+
+a {
+  @apply text-indigo-600 dark:text-indigo-400;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
