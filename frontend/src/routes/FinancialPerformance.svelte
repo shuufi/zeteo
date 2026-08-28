@@ -1,6 +1,7 @@
 <script lang="ts">
   import { link } from 'svelte-spa-router';
   import PageHeader from '../lib/components/PageHeader.svelte';
+  import PageBody from '../lib/components/PageBody.svelte';
   import ContextBar from '../lib/components/ContextBar.svelte';
   import KpiCard from '../lib/components/KpiCard.svelte';
   import GroupedBarChart from '../lib/components/GroupedBarChart.svelte';
@@ -38,9 +39,10 @@
 </script>
 
 <PageHeader title="Financial Performance" />
-<ContextBar currentLabel="Full P&L" />
+<PageBody>
+  <ContextBar currentLabel="Full P&L" />
 
-<div class="shell flex flex-col gap-4 pt-5 pb-12">
+  <div class="flex flex-col gap-4 pt-4">
   <div class="grid grid-cols-4 max-[900px]:grid-cols-2 gap-2.5">
     {#each financialKpis as kpi (kpi.id)}
       <KpiCard {kpi} />
@@ -91,4 +93,5 @@
     </div>
     <div class="text-[10px] text-indigo-600 dark:text-indigo-400 mt-2">click any line → opens VDT Explorer scoped to that line, subtotal rows → opens the decomposition one level down into their own children</div>
   </div>
-</div>
+  </div>
+</PageBody>

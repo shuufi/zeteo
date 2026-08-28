@@ -1,6 +1,7 @@
 <script lang="ts">
   import { link } from 'svelte-spa-router';
   import PageHeader from '../lib/components/PageHeader.svelte';
+  import PageBody from '../lib/components/PageBody.svelte';
   import ContextBar from '../lib/components/ContextBar.svelte';
   import { getNode, getAncestors, getChildren, formatVar } from '../lib/data/zeteo-data';
 
@@ -21,9 +22,10 @@
 
 {#if node}
   <PageHeader title="{node.name} · Decomposition tree" />
-  <ContextBar {ancestors} currentLabel={node.name} />
+  <PageBody>
+    <ContextBar {ancestors} currentLabel={node.name} />
 
-  <div class="shell pt-5 pb-12 flex flex-col gap-4">
+    <div class="flex flex-col gap-4 pt-4">
     <a
       class="self-start text-xs text-indigo-600 dark:text-indigo-400 no-underline hover:underline"
       href="/vdt/{node.id}"
@@ -121,7 +123,9 @@
         Open Driver Diagnostic for {selectedChild ? selectedChild.name : node.name} →
       </a>
     </div>
-  </div>
+    </div>
+  </PageBody>
 {:else}
-  <div class="shell pt-5 pb-12 flex flex-col gap-4">Unknown node: {params.id}</div>
+  <PageHeader title="Unknown node" />
+  <PageBody>Unknown node: {params.id}</PageBody>
 {/if}

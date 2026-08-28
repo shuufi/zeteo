@@ -1,6 +1,7 @@
 <script lang="ts">
   import { link } from 'svelte-spa-router';
   import PageHeader from '../lib/components/PageHeader.svelte';
+  import PageBody from '../lib/components/PageBody.svelte';
   import ContextBar from '../lib/components/ContextBar.svelte';
   import Sparkline from '../lib/components/Sparkline.svelte';
   import ChipRow from '../lib/components/ChipRow.svelte';
@@ -26,9 +27,10 @@
 
 {#if node}
   <PageHeader title={node.name} />
-  <ContextBar {ancestors} currentLabel={node.name} />
+  <PageBody>
+    <ContextBar {ancestors} currentLabel={node.name} />
 
-  <div class="shell flex flex-col gap-4 pt-5 pb-12">
+    <div class="flex flex-col gap-4 pt-4">
     <div class="flex gap-4">
       <div class="w-60 flex-none border-2 border-gray-900 dark:border-gray-50 rounded-lg p-4 bg-white dark:bg-gray-800">
         <div class="text-xs text-gray-500 dark:text-gray-400">{node.name}</div>
@@ -92,7 +94,9 @@
     </div>
 
     <ChipRow label="Compare:" chips={['Petroleum', 'Gas', 'Offshore']} selected="Petroleum" />
-  </div>
+    </div>
+  </PageBody>
 {:else}
-  <div class="shell pt-5 pb-12">Unknown node: {params.id}</div>
+  <PageHeader title="Unknown node" />
+  <PageBody>Unknown node: {params.id}</PageBody>
 {/if}
