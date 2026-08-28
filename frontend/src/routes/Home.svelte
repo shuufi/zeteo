@@ -1,6 +1,7 @@
 <script lang="ts">
   import { link } from 'svelte-spa-router';
   import PageHeader from '../lib/components/PageHeader.svelte';
+  import PageBody from '../lib/components/PageBody.svelte';
   import ContextBar from '../lib/components/ContextBar.svelte';
   import KpiCard from '../lib/components/KpiCard.svelte';
   import {
@@ -14,9 +15,10 @@
 </script>
 
 <PageHeader title="Home" />
-<ContextBar refreshedAt={`Gold Layer refreshed ${context.refreshedAt}`} />
+<PageBody>
+  <ContextBar refreshedAt={`Gold Layer refreshed ${context.refreshedAt}`} />
 
-<div class="shell flex flex-col gap-5 pt-5 pb-12">
+  <div class="flex flex-col gap-5 pt-4">
   <div class="grid grid-cols-6 gap-2.5">
     {#each homeKpis as kpi (kpi.id)}
       <KpiCard {kpi} />
@@ -88,4 +90,5 @@
       {/each}
     </div>
   </div>
-</div>
+  </div>
+</PageBody>

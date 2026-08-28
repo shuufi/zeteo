@@ -27,22 +27,24 @@ body {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-h1, h2, h3 {
-  @apply text-gray-900 dark:text-gray-50;
-  margin: 0;
-}
+@layer base {
+  h1, h2, h3 {
+    @apply text-gray-900 dark:text-gray-50;
+    margin: 0;
+  }
 
-a {
-  @apply text-indigo-600 dark:text-indigo-400;
+  a {
+    @apply text-indigo-600 dark:text-indigo-400;
+  }
+
+  .shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
 }
 
 table {
   border-collapse: collapse;
   width: 100%;
-}
-
-.shell {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
 }
