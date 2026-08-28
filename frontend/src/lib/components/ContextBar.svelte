@@ -2,6 +2,10 @@
   import { link } from 'svelte-spa-router';
   import { context } from '../data/zeteo-data';
   import BusinessPicker from './BusinessPicker.svelte';
+  import ChipSelect from './ChipSelect.svelte';
+
+  const periodOptions = ['FY26 Q1', 'FY26 Q2', 'FY26 Q3', 'FY26 Q4'];
+  const comparisonOptions = ['vs Budget', 'vs Prior Year', 'vs Forecast'];
 
   interface Crumb {
     id: string;
@@ -18,14 +22,8 @@
 
 <div class="flex items-center gap-2.5 pb-4 text-xs flex-wrap border-b border-gray-200 dark:border-gray-700">
   <BusinessPicker />
-  <span
-    class="border border-gray-200 dark:border-gray-700 rounded-full py-0.5 px-2.5 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 whitespace-nowrap"
-    >Period: {context.period} ▾</span
-  >
-  <span
-    class="border border-gray-200 dark:border-gray-700 rounded-full py-0.5 px-2.5 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 whitespace-nowrap"
-    >{context.comparison} ▾</span
-  >
+  <ChipSelect id="period-select" prefix="Period: " options={periodOptions} selected={context.period} />
+  <ChipSelect id="comparison-select" options={comparisonOptions} selected={context.comparison} />
 
   {#if ancestors.length || currentLabel}
     <span class="ml-2 text-gray-700 dark:text-gray-300 text-sm">
