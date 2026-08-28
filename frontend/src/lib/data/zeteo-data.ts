@@ -6,7 +6,7 @@ import type {
   LeadingIndicator,
   PlLineItem,
   BridgeStep,
-  BarChartCategory,
+  MonthlySeries,
   Direction,
 } from './types';
 
@@ -60,6 +60,9 @@ export const leadingIndicators: LeadingIndicator[] = [
  * top-line numbers only (hasSummary) so the tree/tables aren't empty, per
  * docs/adr/0004-mock-data-depth.md.
  */
+/** Charter contracts as a share of total Freight & Charter Revenue — the "key child" shown under Revenue in the P&L. */
+const CHARTER_REVENUE_SHARE = 0.68;
+
 export const vdtNodes: Record<string, VdtNode> = {
   expenses: {
     id: 'expenses',
@@ -269,11 +272,25 @@ export const vdtNodes: Record<string, VdtNode> = {
     id: 'freight-charter-revenue',
     name: 'Freight & Charter Revenue',
     parentId: 'gross-profit',
-    childIds: [],
+    childIds: ['charter-revenue'],
     actual: 1216.1,
     budget: 1118.0,
     priorYear: 1010.5,
     varPct: pct(1216.1, 1118.0),
+    direction: 'favourable',
+    unit: 'RM_M',
+    hasSummary: true,
+    hasFullData: false,
+  },
+  'charter-revenue': {
+    id: 'charter-revenue',
+    name: 'Charter Revenue',
+    parentId: 'freight-charter-revenue',
+    childIds: [],
+    actual: Number((1216.1 * CHARTER_REVENUE_SHARE).toFixed(1)),
+    budget: Number((1118.0 * CHARTER_REVENUE_SHARE).toFixed(1)),
+    priorYear: Number((1010.5 * CHARTER_REVENUE_SHARE).toFixed(1)),
+    varPct: pct(1216.1 * CHARTER_REVENUE_SHARE, 1118.0 * CHARTER_REVENUE_SHARE),
     direction: 'favourable',
     unit: 'RM_M',
     hasSummary: true,
@@ -511,20 +528,71 @@ assignRanks(ebitRefs.map((r) => r.id));
 assignRanks(pbtRefs.map((r) => r.id));
 assignRanks(npatRefs.map((r) => r.id));
 
+const costOfRevenueRefs: { id: string; sign: 1 | -1 }[] = [
+  { id: 'voyage-expenses', sign: 1 },
+  { id: 'vessel-operating-cost', sign: 1 },
+];
+
+/**
+ * Two synthetic rows built for the Financial Performance statement so it
+ * reads as a standard income statement (Revenue → Cost of Revenue → Gross
+ * Profit → G&A → PBT → Tax → NPAT) instead of the full EBIT/financing
+ * breakdown used elsewhere in the VDT tree. 'ga-combined' nets every line
+ * between Gross Profit and PBT (D&A, G&A, other opex/income, financing) into
+ * one figure, computed as GP − PBT so the statement always foots exactly.
+ */
+function costTypeDirection(varPct: number): Direction {
+  return varPct >= 0 ? 'adverse' : 'favourable';
+}
+
+const costOfRevenueActual = rollUp(costOfRevenueRefs, 'actual');
+const costOfRevenueBudget = rollUp(costOfRevenueRefs, 'budget');
+const costOfRevenuePriorYear = rollUp(costOfRevenueRefs, 'priorYear');
+const costOfRevenueVarPct = pct(costOfRevenueActual, costOfRevenueBudget);
+vdtNodes['cost-of-revenue'] = {
+  id: 'cost-of-revenue',
+  name: 'Cost of Revenue',
+  parentId: 'gross-profit',
+  childIds: costOfRevenueRefs.map((r) => r.id),
+  actual: costOfRevenueActual,
+  budget: costOfRevenueBudget,
+  priorYear: costOfRevenuePriorYear,
+  varPct: costOfRevenueVarPct,
+  direction: costTypeDirection(costOfRevenueVarPct),
+  unit: 'RM_M',
+  hasSummary: true,
+  hasFullData: false,
+};
+
+const gaCombinedActual = Number((vdtNodes['gross-profit'].actual - vdtNodes['profit-before-tax'].actual).toFixed(1));
+const gaCombinedBudget = Number((vdtNodes['gross-profit'].budget - vdtNodes['profit-before-tax'].budget).toFixed(1));
+const gaCombinedPriorYear = Number(
+  ((vdtNodes['gross-profit'].priorYear ?? 0) - (vdtNodes['profit-before-tax'].priorYear ?? 0)).toFixed(1)
+);
+const gaCombinedVarPct = pct(gaCombinedActual, gaCombinedBudget);
+vdtNodes['ga-combined'] = {
+  id: 'ga-combined',
+  name: 'General & Administrative Expenses',
+  parentId: 'profit-before-tax',
+  childIds: [],
+  actual: gaCombinedActual,
+  budget: gaCombinedBudget,
+  priorYear: gaCombinedPriorYear,
+  varPct: gaCombinedVarPct,
+  direction: costTypeDirection(gaCombinedVarPct),
+  unit: 'RM_M',
+  hasSummary: true,
+  hasFullData: false,
+};
+
 export const pnlRows: PlLineItem[] = [
-  { nodeId: 'freight-charter-revenue', label: 'Freight & Charter Revenue', sign: 1, indent: 0 },
+  { nodeId: 'freight-charter-revenue', label: 'Revenue', sign: 1, indent: 0, isSubtotal: true },
+  { nodeId: 'charter-revenue', label: 'Charter Revenue (key contracts)', sign: 1, indent: 1 },
+  { nodeId: 'cost-of-revenue', label: 'Cost of Revenue', sign: -1, indent: 0, isSubtotal: true },
   { nodeId: 'voyage-expenses', label: 'Voyage Expenses (bunker, port & canal dues, commissions)', sign: -1, indent: 1 },
   { nodeId: 'vessel-operating-cost', label: 'Vessel Operating Costs (crew, R&M, insurance, stores)', sign: -1, indent: 1 },
   { nodeId: 'gross-profit', label: 'Gross Profit', sign: 1, indent: 0, isSubtotal: true },
-  { nodeId: 'depreciation-amortisation', label: 'Depreciation & Amortisation (vessels, drydock)', sign: -1, indent: 1 },
-  { nodeId: 'g-and-a-expenses', label: 'General & Administrative Expenses', sign: -1, indent: 1 },
-  { nodeId: 'other-operating-income', label: 'Other Operating Income (gain on vessel disposal, etc.)', sign: 1, indent: 1 },
-  { nodeId: 'other-operating-expenses', label: 'Other Operating Expenses (impairment, etc.)', sign: -1, indent: 1 },
-  { nodeId: 'operating-profit-ebit', label: 'Operating Profit / EBIT', sign: 1, indent: 0, isSubtotal: true },
-  { nodeId: 'finance-cost', label: 'Finance Costs (loan & finance lease interest)', sign: -1, indent: 1 },
-  { nodeId: 'finance-income', label: 'Finance Income', sign: 1, indent: 1 },
-  { nodeId: 'jv-share-profit', label: 'Share of Profit — JV / Pool Arrangements', sign: 1, indent: 1 },
-  { nodeId: 'fx-gain-loss', label: 'Foreign Exchange Gain / (Loss)', sign: 1, indent: 1 },
+  { nodeId: 'ga-combined', label: 'General & Administrative Expenses', sign: -1, indent: 0 },
   { nodeId: 'profit-before-tax', label: 'Profit Before Tax', sign: 1, indent: 0, isSubtotal: true },
   { nodeId: 'tax-expense', label: 'Tax Expense', sign: -1, indent: 1 },
   { nodeId: 'npat', label: 'NPAT', sign: 1, indent: 0, isSubtotal: true, isFinal: true },
@@ -535,65 +603,124 @@ export function formatRmAuto(value: number): string {
   return formatRm(value);
 }
 
+/**
+ * Monthly (non-cumulative) actuals, January–December, backing the Financial
+ * Performance trend chart. Financial Performance shows performance over the
+ * year rather than budget/prior-year comparisons — see docs/adr/0013.
+ */
+export const months: string[] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const monthlyRevenue = [118, 121, 125, 129, 133, 137, 141, 145, 148, 151, 154, 158];
+const monthlyCostOfRevenue = [70, 72, 74, 77, 80, 82, 85, 88, 90, 93, 95, 98];
+const monthlyOpex = [7.5, 7.6, 7.8, 7.9, 8.1, 8.3, 8.5, 8.7, 8.9, 9.1, 9.3, 9.6];
+const monthlyNpat = [28, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 50];
+
+/** Normalised month-of-year weighting (sums to 1) for lines with no explicit monthly curve. */
+const MONTHLY_GROWTH_CURVE = [0.07, 0.072, 0.075, 0.078, 0.08, 0.083, 0.085, 0.088, 0.09, 0.092, 0.093, 0.094];
+function spreadByCurve(total: number): number[] {
+  return MONTHLY_GROWTH_CURVE.map((w) => Number((w * total).toFixed(1)));
+}
+
+/**
+ * Monthly split of P&L line items, derived from the aggregate monthly
+ * curves above so each line reconciles to its own actual and the
+ * Revenue/Cost of Revenue/OPEX chart stays consistent with the table below.
+ */
+const voyageExpenseShare =
+  vdtNodes['voyage-expenses'].actual / (vdtNodes['voyage-expenses'].actual + vdtNodes['vessel-operating-cost'].actual);
+const monthlyVoyageExpenses = monthlyCostOfRevenue.map((v) => Number((v * voyageExpenseShare).toFixed(1)));
+const monthlyVesselOperatingCost = monthlyCostOfRevenue.map((v, i) => Number((v - monthlyVoyageExpenses[i]).toFixed(1)));
+
+const monthlyOtherOperatingIncome = spreadByCurve(vdtNodes['other-operating-income'].actual);
+const grossOpexMonthly = monthlyOpex.map((v, i) => v + monthlyOtherOperatingIncome[i]);
+const opexExpenseBase =
+  vdtNodes['depreciation-amortisation'].actual + vdtNodes['g-and-a-expenses'].actual + vdtNodes['other-operating-expenses'].actual;
+const monthlyDepreciationAmortisation = grossOpexMonthly.map((v) =>
+  Number(((v * vdtNodes['depreciation-amortisation'].actual) / opexExpenseBase).toFixed(1))
+);
+const monthlyGAndAExpenses = grossOpexMonthly.map((v) =>
+  Number(((v * vdtNodes['g-and-a-expenses'].actual) / opexExpenseBase).toFixed(1))
+);
+const monthlyOtherOperatingExpenses = grossOpexMonthly.map((v, i) =>
+  Number((v - monthlyDepreciationAmortisation[i] - monthlyGAndAExpenses[i]).toFixed(1))
+);
+
+const monthlyFinanceCost = spreadByCurve(vdtNodes['finance-cost'].actual);
+const monthlyFinanceIncome = spreadByCurve(vdtNodes['finance-income'].actual);
+const monthlyJvShareProfit = spreadByCurve(vdtNodes['jv-share-profit'].actual);
+const monthlyFxGainLoss = spreadByCurve(vdtNodes['fx-gain-loss'].actual);
+const monthlyTaxExpense = spreadByCurve(vdtNodes['tax-expense'].actual);
+
+function monthlySubtotal(refs: { id: string; sign: 1 | -1 }[]): number[] {
+  return months.map((_, i) =>
+    Number(refs.reduce((sum, { id, sign }) => sum + sign * (monthlyPnl[id]?.[i] ?? 0), 0).toFixed(1))
+  );
+}
+
+/** Monthly (Jan–Dec) actuals per P&L row, keyed by nodeId — powers the monthly columns in the Full P&L table. */
+export const monthlyPnl: Record<string, number[]> = {
+  'freight-charter-revenue': monthlyRevenue,
+  'charter-revenue': monthlyRevenue.map((v) => Number((v * CHARTER_REVENUE_SHARE).toFixed(1))),
+  'cost-of-revenue': monthlyCostOfRevenue,
+  'voyage-expenses': monthlyVoyageExpenses,
+  'vessel-operating-cost': monthlyVesselOperatingCost,
+  'depreciation-amortisation': monthlyDepreciationAmortisation,
+  'g-and-a-expenses': monthlyGAndAExpenses,
+  'other-operating-income': monthlyOtherOperatingIncome,
+  'other-operating-expenses': monthlyOtherOperatingExpenses,
+  'finance-cost': monthlyFinanceCost,
+  'finance-income': monthlyFinanceIncome,
+  'jv-share-profit': monthlyJvShareProfit,
+  'fx-gain-loss': monthlyFxGainLoss,
+  'tax-expense': monthlyTaxExpense,
+};
+monthlyPnl['gross-profit'] = monthlySubtotal(grossProfitRefs);
+monthlyPnl['operating-profit-ebit'] = monthlySubtotal(ebitRefs);
+monthlyPnl['profit-before-tax'] = monthlySubtotal(pbtRefs);
+monthlyPnl['npat'] = monthlySubtotal(npatRefs);
+monthlyPnl['ga-combined'] = months.map((_, i) =>
+  Number((monthlyPnl['gross-profit'][i] - monthlyPnl['profit-before-tax'][i]).toFixed(1))
+);
+
+export function cumulative(values: number[]): number[] {
+  let running = 0;
+  return values.map((v) => {
+    running += v;
+    return Number(running.toFixed(1));
+  });
+}
+
 export const financialKpis: KpiCard[] = [
   {
     id: 'revenue-ytd',
     label: 'Revenue YTD',
     value: formatRmAuto(vdtNodes['freight-charter-revenue'].actual),
-    trend: [92, 95, 97, 101, 108, 112],
+    trend: cumulative(monthlyRevenue),
   },
   {
     id: 'cost-of-revenue-ytd',
     label: 'Cost of Revenue YTD',
     value: formatRmAuto(rollUp([{ id: 'voyage-expenses', sign: 1 }, { id: 'vessel-operating-cost', sign: 1 }], 'actual')),
-    trend: [88, 90, 93, 96, 99, 101],
+    trend: cumulative(monthlyCostOfRevenue),
   },
   {
     id: 'gross-profit-ytd',
     label: 'Gross Profit YTD',
     value: formatRmAuto(vdtNodes['gross-profit'].actual),
-    trend: [70, 74, 78, 85, 92, 100],
+    trend: cumulative(monthlyRevenue.map((r, i) => r - monthlyCostOfRevenue[i])),
   },
   {
     id: 'npat-ytd',
     label: 'NPAT YTD',
     value: formatRmAuto(vdtNodes['npat'].actual),
-    trend: [60, 64, 70, 78, 88, 96],
+    trend: cumulative(monthlyNpat),
   },
 ];
 
-export const revenueCostOpexChart: BarChartCategory[] = [
-  {
-    label: 'Revenue',
-    actual: vdtNodes['freight-charter-revenue'].actual,
-    priorYear: vdtNodes['freight-charter-revenue'].priorYear ?? 0,
-  },
-  {
-    label: 'Cost of Revenue',
-    actual: rollUp([{ id: 'voyage-expenses', sign: 1 }, { id: 'vessel-operating-cost', sign: 1 }], 'actual'),
-    priorYear: rollUp([{ id: 'voyage-expenses', sign: 1 }, { id: 'vessel-operating-cost', sign: 1 }], 'priorYear'),
-  },
-  {
-    label: 'OPEX',
-    actual: rollUp(
-      [
-        { id: 'depreciation-amortisation', sign: 1 },
-        { id: 'g-and-a-expenses', sign: 1 },
-        { id: 'other-operating-expenses', sign: 1 },
-        { id: 'other-operating-income', sign: -1 },
-      ],
-      'actual'
-    ),
-    priorYear: rollUp(
-      [
-        { id: 'depreciation-amortisation', sign: 1 },
-        { id: 'g-and-a-expenses', sign: 1 },
-        { id: 'other-operating-expenses', sign: 1 },
-        { id: 'other-operating-income', sign: -1 },
-      ],
-      'priorYear'
-    ),
-  },
+export const monthlyPerformanceChart: MonthlySeries[] = [
+  { label: 'Revenue', values: monthlyRevenue, colorClass: 'stroke-gray-900 dark:stroke-gray-50' },
+  { label: 'Cost of Revenue', values: monthlyCostOfRevenue, colorClass: 'stroke-red-600 dark:stroke-red-400' },
+  { label: 'OPEX', values: monthlyOpex, colorClass: 'stroke-indigo-600 dark:stroke-indigo-400' },
 ];
 
 export const profitBridgeSteps: BridgeStep[] = [
@@ -636,31 +763,12 @@ export const profitBridgeSteps: BridgeStep[] = [
   { label: 'NPAT', value: vdtNodes['npat'].actual, kind: 'total' },
 ];
 
-/**
- * "Auto-generated" insight pinned above the P&L table: the leaf line with
- * the largest |vs prior year| movement. Recomputed from pnlRows/vdtNodes,
- * not hardcoded, so it can't drift from the table it annotates.
- */
-export function getLargestPriorYearMovement(): { label: string; pctLabel: string } {
-  const leafRows = pnlRows.filter((r) => !r.isSubtotal);
-  let best = leafRows[0];
-  let bestPct = -Infinity;
-  for (const row of leafRows) {
-    const node = vdtNodes[row.nodeId];
-    if (!node || node.priorYear === undefined) continue;
-    const change = Math.abs(pct(node.actual, node.priorYear));
-    if (change > bestPct) {
-      bestPct = change;
-      best = row;
-    }
-  }
-  const node = vdtNodes[best.nodeId];
-  const vsLy = pct(node.actual, node.priorYear ?? node.actual);
-  return { label: best.label.replace(/\s*\([^)]*\)\s*$/, ''), pctLabel: formatVar(vsLy) };
-}
-
 export function getNode(id: string): VdtNode | undefined {
   return vdtNodes[id];
+}
+
+export function getMonthlyPnl(nodeId: string): number[] | undefined {
+  return monthlyPnl[nodeId];
 }
 
 export function getChildren(node: VdtNode): VdtNode[] {

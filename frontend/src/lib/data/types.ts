@@ -37,10 +37,10 @@ export interface BridgeStep {
   kind: 'total' | 'increase' | 'decrease';
 }
 
-export interface BarChartCategory {
+export interface MonthlySeries {
   label: string;
-  actual: number;
-  priorYear: number;
+  values: number[];
+  colorClass: string;
 }
 
 export interface ContributionDriver {
