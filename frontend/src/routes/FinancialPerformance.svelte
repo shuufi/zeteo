@@ -40,7 +40,7 @@
 
 <PageHeader title="Financial Performance" />
 <PageBody>
-  <ContextBar currentLabel="Full P&L" />
+  <ContextBar />
 
   <div class="flex flex-col gap-4 pt-4">
   <div class="grid grid-cols-4 max-[900px]:grid-cols-2 gap-2.5">

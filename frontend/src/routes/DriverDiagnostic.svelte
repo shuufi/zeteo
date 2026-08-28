@@ -28,7 +28,7 @@
 {#if node}
   <PageHeader title={node.name} />
   <PageBody>
-    <ContextBar {ancestors} currentLabel={node.name} />
+    <ContextBar {ancestors} />
 
     <div class="pt-4">
     <div class="flex gap-4 border-b-2 border-gray-900 dark:border-gray-50">

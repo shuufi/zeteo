@@ -34,7 +34,7 @@
           class="text-gray-500 dark:text-gray-400 no-underline hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline"
           >{crumb.name}</a
         >
-        <span class="text-gray-500 dark:text-gray-400 mx-1">›</span>
+        {#if i < ancestors.length - 1 || currentLabel}<span class="text-gray-500 dark:text-gray-400 mx-1">›</span>{/if}
       {/each}
       {#if currentLabel}<strong>{currentLabel}</strong>{/if}
     </span>
