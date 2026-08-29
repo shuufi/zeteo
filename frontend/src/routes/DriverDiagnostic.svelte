@@ -7,13 +7,15 @@
   import ChipRow from '../lib/components/ChipRow.svelte';
   import Badge from '../lib/components/Badge.svelte';
   import NotYetModelled from '../lib/components/NotYetModelled.svelte';
-  import { getNode, getAncestors, formatRm, formatVar } from '../lib/data/zeteo-data';
+  import { glStore } from '../lib/data/gl-store.svelte';
+  import { getNode, getAncestors } from '../lib/data/gl-client';
+  import { formatRm, formatVar, pct } from '../lib/data/format';
 
   let { params }: { params: { id: string; tab?: string } } = $props();
 
-  const node = $derived(getNode(params.id));
+  const node = $derived(getNode(glStore.tree, params.id));
   const tab = $derived(params.tab ?? 'diagnose');
-  const ancestors = $derived(node ? getAncestors(node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}` })) : []);
+  const ancestors = $derived(node ? getAncestors(glStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}` })) : []);
 
   // Locally-overridable statuses for Validate/Reject, keyed "nodeId:entryId".
   let statusOverrides = $state<Record<string, string>>({});
@@ -25,7 +27,16 @@
   }
 </script>
 
-{#if node}
+{#if glStore.status === 'loading'}
+  <PageHeader title="Driver Diagnostic" />
+  <PageBody>Loading…</PageBody>
+{:else if glStore.status === 'not-yet-modelled'}
+  <PageHeader title="Driver Diagnostic" />
+  <PageBody>
+    <ContextBar />
+    <NotYetModelled label="No GL data modelled for the selected company/BU yet." />
+  </PageBody>
+{:else if node}
   <PageHeader title={node.name} />
   <PageBody>
     <ContextBar {ancestors} />
@@ -49,24 +60,24 @@
     <div class="pt-4 flex flex-col gap-4">
       {#if tab === 'diagnose'}
         <div class="flex gap-6 items-center">
-          <div><span class="text-xs text-gray-500 dark:text-gray-400">Actual</span><div class="font-bold text-lg">{formatRm(node.actual)}</div></div>
-          <div><span class="text-xs text-gray-500 dark:text-gray-400">Budget</span><div class="font-bold text-lg">{formatRm(node.budget)}</div></div>
+          <div><span class="text-xs text-gray-500 dark:text-gray-400">Actual</span><div class="font-bold text-lg">{formatRm(Math.abs(node.actual))}</div></div>
+          <div><span class="text-xs text-gray-500 dark:text-gray-400">Budget</span><div class="font-bold text-lg">{formatRm(Math.abs(node.budget))}</div></div>
           <div>
             <span class="text-xs text-gray-500 dark:text-gray-400">Var%</span>
             <div class="font-bold text-lg {node.direction === 'adverse' ? 'text-red-600 dark:text-red-400' : node.direction === 'favourable' ? 'text-green-600 dark:text-green-400' : ''}">
-              {formatVar(node.varPct)}
+              {formatVar(pct(node.actual, node.budget))}
             </div>
           </div>
           {#if node.priorYear !== undefined}
-            <div><span class="text-xs text-gray-500 dark:text-gray-400">Prior Year</span><div class="font-bold text-lg">{formatRm(node.priorYear)}</div></div>
+            <div><span class="text-xs text-gray-500 dark:text-gray-400">Prior Year</span><div class="font-bold text-lg">{formatRm(Math.abs(node.priorYear))}</div></div>
           {/if}
           <div class="ml-auto">
             <ChipRow chips={['YTD', 'MTD', 'QTD']} selected="YTD" />
           </div>
         </div>
 
-        {#if node.trend?.length}
-          <div class="border border-gray-200 dark:border-gray-700 p-2"><Sparkline points={node.trend} width={860} height={52} /></div>
+        {#if node.monthlyActual.length}
+          <div class="border border-gray-200 dark:border-gray-700 p-2"><Sparkline points={node.monthlyActual} width={860} height={52} /></div>
         {/if}
 
         {#if node.hasFullData && node.drivers && node.sensitivity}
@@ -100,7 +111,7 @@
         {:else}
           <NotYetModelled
             label="Contribution ranking and sensitivity analysis not yet modelled for {node.name}."
-            linkHref="/diagnostic/repairs-maintenance"
+            linkHref="/diagnostic/PNL-0024"
             linkLabel="See the fully modelled example: Repairs & Maintenance"
           />
         {/if}
@@ -132,7 +143,7 @@
         {:else}
           <NotYetModelled
             label="Benchmark comparison not yet modelled for {node.name}."
-            linkHref="/diagnostic/repairs-maintenance/benchmark"
+            linkHref="/diagnostic/PNL-0024/benchmark"
             linkLabel="See the fully modelled example: Repairs & Maintenance"
           />
         {/if}
@@ -170,7 +181,7 @@
         {:else}
           <NotYetModelled
             label="Root cause & mitigation not yet modelled for {node.name}."
-            linkHref="/diagnostic/repairs-maintenance/rootcause"
+            linkHref="/diagnostic/PNL-0024/rootcause"
             linkLabel="See the fully modelled example: Repairs & Maintenance"
           />
         {/if}

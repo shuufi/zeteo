@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatRmAuto } from '../data/zeteo-data';
+  import { formatRmAuto } from '../data/format';
 
   interface BarChartCategory {
     label: string;

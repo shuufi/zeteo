@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { BridgeStep } from '../data/types';
-  import { formatRmAuto } from '../data/zeteo-data';
+  import { formatRmAuto } from '../data/format';
 
   let {
     steps = [],

@@ -7,7 +7,7 @@
   const navLinks: { href: string; label: string; activePath: string | RegExp }[] = [
     { href: '/', label: 'Home', activePath: '/' },
     { href: '/financial', label: 'Financial Performance', activePath: '/financial' },
-    { href: '/vdt/expenses', label: 'Value Driver', activePath: /^\/(vdt|vdt-tree|diagnostic)(\/.*)?$/ },
+    { href: '/vdt/NPAT', label: 'Value Driver', activePath: /^\/(vdt|diagnostic)(\/.*)?$/ },
     { href: '/ask', label: 'Ask Zeteo', activePath: '/ask' },
     { href: '/initiatives', label: 'Initiatives', activePath: '/initiatives' },
   ];

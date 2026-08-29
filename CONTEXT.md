@@ -5,8 +5,8 @@ The diagnostic dashboard UI for Zeteo — the Value Driver Tree explorer, driver
 ## Language
 
 **VDT node**:
-A single addressable point in the Value Driver Tree — a financial metric or an operational driver — carrying its own actual/budget/variance and, optionally, trend, contribution drivers, benchmark and root-cause data. Identified by a stable `nodeId` (e.g. `vessel-operating-cost`) used in every route.
-_Avoid_: item, row, entry (too generic — use "node" whenever it's a VDT tree position).
+A single addressable point in the Value Driver Tree — a GL/FSI hierarchy position (reporting root, reporting/subtotal node, posting GL account) or an operational driver — carrying its own actual/budget/variance and, optionally, trend, contribution drivers, benchmark and root-cause data. Identified by a stable `nodeId`, the real SAP GL/FSI code (e.g. `PNL-0024`, `4010100100`) rather than a curated slug. See `docs/adr/0022-gl-fsi-hierarchy-replaces-mock-vdt-tree.md`.
+_Avoid_: item, row, entry (too generic — use "node" whenever it's a VDT tree position); GL account alone for a VDT node (a node can also be a reporting/subtotal node or operational driver, not just a posting account).
 
 **VDT Explorer**:
 The screen family for browsing the tree, reached via the **Value Driver** nav item. Has two independent view modes reached by separate routes — Ranked (`/vdt/:id`, a summary card + a children table ranked by contribution) and Tree (`/vdt-tree/:id`, a horizontal decomposition diagram). They are not tabs of one screen; each has its own click model (Ranked rows open Driver Diagnostic directly; Tree nodes re-centre the diagram).
@@ -28,8 +28,16 @@ MISC's internal top-level grouping of legal entities — AET, Offshore Business 
 _Avoid_: "business segment" for BU (that's the website's marketing term, not this data's grouping); "subsidiary" alone for Company (BU is also a kind of grouping, be specific about which level).
 
 **Not-yet-modelled (state)**:
-The empty-state shown when a VDT node lacks full diagnostic data (trend/contribution/benchmark/root-cause). Distinguishes "this node exists but hasn't been modelled yet" from a routing error. Always carries a link to the one fully-modelled example node, `repairs-maintenance`. See `docs/adr/0004-mock-data-depth.md`.
-_Avoid_: empty state (too generic — this is a specific, deliberate placeholder for unmodelled tree depth, not an empty list/search result).
+The empty-state shown when a VDT node lacks full diagnostic data (trend/contribution/benchmark/root-cause), or when a node has no fact data for the selected company/BU scope (see Sampled company). Distinguishes "this doesn't exist yet" from a routing error. Always carries a link to the one fully-modelled example node, `PNL-0024` (Repairs And Maintenance, Cost of Revenue). See `docs/adr/0004-mock-data-depth.md` and `docs/adr/0024-gl-fact-data-company-sampling.md`.
+_Avoid_: empty state (too generic — this is a specific, deliberate placeholder for unmodelled tree depth or unsampled scope, not an empty list/search result).
+
+**Sampled company**:
+One of the 9 companies (3 per Business Unit, or all of a BU's companies where it has 3 or fewer) that carries real fake GL fact data. Selecting any other company renders Not-yet-modelled rather than fabricated figures. See `docs/adr/0024-gl-fact-data-company-sampling.md`.
+_Avoid_: modelled company (overloads "modelled," already used for diagnostic depth in Not-yet-modelled).
+
+**Partial BU total**:
+The figure shown when a Business Unit (not a specific company) is selected — the sum of only that BU's Sampled companies, visibly labelled with the count (e.g. "3 of 57 companies") rather than presented as the BU's true total.
+_Avoid_: BU total alone (implies a completeness the figure doesn't have).
 
 **Attention item (exception)**:
 The single highlighted card on Home surfacing the largest adverse variance needing investigation. Distinct from a "top adverse driver" (a plain ranked list row) — an attention item is the one thing Home foregrounds for immediate action.

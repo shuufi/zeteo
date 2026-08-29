@@ -9,6 +9,7 @@
     defaultValue = '',
     inputEl = $bindable<HTMLInputElement | null>(null),
     wrapperClass = '',
+    onselect,
     children,
   }: {
     id: string;
@@ -18,15 +19,21 @@
     defaultValue?: string;
     inputEl?: HTMLInputElement | null;
     wrapperClass?: string;
+    /** Fires when the user picks an option — el-autocomplete's own `change` event, whose `detail.relatedTarget` is the selected `<el-option>` element. */
+    onselect?: (option: HTMLElement) => void;
     children: Snippet;
   } = $props();
+
+  function handleChange(event: CustomEvent<{ relatedTarget: HTMLElement | null }>): void {
+    if (event.detail.relatedTarget) onselect?.(event.detail.relatedTarget);
+  }
 </script>
 
 {#if label}
   <label for={id} class="block text-sm/6 font-medium text-gray-900 dark:text-white">{label}</label>
 {/if}
 
-<el-autocomplete class="relative {label ? 'mt-2' : ''} block {wrapperClass}">
+<el-autocomplete class="relative {label ? 'mt-2' : ''} block {wrapperClass}" onchange={handleChange}>
   <input
     {id}
     type="text"
