@@ -388,13 +388,6 @@
             {/each}
           </div>
         </div>
-        <div class="text-[10px] text-indigo-600 dark:text-indigo-400 mt-2">
-          ▸ toggles a group open · hover a month value for the search icon →
-          opens VDT Explorer scoped to that line + month ·
-          <span class="text-amber-700 dark:text-amber-400"
-            >amber "Ops" rows are operational value drivers, not GL amounts</span
-          >
-        </div>
       </Card>
     </div>
   {/if}
