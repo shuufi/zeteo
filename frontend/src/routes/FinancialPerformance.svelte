@@ -133,16 +133,11 @@
   );
 
   const monthlyPerformanceChart = $derived(
-    revenue && costOfRevenue && grossProfit && gaExpenses && taxation && npat
+    revenue && costOfRevenue && grossProfit && npat
       ? [
           { label: "Revenue", values: revenue.monthlyActual },
           { label: "COR", values: costOfRevenue.monthlyActual.map(Math.abs) },
           { label: "GP", values: grossProfit.monthlyActual },
-          {
-            // Profit Before Tax = NPAT with the tax deduction added back.
-            label: "PBT",
-            values: npat.monthlyActual.map((v, i) => v - taxation.monthlyActual[i]),
-          },
           { label: "NPAT", values: npat.monthlyActual },
         ]
       : [],
@@ -248,7 +243,7 @@
       </div>
 
       <div class="flex max-[900px]:flex-col gap-4">
-        <Card class="flex-1 min-w-0" title="Revenue, COR, GP, PBT & NPAT — Monthly Trend">
+        <Card class="flex-1 min-w-0" title="Income Statement Key Items">
           <MonthlyTrendChart series={monthlyPerformanceChart} {months} />
         </Card>
 
@@ -261,7 +256,7 @@
         {#snippet header()}
           <div class="flex justify-between items-baseline mb-2">
             <div class="font-bold text-sm text-gray-900 dark:text-gray-50">
-              Full P&amp;L — {ytdView ? "YTD" : "Monthly"} Trend, shipping structure
+              Income Statement
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400">
               RM millions
@@ -392,13 +387,6 @@
               {/if}
             {/each}
           </div>
-        </div>
-        <div class="text-[10px] text-indigo-600 dark:text-indigo-400 mt-2">
-          ▸ toggles a group open · hover a month value for the search icon →
-          opens VDT Explorer scoped to that line + month ·
-          <span class="text-amber-700 dark:text-amber-400"
-            >amber "Ops" rows are operational value drivers, not GL amounts</span
-          >
         </div>
       </Card>
     </div>

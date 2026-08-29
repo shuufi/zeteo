@@ -8,6 +8,8 @@
    #00009d anchors indigo-600, the shade used for buttons/links/focus rings.
    Every other color family keeps Tailwind's own default. */
 @theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
   --color-indigo-100: #e5e5ff;
   --color-indigo-200: #c7c7ff;
   --color-indigo-400: #3838fa;
