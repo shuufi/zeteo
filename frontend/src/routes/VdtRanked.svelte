@@ -3,14 +3,13 @@
   import PageHeader from '../lib/components/PageHeader.svelte';
   import PageBody from '../lib/components/PageBody.svelte';
   import ContextBar from '../lib/components/ContextBar.svelte';
+  import ValueDriverFlow from '../lib/components/ValueDriverFlow.svelte';
   import Sparkline from '../lib/components/Sparkline.svelte';
   import ChipRow from '../lib/components/ChipRow.svelte';
   import NotYetModelled from '../lib/components/NotYetModelled.svelte';
   import { glStore } from '../lib/data/gl-store.svelte';
-  import { getNode, getAncestors, getChildren, getMonthlyNodeView, rankChildren } from '../lib/data/gl-client';
+  import { getNode, getAncestors, getMonthlyNodeView, rankChildren } from '../lib/data/gl-client';
   import { months, formatRm, formatVar, pct } from '../lib/data/format';
-
-  const TREE_SHOW_MAX = 3;
 
   let { params }: { params: { id: string } } = $props();
 
@@ -29,29 +28,6 @@
   // contribution magnitude instead (see gl-client.ts rankChildren).
   const rankedChildren = $derived(node ? rankChildren(glStore.tree, node, selectedMonth ? monthIndex : null) : []);
 
-  // Decomposition tree preview under the ranked list, two levels deep,
-  // scoped to the selected month.
-  const scopeMonthly = (n: import('../lib/data/types').VdtNode) =>
-    selectedMonth ? (getMonthlyNodeView(glStore.tree, n.id, monthIndex) ?? n) : n;
-  const treeLevel1 = $derived(
-    node
-      ? getChildren(glStore.tree, node)
-          .filter((c) => c.nodeType !== 'Operational Driver')
-          .map(scopeMonthly)
-      : []
-  );
-  const treeLevel1Shown = $derived(treeLevel1.slice(0, TREE_SHOW_MAX));
-  const treeLevel1Hidden = $derived(Math.max(0, treeLevel1.length - TREE_SHOW_MAX));
-  const treeSelectedChild = $derived(treeLevel1.find((c) => c.childIds.length > 0));
-  const treeLevel2 = $derived(
-    treeSelectedChild
-      ? getChildren(glStore.tree, treeSelectedChild)
-          .filter((c) => c.nodeType !== 'Operational Driver')
-          .map(scopeMonthly)
-      : []
-  );
-  const treeLevel2Shown = $derived(treeLevel2.slice(0, TREE_SHOW_MAX));
-  const treeLevel2Hidden = $derived(Math.max(0, treeLevel2.length - TREE_SHOW_MAX));
 </script>
 
 {#if glStore.status === 'loading'}
@@ -136,81 +112,17 @@
       </div>
     </div>
 
-    {#if treeLevel1.length}
-      <div class="border-[1.5px] border-gray-200 dark:border-gray-700 rounded-lg py-2.5 px-4 bg-white dark:bg-gray-800">
-        <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">Decomposition tree</div>
-
-        <div class="flex items-center gap-0 overflow-x-auto py-2">
-          <div class="border-2 border-gray-900 dark:border-gray-50 rounded-lg py-2 px-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 min-w-[120px] flex flex-col gap-0.5 text-center">
-            <b>{node.name}</b>
-            <div
-              class="text-[10px] {node.direction === 'adverse'
-                ? 'text-red-600 dark:text-red-400'
-                : node.direction === 'favourable'
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-gray-500 dark:text-gray-400'}"
-            >
-              {formatVar(pct(node.actual, node.budget))}
-            </div>
+    {#if node.childIds.length}
+      <div class="overflow-hidden border-[1.5px] border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
+        <div class="flex items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 px-4 py-2.5">
+          <div class="text-xs text-gray-500 dark:text-gray-400">Decomposition tree</div>
+          <div class="text-[10px] text-gray-500 dark:text-gray-400">
+            Click a node with a ▶ marker to expand its children
           </div>
-
-          <div class="w-8 h-0.5 bg-gray-900 dark:bg-gray-50 flex-none"></div>
-          <div class="flex flex-col gap-2">
-            {#each treeLevel1Shown as child (child.id)}
-              <div
-                class="rounded-lg py-2 px-2.5 text-gray-700 dark:text-gray-300 min-w-[150px] flex flex-col gap-0.5 {child.id ===
-                treeSelectedChild?.id
-                  ? 'border-[1.5px] border-gray-900 dark:border-gray-50 bg-indigo-100 dark:bg-indigo-900'
-                  : 'border-[1.5px] border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}"
-              >
-                <b>{child.name}</b>
-                <span
-                  class="text-[10px] {child.direction === 'adverse'
-                    ? 'text-red-600 dark:text-red-400'
-                    : child.direction === 'favourable'
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-gray-500 dark:text-gray-400'}"
-                >
-                  {formatVar(pct(child.actual, child.budget))}{child.id === treeSelectedChild?.id ? ' · selected' : ''}
-                </span>
-              </div>
-            {/each}
-            {#if treeLevel1Hidden}
-              <div class="border-[1.5px] border-dashed border-gray-200 dark:border-gray-700 rounded-lg py-2 px-2.5 bg-white dark:bg-gray-800 min-w-[150px] flex flex-col gap-0.5 text-gray-500 dark:text-gray-400 text-sm">
-                +{treeLevel1Hidden} more ▾
-              </div>
-            {/if}
-          </div>
-
-          {#if treeLevel2.length}
-            <div class="w-8 h-0.5 bg-gray-900 dark:bg-gray-50 flex-none"></div>
-            <div class="flex flex-col gap-2">
-              {#each treeLevel2Shown as child (child.id)}
-                <div
-                  class="border-[1.5px] border-gray-200 dark:border-gray-700 rounded-lg py-2 px-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 min-w-[150px] flex flex-row justify-between items-center gap-0.5 text-sm"
-                >
-                  {child.name}
-                  <span
-                    class="text-[10px] {child.direction === 'adverse'
-                      ? 'text-red-600 dark:text-red-400'
-                      : child.direction === 'favourable'
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-gray-500 dark:text-gray-400'}"
-                  >
-                    {formatVar(pct(child.actual, child.budget))}
-                  </span>
-                </div>
-              {/each}
-              {#if treeLevel2Hidden}
-                <div class="border-[1.5px] border-dashed border-gray-200 dark:border-gray-700 rounded-lg py-2 px-2.5 bg-white dark:bg-gray-800 min-w-[150px] flex flex-col gap-0.5 text-gray-500 dark:text-gray-400 text-sm">
-                  +{treeLevel2Hidden} more ▾
-                </div>
-              {/if}
-            </div>
-          {/if}
         </div>
-
-        <p class="text-[10px] text-gray-500 dark:text-gray-400">only two levels expanded at once — siblings collapse to "+N more"</p>
+        <div class="h-[34rem]">
+          <ValueDriverFlow rootId={node.id} monthIndex={selectedMonth ? monthIndex : null} />
+        </div>
       </div>
     {/if}
 
