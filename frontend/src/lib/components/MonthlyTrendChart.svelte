@@ -1,61 +1,68 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { Tween } from 'svelte/motion';
+  import { cubicOut } from 'svelte/easing';
+  import { Plot, Line, Text } from 'svelteplot';
   import type { MonthlySeries } from '../data/types';
 
   let {
     series = [],
     months = [],
-    width = 100,
-    height = 170,
-  }: { series?: MonthlySeries[]; months?: string[]; width?: number; height?: number } = $props();
+    height = 300,
+  }: { series?: MonthlySeries[]; months?: string[]; height?: number } = $props();
 
-  const padTop = 10;
-  const padBottom = 32;
-  const padLeft = 4;
-  const padRight = 4;
-  const chartWidth = $derived(width - padLeft - padRight);
-  const chartHeight = $derived(height - padTop - padBottom);
+  const data = $derived(
+    series.flatMap((s) =>
+      s.values.map((value, i) => ({ month: months[i], label: s.label, value, valueLabel: value.toFixed(0) }))
+    )
+  );
 
-  const maxValue = $derived(Math.max(...series.flatMap((s) => s.values), 1));
+  // Headroom above the highest point so its data label isn't clipped by the plot edge.
+  const yMax = $derived(Math.max(...series.flatMap((s) => s.values), 1) * 1.15);
 
-  function pointsFor(values: number[]): string {
-    const stepX = chartWidth / Math.max(values.length - 1, 1);
-    return values
-      .map((v, i) => {
-        const x = padLeft + i * stepX;
-        const y = padTop + chartHeight - (v / maxValue) * chartHeight;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .join(' ');
-  }
-
-  function tickX(i: number): number {
-    const stepX = chartWidth / Math.max(months.length - 1, 1);
-    return padLeft + i * stepX;
-  }
-
-  function fillClass(strokeClass: string): string {
-    return strokeClass.replace(/stroke-/g, 'fill-');
-  }
+  // Reveals the plot left-to-right on mount via a shrinking clip-path — works
+  // uniformly across all series regardless of each line's individual path length.
+  const reveal = new Tween(0, { duration: 900, easing: cubicOut });
+  onMount(() => {
+    reveal.set(1);
+  });
 </script>
 
-<svg {width} {height} viewBox="0 0 {width} {height}" role="img" aria-label="Monthly performance trend, January to December">
-  <line
-    x1={padLeft}
-    y1={padTop + chartHeight}
-    x2={width - padRight}
-    y2={padTop + chartHeight}
-    class="stroke-gray-200 dark:stroke-gray-700"
-  />
-  {#each series as s (s.label)}
-    <polyline points={pointsFor(s.values)} fill="none" class={s.colorClass} stroke-width="1.5" />
-  {/each}
-  {#each months as m, i (m)}
-    <text x={tickX(i)} y={padTop + chartHeight + 11} font-size="7" text-anchor="middle" class="fill-gray-500 dark:fill-gray-400">
-      {m}
-    </text>
-  {/each}
-  {#each series as s, i (s.label)}
-    <rect x={padLeft + i * 100} y={height - 10} width="6" height="6" class={fillClass(s.colorClass)} />
-    <text x={padLeft + i * 100 + 9} y={height - 5} font-size="8" class="fill-gray-500 dark:fill-gray-400">{s.label}</text>
-  {/each}
-</svg>
+<div class="chart-colors w-full" style="clip-path: inset(0 {(1 - reveal.current) * 100}% 0 0);">
+  <Plot
+    {height}
+    x={{ label: false, domain: months }}
+    y={{ label: false, grid: false, axis: false, domain: [0, yMax] }}
+    color={{
+      legend: false,
+      domain: ['Revenue', 'COR', 'GP', 'PBT', 'NPAT'],
+      scheme: {
+        Revenue: 'var(--revenue)',
+        COR: 'var(--cor)',
+        GP: 'var(--gp)',
+        PBT: 'var(--pbt)',
+        NPAT: 'var(--npat)',
+      },
+    }}
+  >
+    <Line {data} x="month" y="value" stroke="label" strokeWidth={2} curve="linear" />
+    <Text {data} x="month" y="value" text="valueLabel" fill="label" dy={-9} textAnchor="middle" fontSize={11} fontWeight="bold" />
+  </Plot>
+</div>
+
+<style>
+  .chart-colors {
+    --revenue: var(--color-gray-900);
+    --cor: var(--color-red-600);
+    --gp: var(--color-emerald-600);
+    --pbt: var(--color-amber-600);
+    --npat: var(--color-blue-600);
+  }
+  :global(.dark) .chart-colors {
+    --revenue: var(--color-gray-50);
+    --cor: var(--color-red-400);
+    --gp: var(--color-emerald-400);
+    --pbt: var(--color-amber-400);
+    --npat: var(--color-blue-400);
+  }
+</style>

@@ -52,7 +52,6 @@ export interface BridgeStep {
 export interface MonthlySeries {
   label: string;
   values: number[];
-  colorClass: string;
 }
 
 export interface ContributionDriver {

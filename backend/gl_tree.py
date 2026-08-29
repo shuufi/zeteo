@@ -65,9 +65,13 @@ def build_tree(session: Session, companies: list[str]) -> dict[str, dict]:
 
     monthly: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(lambda: [0.0] * 12))
     if companies:
-        facts = session.exec(select(GLFact).where(col(GLFact.company).in_(companies))).all()
-        for f in facts:
-            monthly[f.code][f.scenario.value][f.month - 1] += f.amount
+        # Selecting only the needed columns (rather than full GLFact rows)
+        # skips ORM row hydration, the dominant cost for ~40k facts per scope.
+        facts = session.exec(
+            select(GLFact.code, GLFact.scenario, GLFact.month, GLFact.amount).where(col(GLFact.company).in_(companies))
+        ).all()
+        for code, scenario, month, amount in facts:
+            monthly[code][scenario.value][month - 1] += amount
 
     computed: dict[str, dict] = {}
 
