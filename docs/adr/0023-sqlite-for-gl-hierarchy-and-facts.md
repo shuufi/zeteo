@@ -1,0 +1,9 @@
+# GL/FSI hierarchy and fact data live in SQLite, not JSON — dimension/fact split, DB itself gitignored
+
+ADR-0014 kept the backend DB-free, reading `companies.json` straight off disk, reasoning that a single ~86-row dropdown didn't warrant standing up a database. The GL/FSI hierarchy is a different shape of problem: 1171 hierarchy nodes needing bottom-up rollup, joined against a fact table of actual/budget/prior-year amounts per node × company × month (~327k rows once seeded) — a genuinely relational, star-schema-shaped problem that a nested JSON blob would force back into hand-rolled joins. The backend gets its first real database: SQLite via SQLModel, with `gl_node` (code, description, parent_code, node_type, level, normal_balance) as the dimension table and `gl_fact` (code, company, period, scenario, amount) as the fact table. `normal_balance` (`D`/`C`) is hand-tagged only on the 87 real reporting nodes — leaf accounts inherit their parent's — and is the single flag driving both rollup arithmetic and the presentation-layer sign inversion (e.g. Revenue, a credit-normal account, always displays positive). A fourth `node_type`, `Operational Driver`, extends the same table for non-monetary KPI rows (utilization %, off-hire days, etc.) attached under real revenue reporting nodes with synthetic codes — they carry a `unit` and are excluded from financial rollup sums.
+
+The SQLite file itself is gitignored, not committed. A seed script rebuilds it from the checked-in `docs/anaplan_is_master_data.csv` (the real hierarchy — the source of truth) plus a fixed RNG seed for the fabricated fact amounts, so regenerating the dataset is a reviewable script diff, never an opaque binary diff.
+
+Rejected: committing the built `.db` file the way `companies.json` is committed — companies.json is static source data, but this fact table is randomly generated and would produce unreviewable binary diffs on every reseed.
+
+**Status**: accepted

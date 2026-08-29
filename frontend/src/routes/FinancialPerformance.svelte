@@ -7,29 +7,30 @@
   import KpiCard from '../lib/components/KpiCard.svelte';
   import MonthlyTrendChart from '../lib/components/MonthlyTrendChart.svelte';
   import ProfitBridge from '../lib/components/ProfitBridge.svelte';
-  import {
-    pnlRows,
-    getNode,
-    getMonthlyPnl,
-    cumulative,
-    financialKpis,
-    months,
-    monthlyPerformanceChart,
-    profitBridgeSteps,
-  } from '../lib/data/zeteo-data';
-  import type { PlLineItem, OperationalUnit } from '../lib/data/types';
+  import NotYetModelled from '../lib/components/NotYetModelled.svelte';
+  import { glStore } from '../lib/data/gl-store.svelte';
+  import { getNode, buildDisplayRows, indentClass } from '../lib/data/gl-client';
+  import { months, formatRmAuto, cumulative } from '../lib/data/format';
+  import type { DisplayRow, OperationalUnit } from '../lib/data/types';
 
   let ytdView = $state(false);
 
-  const rowsByNodeId = new Map(pnlRows.map((row) => [row.nodeId, row]));
-  const collapsibleIds = new Set(pnlRows.map((row) => row.group).filter((g): g is string => g !== undefined));
+  const pnlRows = $derived(buildDisplayRows(glStore.tree));
+  const rowsByNodeId = $derived(new Map(pnlRows.map((row) => [row.nodeId, row])));
+  const collapsibleIds = $derived(new Set(pnlRows.map((row) => row.group).filter((g): g is string => g !== undefined)));
   // Groups whose children are purely operational drivers start collapsed — they're
   // supplementary detail, so the GL statement stays readable by default.
-  const operationalGroupIds = new Set(
-    pnlRows.filter((row) => row.kind === 'operational').map((row) => row.group).filter((g): g is string => g !== undefined)
+  const operationalGroupIds = $derived(
+    new Set(pnlRows.filter((row) => row.kind === 'operational').map((row) => row.group).filter((g): g is string => g !== undefined))
   );
 
-  let expandedGroups = $state(new Set([...collapsibleIds].filter((id) => !operationalGroupIds.has(id))));
+  let expandedGroups = $state<Set<string>>(new Set());
+  let expandedGroupsInitialised = false;
+  $effect(() => {
+    if (expandedGroupsInitialised || pnlRows.length === 0) return;
+    expandedGroupsInitialised = true;
+    expandedGroups = new Set([...collapsibleIds].filter((id) => !operationalGroupIds.has(id)));
+  });
 
   function toggleGroup(nodeId: string): void {
     const next = new Set(expandedGroups);
@@ -38,7 +39,7 @@
     expandedGroups = next;
   }
 
-  function isVisible(row: PlLineItem): boolean {
+  function isVisible(row: DisplayRow): boolean {
     let group = row.group;
     while (group) {
       if (!expandedGroups.has(group)) return false;
@@ -50,7 +51,7 @@
   const rows = $derived(
     pnlRows
       .filter(isVisible)
-      .map((row) => ({ row, node: getNode(row.nodeId), monthly: getMonthlyPnl(row.nodeId) ?? [] }))
+      .map((row) => ({ row, node: getNode(glStore.tree, row.nodeId), monthly: getNode(glStore.tree, row.nodeId)?.monthlyActual ?? [] }))
       .filter((r) => r.row.kind === 'operational' || r.node !== undefined)
   );
 
@@ -63,11 +64,66 @@
     }))
   );
 
+  // Level-1 children of NPAT in the real GL/FSI hierarchy — see docs/adr/0022.
+  const revenue = $derived(getNode(glStore.tree, 'PNL-0002'));
+  const costOfRevenue = $derived(getNode(glStore.tree, 'PNL-0011'));
+  const grossProfit = $derived(getNode(glStore.tree, 'PNL-0001'));
+  const gaExpenses = $derived(getNode(glStore.tree, 'PNL-0030'));
+  const otherIncomeExpenses = $derived(getNode(glStore.tree, 'PNL-0054'));
+  const secondaryCost = $derived(getNode(glStore.tree, 'PNL-0086'));
+  const taxation = $derived(getNode(glStore.tree, 'PNL-0087'));
+  const npat = $derived(getNode(glStore.tree, 'NPAT'));
+
+  const financialKpis = $derived(
+    revenue && costOfRevenue && grossProfit && npat
+      ? [
+          { id: 'revenue-ytd', label: 'Revenue YTD', value: formatRmAuto(revenue.actual), trend: cumulative(revenue.monthlyActual) },
+          {
+            id: 'cost-of-revenue-ytd',
+            label: 'Cost of Revenue YTD',
+            value: formatRmAuto(Math.abs(costOfRevenue.actual)),
+            trend: cumulative(costOfRevenue.monthlyActual.map(Math.abs)),
+          },
+          { id: 'gross-profit-ytd', label: 'Gross Profit YTD', value: formatRmAuto(grossProfit.actual), trend: cumulative(grossProfit.monthlyActual) },
+          { id: 'npat-ytd', label: 'NPAT YTD', value: formatRmAuto(npat.actual), trend: cumulative(npat.monthlyActual) },
+        ]
+      : []
+  );
+
+  const monthlyPerformanceChart = $derived(
+    revenue && costOfRevenue && gaExpenses
+      ? [
+          { label: 'Revenue', values: revenue.monthlyActual, colorClass: 'stroke-gray-900 dark:stroke-gray-50' },
+          { label: 'Cost of Revenue', values: costOfRevenue.monthlyActual.map(Math.abs), colorClass: 'stroke-red-600 dark:stroke-red-400' },
+          { label: 'OPEX', values: gaExpenses.monthlyActual.map(Math.abs), colorClass: 'stroke-indigo-600 dark:stroke-indigo-400' },
+        ]
+      : []
+  );
+
+  // Bridge steps map 1:1 onto NPAT's real direct children — no curated ref
+  // lists needed, values already carry the right sign (see docs/adr/0023).
+  const profitBridgeSteps = $derived(
+    revenue && costOfRevenue && grossProfit && gaExpenses && otherIncomeExpenses && secondaryCost && taxation && npat
+      ? [
+          { label: 'Revenue', value: revenue.actual, kind: 'total' as const },
+          { label: 'Cost of Revenue', value: costOfRevenue.actual, kind: 'decrease' as const },
+          { label: 'Gross Profit', value: grossProfit.actual, kind: 'total' as const },
+          { label: 'G&A Expenses', value: gaExpenses.actual, kind: 'decrease' as const },
+          { label: 'Other Income & Expenses', value: otherIncomeExpenses.actual, kind: 'decrease' as const },
+          { label: 'Secondary Cost Elements', value: secondaryCost.actual, kind: 'decrease' as const },
+          { label: 'Taxation', value: taxation.actual, kind: 'decrease' as const },
+          { label: 'NPAT', value: npat.actual, kind: 'total' as const },
+        ]
+      : []
+  );
+
   const statementGridCols = 'grid-cols-[minmax(240px,1.3fr)_repeat(12,minmax(64px,1fr))]';
 
-  function statementValue(actual: number, sign: 1 | -1): string {
-    const text = actual.toFixed(1);
-    return sign === -1 && actual !== 0 ? `(${text})` : text;
+  // Values already carry the right sign server-side (see docs/adr/0023) — a
+  // negative number is a subtraction/loss, shown in parens.
+  function statementValue(value: number): string {
+    const text = Math.abs(value).toFixed(1);
+    return value < 0 && value !== 0 ? `(${text})` : text;
   }
 
   function operationalValue(value: number, unit: OperationalUnit | undefined): string {
@@ -92,6 +148,13 @@
 <PageBody>
   <ContextBar />
 
+  {#if glStore.status === 'loading'}
+    <div class="pt-4">Loading…</div>
+  {:else if glStore.status === 'not-yet-modelled'}
+    <div class="pt-4">
+      <NotYetModelled label="No GL data modelled for the selected company/BU yet." />
+    </div>
+  {:else}
   <div class="flex flex-col gap-4 pt-4">
   <div class="grid grid-cols-4 max-[900px]:grid-cols-2 gap-2.5">
     {#each financialKpis as kpi (kpi.id)}
@@ -168,7 +231,7 @@
               transition:slide={{ duration: 150 }}
               class="grid {statementGridCols} items-center py-1.5 text-sm cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 {row.isSubtotal ? 'font-bold bg-indigo-50 dark:bg-indigo-900/30 rounded' : ''}"
             >
-              <span class="flex items-center gap-1.5 {row.indent === 1 ? 'pl-4 text-gray-500 dark:text-gray-400' : ''}">
+              <span class="flex items-center gap-1.5 {indentClass(row.indent)} {row.indent > 0 ? 'text-gray-500 dark:text-gray-400' : ''}">
                 <span
                   class="inline-block w-4 text-base leading-none text-indigo-600 dark:text-indigo-400 transition-transform duration-150 {expandedGroups.has(row.nodeId) ? 'rotate-90' : ''}"
                 >
@@ -177,7 +240,7 @@
                 {row.label}
               </span>
               {#each values as value, i (i)}
-                {@render monthCell(row.nodeId, months[i], statementValue(value, row.sign))}
+                {@render monthCell(row.nodeId, months[i], statementValue(value))}
               {/each}
             </div>
           {:else if row.kind === 'operational'}
@@ -185,7 +248,7 @@
               transition:slide={{ duration: 150 }}
               class="grid {statementGridCols} items-center py-1.5 text-sm text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-400/10"
             >
-              <span class="pl-4 flex items-center gap-1.5">
+              <span class="{indentClass(row.indent)} flex items-center gap-1.5">
                 <span class="text-[9px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-400/40 rounded px-1">Ops</span>
                 {row.label}
               </span>
@@ -198,9 +261,9 @@
               transition:slide={{ duration: 150 }}
               class="grid {statementGridCols} items-center py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 {row.isSubtotal ? 'font-bold bg-indigo-50 dark:bg-indigo-900/30 rounded' : ''} {row.isFinal ? 'bg-indigo-600 dark:bg-indigo-500 text-white rounded pl-1.5' : ''}"
             >
-              <span class={row.indent === 1 ? 'pl-4 text-gray-500 dark:text-gray-400' : undefined}>{row.label}</span>
+              <span class={row.indent > 0 ? `${indentClass(row.indent)} text-gray-500 dark:text-gray-400` : undefined}>{row.label}</span>
               {#each values as value, i (i)}
-                {@render monthCell(row.nodeId, months[i], statementValue(value, row.sign))}
+                {@render monthCell(row.nodeId, months[i], statementValue(value))}
               {/each}
             </div>
           {/if}
@@ -213,4 +276,5 @@
     </div>
   </div>
   </div>
+  {/if}
 </PageBody>

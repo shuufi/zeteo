@@ -1,0 +1,1173 @@
+Code,Description,Parent Code,Node Type,Hierarchy Level,P&L Path
+NPAT,Net Profit After Tax (NPAT),,Reporting Root,0,NPAT
+PNL-0001,Gross Profit,NPAT,Reporting Node,1,NPAT > Gross Profit
+PNL-0002,Revenue,PNL-0001,Reporting Node,2,NPAT > Gross Profit > Revenue
+PNL-0003,Operating Lease - Charter Income,PNL-0002,Reporting Node,3,NPAT > Gross Profit > Revenue > Operating Lease - Charter Income
+4010100100,Revenue-Time Charter,PNL-0003,Posting GL Account,4,NPAT > Gross Profit > Revenue > Operating Lease - Charter Income
+4010100200,Revenue-Amortization of Deferred Income,PNL-0003,Posting GL Account,4,NPAT > Gross Profit > Revenue > Operating Lease - Charter Income
+4010100300,Revenue-Bareboat-Charter,PNL-0003,Posting GL Account,4,NPAT > Gross Profit > Revenue > Operating Lease - Charter Income
+4010100400,Revenue-Capex Hire,PNL-0003,Posting GL Account,4,NPAT > Gross Profit > Revenue > Operating Lease - Charter Income
+4010100500,Revenue-OPEX Hire,PNL-0003,Posting GL Account,4,NPAT > Gross Profit > Revenue > Operating Lease - Charter Income
+4010100600,Revenue-Spot charter,PNL-0003,Posting GL Account,4,NPAT > Gross Profit > Revenue > Operating Lease - Charter Income
+4010100700,Revenue-Shipping Interco,PNL-0003,Posting GL Account,4,NPAT > Gross Profit > Revenue > Operating Lease - Charter Income
+4010100800,Revenue-Non Shipping Interco,PNL-0003,Posting GL Account,4,NPAT > Gross Profit > Revenue > Operating Lease - Charter Income
+PNL-0004,Finance Lease,PNL-0002,Reporting Node,3,NPAT > Gross Profit > Revenue > Finance Lease
+4020100100,Finance Income Lease Receivables,PNL-0004,Posting GL Account,4,NPAT > Gross Profit > Revenue > Finance Lease
+4020100200,Interest Revenue Ship,PNL-0004,Posting GL Account,4,NPAT > Gross Profit > Revenue > Finance Lease
+4020100300,Interest Revenue Offshore Floating Asset,PNL-0004,Posting GL Account,4,NPAT > Gross Profit > Revenue > Finance Lease
+4020100400,Interest Revenue Workboat,PNL-0004,Posting GL Account,4,NPAT > Gross Profit > Revenue > Finance Lease
+4020100800,Maintenance/Service Fee,PNL-0004,Posting GL Account,4,NPAT > Gross Profit > Revenue > Finance Lease
+PNL-0005,Voyage and Lightering,PNL-0002,Reporting Node,3,NPAT > Gross Profit > Revenue > Voyage and Lightering
+4030100100,Revenue-Lightering,PNL-0005,Posting GL Account,4,NPAT > Gross Profit > Revenue > Voyage and Lightering
+4030100200,Revenue-Lightering-Workboat Charter Out,PNL-0005,Posting GL Account,4,NPAT > Gross Profit > Revenue > Voyage and Lightering
+4030100300,Revenue-Freight,PNL-0005,Posting GL Account,4,NPAT > Gross Profit > Revenue > Voyage and Lightering
+4030100400,Revenue-Freight Bunker Adjustment,PNL-0005,Posting GL Account,4,NPAT > Gross Profit > Revenue > Voyage and Lightering
+4030100500,Revenue-Voyage Charter,PNL-0005,Posting GL Account,4,NPAT > Gross Profit > Revenue > Voyage and Lightering
+4030100600,Revenue-Overseas-Related Party Freight Rev.,PNL-0005,Posting GL Account,4,NPAT > Gross Profit > Revenue > Voyage and Lightering
+4030100700,Revenue-Local-Interco-Lightering Fee Income,PNL-0005,Posting GL Account,4,NPAT > Gross Profit > Revenue > Voyage and Lightering
+PNL-0006,Other Shipping Revenue,PNL-0002,Reporting Node,3,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040100100,Revenue-O&M Reimbursables,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040100200,Revenue-Other Claims,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040100300,Revenue-Demurrage,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040100400,Revenue-Time Rates,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040100500,Revenue-O&M,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040100600,Revenue-Supply Vessel DCR,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040100700,Revenue-O&M Fixed Fee,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040100800,Revenue-O&M Bonus & Assessment,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040100900,Revenue-O&M Catering,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040101000,Revenue-Cancellation Fee,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040101100,Revenue-Overseas-Cargo Heating,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040101200,Revenue-O&M JV Commercial Management Fees,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040101300,Revenue-O&M Mooring Master,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040101400,Revenue-Overseas-Other Shipping Revenue,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040101500,Revenue-Overseas-Deviation,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040101600,Revenue-Overseas-OPA Differential/Cancellation,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040101700,Revenue-Overseas-Shifting,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040101800,Revenue-Overseas-Related Party War Risk,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+4040101900,Revenue - Overseas - Misc. Revenue,PNL-0006,Posting GL Account,4,NPAT > Gross Profit > Revenue > Other Shipping Revenue
+PNL-0007,Construction Revenue,PNL-0002,Reporting Node,3,NPAT > Gross Profit > Revenue > Construction Revenue
+4050100100,Revenue-Vessel Conversion,PNL-0007,Posting GL Account,4,NPAT > Gross Profit > Revenue > Construction Revenue
+4050100200,Revenue-MMHE Heavy Engineering & Construction,PNL-0007,Posting GL Account,4,NPAT > Gross Profit > Revenue > Construction Revenue
+4050100300,Revenue-MMHE-Inter-Division Work,PNL-0007,Posting GL Account,4,NPAT > Gross Profit > Revenue > Construction Revenue
+4050100400,Revenue-MMHE-Inter-Division Work(Recovery),PNL-0007,Posting GL Account,4,NPAT > Gross Profit > Revenue > Construction Revenue
+4050100500,Revenue-MMHE Marine Conversion and Repair,PNL-0007,Posting GL Account,4,NPAT > Gross Profit > Revenue > Construction Revenue
+PNL-0008,Fleet Management Revenue,PNL-0002,Reporting Node,3,NPAT > Gross Profit > Revenue > Fleet Management Revenue
+4060100100,Revenue-Ship Management Services,PNL-0008,Posting GL Account,4,NPAT > Gross Profit > Revenue > Fleet Management Revenue
+4060100200,Revenue-Manning Fees,PNL-0008,Posting GL Account,4,NPAT > Gross Profit > Revenue > Fleet Management Revenue
+4060100300,Revenue-Comissions,PNL-0008,Posting GL Account,4,NPAT > Gross Profit > Revenue > Fleet Management Revenue
+4060100400,Revenue-Reimbursables,PNL-0008,Posting GL Account,4,NPAT > Gross Profit > Revenue > Fleet Management Revenue
+4060100500,Revenue-Project Management Fees,PNL-0008,Posting GL Account,4,NPAT > Gross Profit > Revenue > Fleet Management Revenue
+4060100600,Revenue-Overseas-Time Rate,PNL-0008,Posting GL Account,4,NPAT > Gross Profit > Revenue > Fleet Management Revenue
+4060100700,Revenue-Overseas-Interco-Other Shipping Revenue,PNL-0008,Posting GL Account,4,NPAT > Gross Profit > Revenue > Fleet Management Revenue
+4060100800,Revenue-Overseas-MGMT Svcs-Others(Inter,PNL-0008,Posting GL Account,4,NPAT > Gross Profit > Revenue > Fleet Management Revenue
+4060100900,Revenue-Overseas-Interco-Time Charter,PNL-0008,Posting GL Account,4,NPAT > Gross Profit > Revenue > Fleet Management Revenue
+PNL-0009,Management Of Ports & Terminals,PNL-0002,Reporting Node,3,NPAT > Gross Profit > Revenue > Management Of Ports & Terminals
+4070100100,Revenue-Management of Ports and Terminals,PNL-0009,Posting GL Account,4,NPAT > Gross Profit > Revenue > Management Of Ports & Terminals
+4070100200,Revenue-Maritime Services & Consultancy,PNL-0009,Posting GL Account,4,NPAT > Gross Profit > Revenue > Management Of Ports & Terminals
+4070100300,Revenue-Ship Audit & Ship Vetting,PNL-0009,Posting GL Account,4,NPAT > Gross Profit > Revenue > Management Of Ports & Terminals
+4070100400,International Revenue-Interco-Rendering of Svc,PNL-0009,Posting GL Account,4,NPAT > Gross Profit > Revenue > Management Of Ports & Terminals
+4070100500,Revenue-VOC-Addressee Comissions Paid,PNL-0002,Posting GL Account,3,NPAT > Gross Profit > Revenue
+PNL-0010,Maritime Education,PNL-0002,Reporting Node,3,NPAT > Gross Profit > Revenue > Maritime Education
+4080100100,Revenue-Tuition Fees,PNL-0010,Posting GL Account,4,NPAT > Gross Profit > Revenue > Maritime Education
+4080100200,Revenue-Processing & Registration,PNL-0010,Posting GL Account,4,NPAT > Gross Profit > Revenue > Maritime Education
+4080100300,Revenue-Food Income,PNL-0010,Posting GL Account,4,NPAT > Gross Profit > Revenue > Maritime Education
+4080100400,Revenue-Rental-Residential Premises,PNL-0010,Posting GL Account,4,NPAT > Gross Profit > Revenue > Maritime Education
+4080100500,Revenue-Hostel Fees,PNL-0010,Posting GL Account,4,NPAT > Gross Profit > Revenue > Maritime Education
+PNL-0011,Cost of Revenue,PNL-0001,Reporting Node,2,NPAT > Gross Profit > Cost of Revenue
+PNL-0012,Commission,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Commission
+5010100100,COS-Brokerage and Commission,PNL-0012,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Commission
+PNL-0013,Freight Tax,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Freight Tax
+5020100100,COS-Freight Tax,PNL-0013,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Freight Tax
+PNL-0014,Insurance,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Insurance
+5030100100,COS-Insurance-P & I Insurance,PNL-0014,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Insurance
+5030100200,COS-Insurance-Loss of Hire,PNL-0014,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Insurance
+5030100300,COS-Insurance-Hull and Machinery,PNL-0014,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Insurance
+5030100400,COS-Insurance-Freight Demmurage & Defence,PNL-0014,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Insurance
+5030100500,COS-Insurance-General Liability,PNL-0014,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Insurance
+5030100600,COS-Insurances-Marine Jull/Protect &Indemnity&Avia,PNL-0014,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Insurance
+5030100700,COS-Insurances-War Risk,PNL-0014,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Insurance
+5030100800,COS-Insurances-Marine Open Cover Insurance,PNL-0014,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Insurance
+5030101000,COS-R&M-Port & Terminal,PNL-0014,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Insurance
+PNL-0015,Port & Canal,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Port & Canal
+5040100100,COS-Port Charges,PNL-0015,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Port & Canal
+5040100200,COS-Canal Dues,PNL-0015,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Port & Canal
+5040100300,VOC-Port-Pilotage,PNL-0015,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Port & Canal
+5040100400,VOC-Port-Other,PNL-0015,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Port & Canal
+5040100500,COS - Marine Other Transport Charges - Demurrage,PNL-0011,Posting GL Account,3,NPAT > Gross Profit > Cost of Revenue
+PNL-0016,Other Voyage Cost,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Other Voyage Cost
+5050100100,COS-Lighterage Cost,PNL-0016,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Voyage Cost
+PNL-0017,Other Ship Operating Cost,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060100100,COS-Ship Management Fees,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060100200,COS-Freight/Handling Charges,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060100300,COS-Vessel-Flag Administration,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060100400,COS-Manning Office Charges,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060100500,COS-Vessel-Agency Fees,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060100600,COS-Victuals,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060100700,COS-Bonded Stores Utilised,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060100800,COS-Vessel-Launch/Barge Cost,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060100900,COS-Vessel-Warehouse Storage,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060101000,COS-Vessel-Logistics,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060101100,COS-Vessel-Others,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060101200,COS-Vessel-Fresh Water,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060101300,COS-Vessel-Garbage/Slop Disposal,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060101400,COS-Vessel-Customs Clearance,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060101500,COS-Vessel-Courier From/To Vessel,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060101600,COS-Deck Stores-Medical Supplies,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060101700,COS-Vessel-P&I,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060101800,COS-Vessel-Satellite TV Subscriptions,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060101900,COS-Main Engine Spares,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060102000,COS-Aux Engine Spares,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060102100,COS-IOPP/LSA/FFA Spares,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060102200,COS-Pumps Spares,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060102300,COS-Security/Safety Services,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060102400,COS-Compressed Air -Compressors,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060102500,COS-Boiler Spares,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060102600,COS-Lubricants Major Grade,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060102700,COS-Lubricants Minor Grade,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060102800,COS-Other  Lubricants And Greases,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060102900,COS-Other Charges-Boat / Etc,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060103000,COS-Deck Stores-Radio Navigation,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060103100,COS-Deck Stores-Electrical And Eng Store,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060103200,COS-Deck Stores-STW Stores,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060103300,COS-Deck Store-Others,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060103400,COS-Deck Stores-Marine Paints & Thinners,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060103500,COS-Deck & Cargo Equip-General Consumables,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060103600,COS-Deck Stores-Chemical,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060103700,COS-Deck Machinery And Steering Spares,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060103800,COS-Ballast -Consumables,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060103900,COS-I.G. System -Consumables,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060104000,COS-Deck Stores-Mooring Systems,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060104100,COS-Navigation Equipment Spares,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060104200,COS-Purifier Spares,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060104300,COS-DP And Bow Load Systems,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060104400,COS-Others-Miscellaneous Spares,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060104500,COS-FO And LO Testing And Analysis,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060104600,COS-Vessel-Statutory Audit/Survey,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060104700,COS-Vessel-Emergency Response,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060104800,COS-Vessel-Occasional Audit/Survey,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060104900,COS-Vessel-Block Fees,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060105000,COS-Vessel-Vetting and OM Surveys,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060105100,COS-Vessel-Other Audit/Surveys,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060105200,COS-Vessel-Redelivery Costs,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060105300,COS-Charterers Exp,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060105400,COS-Technical Library-Peridocals & Publications,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060105500,"COS-Printing,Stationery&Office Consumables",PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060105600,COS-Vessel-Audit & Training,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060105700,COS-Vessel-Trainees and OJT Onboard,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060105800,COS-Cadet Sponsorship,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060105900,COS-Training-Study Grant,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+5060109900,COS-Other Ship Operating Cost,PNL-0017,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Ship Operating Cost
+PNL-0018,Construction Cost,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Construction Cost
+5070100100,COS-MMHE Marine Conversion and Repair,PNL-0018,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Construction Cost
+5070100200,COS-MMHE Heavy Engineering Construction Costs,PNL-0018,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Construction Cost
+5070100300,COS-Offshore Vessel Conversion Cost,PNL-0018,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Construction Cost
+5070100400,COS-GAS Vessel Construction Cost,PNL-0018,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Construction Cost
+PNL-0019,Charter Hire/ Rental,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Charter Hire/ Rental
+5080100100,COS-Rental-Warehouse & Storage,PNL-0019,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Charter Hire/ Rental
+5080100200,COS-Rental-Office Equipments,PNL-0019,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Charter Hire/ Rental
+5080100300,COS-Rental-Plant & Equipment,PNL-0019,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Charter Hire/ Rental
+5080100400,COS-Rental-Motor Vehicle,PNL-0019,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Charter Hire/ Rental
+5080100500,COS-Rental-Building & Land,PNL-0019,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Charter Hire/ Rental
+5080100600,COS-Rental-Charter Hire-Tugboat&Barges,PNL-0019,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Charter Hire/ Rental
+5080100700,COS-Rental-Charter Hire-Ship,PNL-0019,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Charter Hire/ Rental
+PNL-0020,Cos Depreciation & Impairment,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090100100,Depreciation-Plant & Equipment,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090100200,Depreciation-Ship,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090100300,Depreciation-Offshore floating asset,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090100400,Depreciation-Workboat & Tugboat,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090100500,COS-Fixed Assets Expensed-Off-Consumable Assets,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090100600,COS-Amortization-Software,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090100700,"COS-Depreciation-Office & H/hold Equip,Furniture",PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090200100,COS-Depreciation-ROU-Ship,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090200200,COS-Depreciation-ROU-Offshore floating asset,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090200300,COS-Depreciation-ROU-Workboat,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090200400,COS-Depreciation-ROU-Plant & Machinery,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090300100,COS-Impairment-Ship,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090300200,COS-Impairment-Offshore Floating Asset,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090300300,COS-Impairment-Workboat & Tugboat,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090300400,COS-Impairment-Plant & Equipment,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090300500,COS-Impairment-ROU-Ship,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090300600,COS-Impairment-ROU-Offshore floating asset,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090300700,COS-Impairment-ROU-Workboat,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090300800,COS-Impairment-ROU-Plant & Machinery,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090100800,COS - Depreciation-Buildings,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090100900,"COS - Depreciation-Office & H/hold Equip,Fur & Fit",PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090101000,COS - Depreciation-Land Transportation,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090101100,COS - Depreciation-Computer Hardware,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090101200,COS - Depreciation-Other Fixed Assets,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090101300,COS - Amortization-Software,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090101400,COS - Amortization & Depn-Leased Property/Assets,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090200500,COS - Depreciation-Buildings-ROU-Third party,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5100215500,COS - Corporate Subscription & Membership,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+5090101500,COS  Amort. & Depn- Intangible  Priv.Agrment,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
+PNL-0021,Manpower Cost,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100100100,COS-Crew costs-Salary & Wages,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100100200,COS-Crew costs-Salary & Wages-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100100300,COS-Crew costs-Overtime,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100100400,COS-Crew costs-Leave Pay,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100100500,COS-Crew costs-Bonus,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100100600,COS-Crew costs-Allowance,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100100700,COS-Crew costs-Allowance-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100100800,COS-Crew costs-EPF,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100100900,COS-Crew costs-CPF,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100101000,COS-Crew costs-SOCSO,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100101100,COS-Crew costs-Other Statutory Contribution,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100101200,COS-Crew costs-Medical-Sickness/Injury,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100101300,COS-Crew costs-Insurance,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100101400,COS-Crew Recruitment,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100101500,COS-Crew Recruitment-Medical Check Up,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100101600,COS-Crew Training-Course-Fees & Charges,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100101700,COS-Crew Training-Course-Sea (CBT),PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100101800,COS-Crew Training-Course-Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100101900,COS-Crew Training-Shore Attach/Succession Planning,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100102000,COS-Crew Training-Higher Sponsorship,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100102100,COS-Crew Training-Airfare,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100102200,COS-Crew Training-Transportation,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100102300,COS-Crew Training-Accommodation,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100102400,COS-Crew Training-Project Capability,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100102500,COS-Crew costs-Others,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100102600,COS-Crew costs-Union Fee,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100102700,COS-Crew costs-HRDF,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100102800,COS-Crew costs-Overtime-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100102900,COS-Crew costs-Leave Pay-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100103000,COS-Crew costs-Bonus-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100103100,COS-Crew costs-EPF-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100103200,COS-Crew costs-CPF-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100103300,COS-Crew costs-Awards,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100103400,COS-Crew Reloc-Trvl Fares & Exp-Transferred,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100103500,COS-Crew Reloc-Trvl Fares & Exp-Air Travel,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100103600,COS-Crew Reloc-Trvl Fares & Exp-Accommodation,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100103700,COS-Crew Reloc-Trvl Fares & Exp-Pre MedicalCheckup,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100103800,COS-Crew Reloc-Trvl Fares & Exp-Other related cost,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100103900,COS-Crew Reloc-Others-Transferred,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100200100,"COS-Salary/Wages-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100200200,COS-Salary/Wages-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100200300,COS-Salary/Wages-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100200400,COS-Salary/Wages-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100200500,COS-Salary/Wages-Contract Staff-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100200600,COS-Salary/Wages-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100200700,COS-Salary/Wages-Contract Staff-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100200800,COS-Director Fees - Attendance Allowances-BOD,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100200900,"COS-Non-Exec Dir Fees&Allow-Dir,Snr Mgt &Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100201000,"COS-Bonus-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100201100,COS-Bonus-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100201200,COS-Bonus-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100201300,COS-Bonus-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100201400,COS-Bonus-Contract Staff-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100201500,COS-Bonus-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100201600,COS-Bonus-Contract Staff-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100201700,"COS-Overtime-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100201800,COS-Overtime-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100201900,COS-Overtime-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100202000,COS-Overtime-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100202100,COS-Overtime-Contract Staff-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100202200,COS-Overtime-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100202300,COS-Overtime-Contract Staff-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100202400,"COS-House All & Sub-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100202500,COS-House All & Sub-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100202600,COS-House All & Sub-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100202700,"COS-OCOLA-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100202800,COS-OCOLA-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100202900,COS-OCOLA-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100203000,COS-All-in-Compensation-Interns & Apprentices,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100203100,COS-Co Ctrbn to KWSP-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100203200,COS-Co Ctrbn to KWSP-Contract Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100203300,COS-Co Ctrbn to KWSP-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100203400,COS-Co Ctrbn to KWSP-Contract Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100203500,"COS-Co Ctrbn to PRBF-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100203600,COS-Co Ctrbn to PRBF-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100203700,COS-Co Ctrbn to PRBF-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100203800,COS-Co Ctrbn to PRBF-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100203900,COS-Co Ctrbn to PRBF-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100204000,COS-Co Ctrbn to PRBF-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100204100,COS-Co Ctrbn to PRBF-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100204200,"COS-Co Ctrbn to KWSP-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100204300,COS-Co Ctrbn to KWSP-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100204400,COS-Co Ctrbn to KWSP-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100204500,"COS-Co Ctrbn to SOCSO-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100204600,COS-Co Ctrbn to SOCSO-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100204700,COS-Co Ctrbn to SOCSO-EIS Permanent Exec,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100204800,COS-Co Ctrbn to SOCSO-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100204900,COS-Co Ctrbn to SOCSO-Contract Staff-Expat-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100205000,COS-Co Ctrbn to SOCSO-Contrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100205100,COS-Co Ctrbn to SOCSO-Contract Staff-Local-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100205200,COS-Co Ctrbn to SOCSO-Contrct Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100205300,"COS-Co Ctrbn to EIS-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100205400,COS-Co Ctrbn to EIS-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100205500,COS-Co Ctrbn to EIS-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100205600,COS-Co Ctrbn to EIS-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100205700,COS-Co Ctrbn to EIS-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100205800,COS-Co Ctrbn to EIS-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100205900,COS-Co Ctrbn to EIS-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100206000,"COS-Co Ctrbn to HRM Dev Fund-Dir,Snr Mgt&Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100206100,COS-Co Ctrbn to HRM Devt Fund-Permanent Non-Exec,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100206200,COS-Co Ctrbn to HRM Devt Fund-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100206300,"COS-Shift Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100206400,COS-Shift Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100206500,COS-Shift Allowance-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100206600,COS-Shift Allowance-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100206700,COS-Shift Allowance-Contract Staff-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100206800,COS-Shift Allowance-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100206900,COS-Shift Allowance-Contract Staff-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100207000,"COS-Acting Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100207100,COS-Acting Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100207200,COS-Acting Allowance-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100207300,COS-Acting Allowance-Contract Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100207400,COS-Acting Allowance-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100207500,COS-Acting Allowance-Contract Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100207600,"COS-Covering Allowance-Dir,Snr Mgt& Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100207700,COS-Covering Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100207800,COS-Covering Allowance-Contrct Staff-Expat-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100207900,COS-Covering Allowance-Cntrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100208000,COS-Covering Allowance-Contrct Staff-Local-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100208100,COS-Covering Allowance-Cntrct Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100208200,"COS-Performance Allow-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100208300,COS-Performance Allow-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100208400,COS-Performance Allow-Contract Staff-Expat-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100208500,COS-Performance Allow-Contrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100208600,COS-Performance Allow-Contract Staff-Local-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100208700,COS-Performance Allow-Contrct Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100208800,"COS-Hardship Allowance-Dir,Snr Mgt &Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100208900,COS-Hardship Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100209000,COS-Hardship Allowance-Contrct Staff-Expat-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100209100,COS-Hardship Allowance-Cntrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100209200,COS-Hardship Allowance-Cntrct Staff-Local-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100209300,COS-Hardship Allowance-Cntrct Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100209400,"COS-Driver Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100209500,"COS-Laundry Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100209600,COS-Laundry Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100209700,COS-Laundry Allowance-Contract Staff-Expat-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100209800,COS-Laundry Allowance-Contrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100209900,COS-Laundry Allowance-Contract Staff-Local-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100210000,COS-Laundry Allowance-Contrct Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100210100,"COS-Meal Allowance-OT-Dir,Snr Mgt & Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100210200,COS-Meal Allowance-Overtime-Permanent Non-Exec.,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100210300,COS-Meal Allowance-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100210400,COS-Meal Allowance-Contract Staff-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100210500,COS-Meal Allowance-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100210600,COS-Meal Allowance-Contract Staff-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100210700,"COS-Interim Allowance-Dir,Snr Mgt & Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100210800,COS-Interim Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100210900,COS-Interim Allowance-Contract Staff-Expat-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100211000,COS-Interim Allowance-Contrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100211100,COS-Interim Allowance-Contract Staff-Local-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100211200,COS-Interim Allowance-Contrct Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100211300,"COS-Charge Allowance-Dir,Snr Mgt & Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100211400,COS-Charge Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100211500,COS-Charge Allowance-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100211600,COS-Charge Allowance-Contrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100211700,COS-Charge Allowance-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100211800,COS-Charge Allowance-Contract Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100211900,"COS-Other Allowances-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100212000,COS-Other Allowances-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100212100,COS-Other Allowance-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100212200,COS-Other Allowance-Contract Staff-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100212300,COS-Other Allowance-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100212400,COS-Other Allowance-Contract Staff-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100212500,COS-Travelling/Accomodation - Courses - Local,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100212600,COS-Travelling/Accomodation - Courses - Overseas,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100212700,COS-Other Training Expenses -Courses - Local,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100212800,COS-Other Training Expenses -Courses - Overseas,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100212900,Direct Labour Cost,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100213000,Subcontractor-Labour,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100213100,COS-Children Tuition Fees - Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100213200,COS- Staff Medical Exp-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100213300,COS-Staff Med Exp-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100213400,COS-Staff Med Exp-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100213500,COS-Staff Med Exp-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100213600,COS-Dental Exp-Exec & Above,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100213700,COS- Staff Dependent Med Exp-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100213800,COS-Staff Med Exp-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100213900,COS-Staff Med Exp-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100214000,"COS-Children Tuition Fees-Dir,Snr Mgt & Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100214100,COS-Gratuity-Cntrt Staff Gratuity-Cntrt Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100214200,"COS-Gratuity-Dir, Snr Mgt & Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100214300,COS-Separation Compensn-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100214400,"COS-Separation Compensn-Dir,Snr Mgt & Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100214500,COS-Staff Recruiting-Overseas Travel Fares & Exp,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100214600,COS-Staff Recruiting-Local Travel Fares & Expenses,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100214700,COS-Clubs & Corporate Credit Card Fees & Subs,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100214800,COS-Staff Subscriptions to Professional Bodies,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100214900,COS-Staff Medical - Onshore - Executive,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100215000,COS-Staff Medical - Onshore -Non-Executive,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100215100,COS-Staff Dental - Onshore - Executive,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100215200,COS-Staff Dental - Onshore - Non-Executive,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100215300,COS-Staff Subscriptions to Professional Bodies,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+5100215400,Dependent Med Exp-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+PNL-0022,Materials And Supplies,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110100100,COS-Engineering Equipments & Materials,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110100200,COS-Safety Equipment,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110100300,COS-Spares,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110100400,COS-Bunkers,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110100500,COS-Other Fuels,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110100600,COS-Raw Materials Consumption,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110100700,COS-Lubricants,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110100800,COS-Chemicals,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110100900,COS-Other Fuels & Chemical,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110101000,COS-Consumable Stores,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110101100,COS-Personal Protection Equipment,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110101200,COS-Turret & Mooring,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110101300,COS-Workboat Supplies,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110101400,COS-Project/Capital Material,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110101500,COS-Bonded Stores(NonPerisha),PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110101600,"COS-Books
+Magazines/Periodicals/Newspapers/Books",PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110101700,COS - Uniform & PPE,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110101800,COS-Recreational/Sports Consumables,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+5110101900,COS-Medical Supplies,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
+PNL-0023,Professional And Purchased Services,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120100100,COS-Environmental Services,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120100200,COS Eng Serv-Architectural & Carpentry,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120100300,COS Eng Serv-Blasting & Painting,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120100400,COS Eng Serv-Boiler &Furnace Cnstrctin & Mntn Srvc,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120100500,COS Eng Serv-Calculation / Analysis,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120100600,COS Eng Serv-Cargo Containment System,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120100700,"COS Eng Serv-Civil, Structural & Bldng",PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120100800,COS Eng Serv-Dist.&Cond.Syst.Equip.Mntn&Repair Srv,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120100900,COS Eng Serv-Electrical & Instrument,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120101000,"COS Eng Serv-Eng,Research&Tech.Based Srv-Lvl1",PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120101100,COS Eng Serv-Heating &Cooling &Air Condition-HVAC,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120101200,COS Eng Serv-Heavy Lifting,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120101300,"COS Eng Serv-Inspection, Testing & Certification",PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120101400,COS Eng Serv-Mechanical,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120101500,COS Eng Srv-Motivo&Elctrc Pwr Gen.Eqpt.Mntn&Repair,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120101600,COS Eng Serv-Piping,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120101700,COS Eng Serv-Pre-heating/ Post Weld Heat Treatment,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120101800,COS Eng Serv-Scaffolding,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120101900,COS Eng Serv-Structural,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120102000,COS Eng Serv-Mining and oil and gas services,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120102100,COS Eng Serv-Bldng&Facility Cnstrctn & Mntnc Serv.,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120102200,COS Eng Serv-Environmental Services,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120102300,COS Eng Serv-General,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120102400,COS General Serv - Industrial Cleaning,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120200100,COS-Shipping & Maritime Services,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120300100,COS-T&I Serv-T&Iportation-T&I Serv-3rd Party Srvc.,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120300200,COS-T&I Serv-Bunkering Service,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120300300,COS-T&I Serv-Cargo Transportation,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120300400,"COS-T&I Serv-Classification, Cert and Calibration",PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120300500,"COS-T&I Serv-Demolition, Disposal & Removal",PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120300600,COS-T&I Serv-Vessel Base Waste Disposal,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120300700,"COS-T&I Srv-Demolitn,Dispose,Remove&DecomOfFloater",PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120300800,COS-T&I Serv-Floating & Mobile Offshore Facilities,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120300900,COS-T&I Serv-Logistic Service,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120301000,COS-T&I Serv-Hook-Trans Srv-Up & Commissioning-HUC,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120301100,COS-T&I Serv-Land Transportation & Support Service,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120301200,COS-T&I Serv-Main Trans Vessel,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120301300,COS-T&I Serv-Marine Transportation& Support Srvcs,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120301400,COS-T&I Serv-Marine Warranty Surveyor,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120301500,COS-T&I Serv-Transportation& Installtn of Floaters,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120301600,COS-T&I Serv-Trnsprt&Installatn of Offs.Facilities,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120400100,COS-Catering Svcs-Visitors Only,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120400200,COS-Catering Svcs-Client's Personnel (Reg. Crew),PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120400300,COS-Contractor Services,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120400400,COS-Diving Expenses,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120400500,COS-Security/Safety Services,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120400600,COS-Agency Fees,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120400700,COS-Surveys/Audit/Inspection,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120400800,COS-Other Purchased Serv-Shunting Charges,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120401000,COS-Laundry Services,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120409900,COS-Other Professional Fees,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120400900,COS - Immigration/Visa Expenses,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120401100,COS - IT Hardware Maint Fees & Charges,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120401200,COS - IT Software Maint Fees & Charges,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120401300,COS - Other Purchased Services-Miscellaneous Exp,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120401400,COS - Clothing Allowances,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+5120401500,COS - Insurances-Other Coverages,PNL-0023,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Professional And Purchased Services
+PNL-0024,Repairs And Maintenance,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130100100,COS-R&M-Survey Fees,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130100200,COS-R&M-Ships & Floating Assets,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130100300,COS-R&M-Dry Docking for Finance Lease Assets,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130100400,COS-R&M-Refurbishment,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130100500,COS-R&M-Warehouse & Storage,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130100600,COS-R&M-Office,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130100700,COS-R&M-Motor Vehicles,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130100800,COS-R&M-Tugboat&Barges,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130100900,COS-R&M-Office Equipment,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130101000,COS-R&m-Ports & Terminal,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130101100,COS-R&M-Vessels-Main Engine,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130101200,COS-R&M-Vessels-Aux Engine,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130101300,COS-R&M-Vessels-Boiler,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130101400,COS-R&M-Vessels-Cargo/Ballast/IG,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130101500,COS-R&M-Vessels-IOPP/LSA/FFA,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130101600,COS-R&M-Vessels-Navigation And Comms Eq,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130101700,COS-R&M-Vessels-Deck Machinery And Steering,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130101800,COS-R&M-Vessels-Hull Structure And Riding Crews,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130101900,COS-R&M-Vessels-Miscellaneous,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130102000,COS-R&M-Vessels-DP And Bow Load Systems,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130102100,COS-R&M-Vessels-Instrumentation/ Automation,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+5130102200,G&A-R&M-Plant & Equipment,PNL-0024,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Repairs And Maintenance
+PNL-0025,Cos Of Freight Forwarding,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Cos Of Freight Forwarding
+5140100100,COS-Freight Forwarding,PNL-0025,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Of Freight Forwarding
+5140100200,COS-Freight Forwarding-Custom Duties & Taxes,PNL-0025,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Of Freight Forwarding
+PNL-0026,Business Travel,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150100100,COS-Business Travel - Local Travel Fares / Exp,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150100200,COS-Business Travel-Local Hotel Allowance/Expenses,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150100300,COS-Business Travel -Local Meal Allowance/Expenses,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150100400,COS-Business Travel-Local Other Allowances/Expense,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150100500,COS-Business Travel - Local Lodging,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150100600,COS-Business Travel - Overseas Travel Fares / Exp,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150100700,COS-Business Travel-Overseas Hotel Allowance/Expen,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150100800,COS-Business Travel - Overseas Meal Allowance/Exp.,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150100900,COS-Business Travel - Overseas Oth Allowances/Exp,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150101000,COS-Business Travel - Overseas Lodging Allowance,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150101100,COS-Travelling - Airfare,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150101200,COS-Travelling -Transportation,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150101300,COS-Travelling - Accommodation,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150101400,COS-Travelling- Travel Document/VISA/Passport/Work,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+5150101500,COS-Meeting Expenses - Staff,PNL-0026,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Business Travel
+PNL-0027,Utilities,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Utilities
+5160100100,COS-Utilities-Water,PNL-0027,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Utilities
+5160100200,COS-Utilities-Electricity,PNL-0027,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Utilities
+5160100300,COS-Utilities-Others,PNL-0027,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Utilities
+PNL-0028,Tax,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Tax
+5170100100,COS-Stamp Duties,PNL-0028,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Tax
+5170100200,COS-Other Taxes-Withholding Tax,PNL-0028,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Tax
+5170100300,COS-Tonnage Tax,PNL-0028,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Tax
+5170100400,Property Taxes  Workboat & Lightering Equipment,PNL-0028,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Tax
+PNL-0029,Other Cos,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180100100,Facilities General,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180100200,VOC-Owners Expenses,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180100300,VOC-Charterers Expenses,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180100400,VOC-Rebillable Cargo Dues,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180100500,COS-Other O&M Expenses,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180100600,COS-Meeting Expenses - Client,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180100700,COS-Special Events,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180100800,COS-Catering Services,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180100900,COS-Telecommunications,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180101000,COS-Technical Library-Peridocals & Publications,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180101100,COS-Entertainment,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180101200,"COS-Printing,Stationery&Office Consumables",PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180101300,COS-Other Fin Exp-Bank Charges,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180101400,COS-Realised Forex G/(L)-Payable,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180101500,COS-Support Vessels,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180101600,COS-License,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180101700,COS-Expenses Reimbursement,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180101800,COS-Charge-in-Human Resources,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180101900,COS-Charge-in-Security,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180102000,COS-FPSO Hotel- Galley & Messroom Equipment,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180102100,COS-FPSO Hotel- Cold Rooms (Freezer&Chillers),PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180102200,COS-FPSO Hotel- Laundry Appliance,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180102300,COS-COVID19 Testing,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180102400,COS-COVID19 Vaccination,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180102500,COS-COVID19 Quarantine,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180102600,COS-Rescue Squad,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180102700,COS-Safety Course for Contractor,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180102800,COS - Fixed Assets Expensed-Off-Consumable Assets,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180102900,COS-Other Penalties,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180109900,COS-Other Expenses-Miscellaneous Expenses,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180103000,COS- EUA Expense,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180103100,COS- Sales Tax,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180103200,COS-Fuel EU,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180103300,Marine Transport - Vessel - IFRS16,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180103400,VOC-Additional War Risk Premium,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+5180103500,VOC - Addressee Commissions Paid,PNL-0029,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Other Cos
+PNL-0030,G&A Expenses,NPAT,Reporting Node,1,NPAT > G&A Expenses
+PNL-0031,Manpower Cost,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Manpower Cost
+7010000100,Salary/Wages - Permanent Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010000200,Salary/Wages - Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010000300,Salary/Wages - Temporary,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010000400,Salary/Wages - Contract Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010000500,Salary/Wages - Contract Expatriate,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010000600,Salary/Wages - Contract Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010000700,Salary/Wages-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010000800,Director Fees-Attendance Allowances-BOD,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010000900,"Non-Exec Dir Fees & Allow-Dir,Snr Mgt & Perm Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010001000,"Bonus-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010001100,Bonus-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010001200,Bonus-Temporary Staff,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010001300,Bonus/Performance Allowances - Contract Non-Exec,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010001400,Bonus/Performance Allowances - Contract Expatriate,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010001500,Bonus/Performance Allowances - Temporary,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010001600,Bonus-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010001700,"Overtime-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010001800,Overtime-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010001900,Overtime - Temporary,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010002000,Overtime - Contract Expatriate,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010002100,Overtime-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010002200,Overtime - Contract Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010002300,Overtime - Contract Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010002400,"House All & Sub-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010002500,House All & Sub-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010002600,House All & Sub-Contract Staff,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010002700,"OCOLA-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010002800,OCOLA-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010002900,OCOLA-Contract Staff,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010003000,"Co Ctrbn to KWSP-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010003100,Co Ctrbn to KWSP-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010003200,Co Ctrbn to KWSP-Temporary Staff,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010003300,Co Ctrbn to KWSP-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010003400,Co Ctrbn to KWSP-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010003500,Co Ctrbn to KWSP-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010003600,Co Ctrbn to KWSP-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010003700,"Co Ctrbn to PRBF-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010003800,Co Ctrbn to PRBF-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010003900,Co Ctrbn to PRBF-Temporary Staff,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010004000,Co Ctrbn to PRBF-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010004100,Co Ctrbn to PRBF-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010004200,Co Ctrbn to PRBF-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010004300,Co Ctrbn to PRBF-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010004400,"Co Ctrbn to SOCSO-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010004500,Co Ctrbn to SOCSO-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010004600,Co Ctrbn to SOCSO-EIS Permanent Exec,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010004700,Co Ctrbn to SOCSO-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010004800,Co Ctrbn to SOCSO-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010004900,Co Ctrbn to SOCSO-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010005000,Co Ctrbn to SOCSO-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010005100,"Co Ctrbn to EIS-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010005200,Co Ctrbn to EIS-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010005300,Co Ctrbn to EIS-Temporary Staff,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010005400,Co Ctrbn to EIS-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010005500,Co Ctrbn to EIS-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010005600,Co Ctrbn to EIS-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010005700,Co Ctrbn to EIS-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010005800,Co Ctrbn to HRM Devt Fund,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010005900,Co Ctrbn to HRM Devt Fund-Permanent Non-Exec,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010006000,Co Ctrbn to HRM Devt Fund-Contract Staff,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010006100,Separation Payments - Permanent Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010006200,Separation Payments - Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010006300,Separation Payments - Contract Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010006400,Separation Payments - Contract Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010006500,Separation Payments - Contract Expatriate,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010006600,Separation Payments - Temporary,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010006700,"Shift Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010006800,Shift Allowance-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010006900,Shift Allowance-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010007000,Shift Allowance-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010007100,Shift Allowance-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010007200,Shift Allowance-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010007300,Allowances - Permanent Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010007400,Allowances - Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010007500,Acting Allowance-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010007600,Acting Allowance-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010007700,Acting Allowance-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010007800,Acting Allowance-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010007900,"Covering Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010008000,Covering Allowance-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010008100,Covering Allowance-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010008200,Covering Allowance-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010008300,Covering Allowance-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010008400,Covering Allowance-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010008500,"Shift Coverage All-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010008600,Shift Coverage All-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010008700,Bonus/Performance Allowances - Permanent Executive,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010008800,Bonus/Performance Allowances - Permanent Non-Exec,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010008900,Performance Allow-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010009000,Performance Allow-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010009100,Bonus/Performance Allowances - Contract Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010009200,Performance Allow-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010009300,"Hardship Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010009400,Hardship Allowance-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010009500,Hardship Allowance-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010009600,Hardship Allowance-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010009700,Hardship Allowance-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010009800,Hardship Allowance-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010009900,"Driver Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010010000,"Laundry Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010010100,Laundry Allowance-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010010200,Laundry Allowance-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010010300,Laundry Allowance-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010010400,Laundry Allowance-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010010500,Laundry Allowance-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010010600,Overtime - Permanent Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010010700,Overtime - Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010010800,Meal Allowance-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010010900,Meal Allowance-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010011000,Meal Allowance-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010011100,Meal Allowance-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010011200,"Interim Allowance-Dir,Snr Mgt & Perm Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010011300,Interim Allowance-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010011400,Interim Allowance-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010011500,Interim Allowance-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010011600,Interim Allowance-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010011700,Interim Allowance-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010011800,"Charge Allowance-Dir,Snr Mgt & Perm Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010011900,Charge Allowance-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010012000,Charge Allowance-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010012100,Charge Allowance-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010012200,Charge Allowance-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010012300,Charge Allowance-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010012400,"Other Allowances-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010012500,Allowances - Contract Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010012600,Allowances - Contract Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010012700,Allowances - Contract Expatriate,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010012800,Allowances - Temporary,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010012900,Other Allowance-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010013000,"Gratuity-Dir, Snr Mgt & Perm Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010013100,Gratuity-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010013200,Gratuity-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010013300,Gratuity-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010013400,Gratuity-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010013500,Gratuity-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010013600,"Personl Inc Tax Paid For-Dir,Snr Mgt & Perm Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010013700,Personl Inc Tax Paid For-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010013800,Personl Inc Tax Paid Fr-Cntrct Staff-Expat-Onshore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010013900,Personl Inc Tax Paid Fr-Cntrct Staff-Expat-OffShr.,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010014000,Personl Inc Tax Paid Fr-Cntrct Staff-Local-Onshr,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010014100,Personl Inc Tax Paid For-Cntrct Staff-Local-OffSh.,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010014200,"Children Tuition Fees-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010014300,Children Tuition Fees-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010014400,Children Tuition Fees-Contract Staff-Expat-OnShore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010014500,Children Tuition Fees-Contrct Staff-Expat-OffShore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010014600,Children Tuition Fees-Contract Staff-Local-OnShore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010014700,Children Tuition Fees-Contrct Staff-Local-OffShore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010014800,"Staff Medical Exp-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010014900,Staff Medical Exp-Permanent Non-Exec (Entitlement),PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010015000,Staff Medical Exp-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010015100,Staff Medical Exp-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010015200,Staff Medical Exp-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010015300,Staff Medical Exp-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010015400,"Dependent Med Exp-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010015500,Dependent Med Exp-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010015600,Dependent Med Exp-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010015700,Dependent Med Exp-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010015800,Dependent Med Exp-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010015900,Dependent Med Exp-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010016000,"Utilities Paid For-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010016100,Utilities Paid For-Permanent Non-Exec,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010016200,Utilities Paid For-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010016300,Utilities Paid For-Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010016400,Utilities Paid For-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010016500,Utilities Paid For-Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010016600,"Hm Leave Passage Exp-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010016700,Hm Leave Passage Exp-Permanent Non-Executives,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010016800,Hm Leave Passage Exp-Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010016900,Hm Leave Passage Exp-Contract Staff-Expat-OffShore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010017000,Hm Leave Passage Exp-Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010017100,Hm Leave Passage Exp-Contract Staff-Local-OffShore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010017200,"Dental Exp-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010017300,Dental Expenses - Permanent Non Exec,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010017400,Dental Expenses -Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010017500,Dental Expenses -Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010017600,Dental Expenses -Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010017700,Dental Expenses -Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010017800,Dental Expenses-Dependent,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010017900,"Optical Exp-Dir,Snr Mgt & Permanent Exec",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010018000,Optical Exp-Permanent Non Exec,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010018100,Optical Exp -Contract Staff-Expat-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010018200,Optical Exp -Contract Staff-Expat-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010018300,Optical Exp -Contract Staff-Local-On Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010018400,Optical Exp -Contract Staff-Local-Off Shore,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010018500,Optical Expenses - Dependent,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010018600,Interest Subsidy-Housing Loan,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010018700,Interest Subsidy-Car Loan,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010018800,Co's Contribution to Staff Recreational Club/Asso,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010018900,Clubs & Corporate Credit Card Fees & Subscriptions,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010019000,Staff Subscriptions to Professional Bodies,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010019100,Individual Professional Membership/Bodies Claim,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010019200,Safety Awards - Onshore - Exec/Non-exec,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010019300,Safety Awards - Offshore - Exec/Non-exec,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010019400,Staff Welfare - Office Provision,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010019500,Staff Welfare - Other,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010019600,"Awards, Gifts & Donations to Staff",PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010019700,Staff Refreshment - Onshore - Exec/Non-exec,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010019800,Meal Subsidy,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010019900,Other Staff Relations Expenses,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010020000,All-in-Compensation-Interns & Apprentices,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010020100,Cadetship Cost - ALAM,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010020200,Course Fees and Charges,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010020300,Conference and Seminar-Fees & Chrgs,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010020400,Conference and Seminar-Fees & Chrgs - Overseas,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010020500,Other Educational Expenses,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010020600,Training Exp Recovery of HRDF Claims,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010020700,Travel Allowances- Hotel Allowance/Expenses,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010020800,Travel Allowances- Meal Allowance/Expenses,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010020900,Travel Allowances- Other Allowances/Expense,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010021000,Travel Allowances - Clothing Allowances,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010021100,Staff Recruiting-Medical Check-Up Expenses,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010021200,Staff Recruiting-Advertising Expenses,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010021300,Staff Recruiting-Facilities Hire Expenses,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010021400,Staff Recruiting-Applicant Trvl & Reimbursable Exp,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010021500,Staff Recruiting-Local Travel Fares & Expenses,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010021600,Staff Recruiting-Others,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010021700,Staff Uniform/Workdress,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010021800,Relocation Expenses-Staff,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010021900,Training-Cadet Sponsorship,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010022000,Training-Study Grant,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010099999,Other Manpower Costs,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010022100,Clothing Allowance,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010022200,Opt Exp - Parking Fee & Charges,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010022300,Dental Expenses  NE Employee & Drivers Dependent,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+7010022400,Optical Expenses  NE Employee & Driver Dependent,PNL-0031,Posting GL Account,3,NPAT > G&A Expenses > Manpower Cost
+PNL-0032,Depreciation & Amortization,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020100100,Amortization-Land-Long Leasehold,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020100200,Amortization-Land-Short Leasehold,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020100300,Amortization & Depn-Leased Property/Assets,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020100400,Depreciation-Buildings,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020100600,Depreciation-Cargo Handling Equipment,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020100700,Depreciation-Electrical Installation,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020100800,"Depreciation-Office & H/hold Equip,Furniture & Fit",PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020100900,Depreciation-Land Transportation,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020101000,Depreciation-Computer Hardware,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020101100,Depreciation-Tools,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020101200,Depreciation-Consumables Asset,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020101300,Acc Amort Intg Assets-Computer Software,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020101400,Amortization-Goodwill,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020101500,Amortization-Patent and Trademark,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020101600,Amortization- Prod Dev Cost,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020101700,FA Expensed-Off-Consumable Assets,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020200100,Depreciation-ROU-Building,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020200200,Depreciation-ROU-Land,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020200300,Depreciation-ROU-Office Equipment,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020200400,Depreciation-ROU-Motor Vehicle,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020200500,Depreciation-ROU-ICT Hardware,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020200600,Depreciation-ROU-ICT Software,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020200700,Depreciation-ROU-Cost Adjustment for Consolidation,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+7020100500,Depreciation-Plant & Equipment,PNL-0032,Posting GL Account,3,NPAT > G&A Expenses > Depreciation & Amortization
+PNL-0033,Rental / Lease,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Rental / Lease
+7030100100,Rental/Lease Exp-Apartment,PNL-0033,Posting GL Account,3,NPAT > G&A Expenses > Rental / Lease
+7030100200,Rental/Lease Exp-Land Transportation,PNL-0033,Posting GL Account,3,NPAT > G&A Expenses > Rental / Lease
+7030100300,Rental/Lease Exp-Plant and Equipment,PNL-0033,Posting GL Account,3,NPAT > G&A Expenses > Rental / Lease
+7030100400,Rental/Lease Exp-Building,PNL-0033,Posting GL Account,3,NPAT > G&A Expenses > Rental / Lease
+7030100500,"Rental/Lease Exp-Office & H/hold Equip,Furn & Fit",PNL-0033,Posting GL Account,3,NPAT > G&A Expenses > Rental / Lease
+7030100600,Rental/Lease Exp-Office Premises,PNL-0033,Posting GL Account,3,NPAT > G&A Expenses > Rental / Lease
+7030100700,Rental/Lease Exp - Office - IFRS16,PNL-0033,Posting GL Account,3,NPAT > G&A Expenses > Rental / Lease
+PNL-0034,Business Travel,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Business Travel
+7040100100,Business Travel-Accomodation Expense,PNL-0034,Posting GL Account,3,NPAT > G&A Expenses > Business Travel
+7040100200,Business Travel-Claims & Living Expense,PNL-0034,Posting GL Account,3,NPAT > G&A Expenses > Business Travel
+7040100300,Business Travel-Travelling Expense,PNL-0034,Posting GL Account,3,NPAT > G&A Expenses > Business Travel
+7040100400,Immigration/Visa Expenses,PNL-0034,Posting GL Account,3,NPAT > G&A Expenses > Business Travel
+PNL-0035,Public & Communication Relation,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Public & Communication Relation
+7050100100,Pub & Comm Rel Exp-Cash Donations,PNL-0035,Posting GL Account,3,NPAT > G&A Expenses > Public & Communication Relation
+7050100200,Pub & Comm Rel Exp-Gifts & Donations in Kind,PNL-0035,Posting GL Account,3,NPAT > G&A Expenses > Public & Communication Relation
+7050100300,Pub & Comm Rel Exp-Advertising,PNL-0035,Posting GL Account,3,NPAT > G&A Expenses > Public & Communication Relation
+7050100400,Pub & Comm Rel Exp-Printing,PNL-0035,Posting GL Account,3,NPAT > G&A Expenses > Public & Communication Relation
+7050100500,Pub & Comm Rel Exp-Non-Trd Expo & Celebration,PNL-0035,Posting GL Account,3,NPAT > G&A Expenses > Public & Communication Relation
+7050100600,Pub & Comm Rel Exp-Soc/Religious/Recreation Act,PNL-0035,Posting GL Account,3,NPAT > G&A Expenses > Public & Communication Relation
+7050100700,Pub & Comm Rel Exp-Corporate Event & Meetings,PNL-0035,Posting GL Account,3,NPAT > G&A Expenses > Public & Communication Relation
+7050109900,Pub & Comm Rel Exp-Others,PNL-0035,Posting GL Account,3,NPAT > G&A Expenses > Public & Communication Relation
+PNL-0036,Motor Vehicle & Running Expenses,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Motor Vehicle & Running Expenses
+7060100100,Business Travel-Airfare,PNL-0036,Posting GL Account,3,NPAT > G&A Expenses > Motor Vehicle & Running Expenses
+7060100200,Toll Fees & Charges,PNL-0036,Posting GL Account,3,NPAT > G&A Expenses > Motor Vehicle & Running Expenses
+7060100300,Motor Vehicles-Fuels,PNL-0036,Posting GL Account,3,NPAT > G&A Expenses > Motor Vehicle & Running Expenses
+7060100400,Motor Vehicles-Road Tax,PNL-0036,Posting GL Account,3,NPAT > G&A Expenses > Motor Vehicle & Running Expenses
+7060100500,Land Oth Transp Chrg-Freight/Handling Charges,PNL-0036,Posting GL Account,3,NPAT > G&A Expenses > Motor Vehicle & Running Expenses
+7060100600,Land Oth Transp Chrg-Freight/Handlng Chrg-Recovery,PNL-0036,Posting GL Account,3,NPAT > G&A Expenses > Motor Vehicle & Running Expenses
+7060100700,Logistic Transportation Services,PNL-0036,Posting GL Account,3,NPAT > G&A Expenses > Motor Vehicle & Running Expenses
+PNL-0037,Repairs And Maintenance,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Repairs And Maintenance
+7070100100,G&A-R&M-Building,PNL-0037,Posting GL Account,3,NPAT > G&A Expenses > Repairs And Maintenance
+7070100200,G&A-R&M-Plant & Equipment,PNL-0037,Posting GL Account,3,NPAT > G&A Expenses > Repairs And Maintenance
+7070100300,"G&A-R&M-Ofc.& Household Equip, Furniture& Fittings",PNL-0037,Posting GL Account,3,NPAT > G&A Expenses > Repairs And Maintenance
+7070100400,G&A-R&M--Plant & Equipment-Recovery,PNL-0037,Posting GL Account,3,NPAT > G&A Expenses > Repairs And Maintenance
+7070100500,G&A-R&M-Upkeep of office/buildings,PNL-0037,Posting GL Account,3,NPAT > G&A Expenses > Repairs And Maintenance
+7070100600,G&A-R&M-Motor Vehicles,PNL-0037,Posting GL Account,3,NPAT > G&A Expenses > Repairs And Maintenance
+PNL-0038,IT & Cyber Securities,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > IT & Cyber Securities
+7080100100,IT Subscription & Licenses,PNL-0038,Posting GL Account,3,NPAT > G&A Expenses > IT & Cyber Securities
+7080100200,Maintenance & IT Support Services-Hardware,PNL-0038,Posting GL Account,3,NPAT > G&A Expenses > IT & Cyber Securities
+7080100300,Maintenance & IT Support Services-Software,PNL-0038,Posting GL Account,3,NPAT > G&A Expenses > IT & Cyber Securities
+7080100400,Cybersecurity Subscription & licenses,PNL-0038,Posting GL Account,3,NPAT > G&A Expenses > IT & Cyber Securities
+7080100500,Cybersecurity Operations & Support Services,PNL-0038,Posting GL Account,3,NPAT > G&A Expenses > IT & Cyber Securities
+7080100600,IT Equipment-Other Parts and Accessories,PNL-0038,Posting GL Account,3,NPAT > G&A Expenses > IT & Cyber Securities
+7080100700,"IT Equipment-Satellite,Radio,Navigational",PNL-0038,Posting GL Account,3,NPAT > G&A Expenses > IT & Cyber Securities
+7080100800,Telecom Rental/Usage Charges,PNL-0038,Posting GL Account,3,NPAT > G&A Expenses > IT & Cyber Securities
+7080109900,IT Services & Support - Others,PNL-0038,Posting GL Account,3,NPAT > G&A Expenses > IT & Cyber Securities
+PNL-0039,Insurances,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Insurances
+7090100100,Insurances-General Liability,PNL-0039,Posting GL Account,3,NPAT > G&A Expenses > Insurances
+7090100200,Insurances-FA/Property Damage & Loss,PNL-0039,Posting GL Account,3,NPAT > G&A Expenses > Insurances
+7090100300,Insurances-Land Transportation (Corporate),PNL-0039,Posting GL Account,3,NPAT > G&A Expenses > Insurances
+7090100400,Insurances-Money and Fidelity,PNL-0039,Posting GL Account,3,NPAT > G&A Expenses > Insurances
+7090100500,Insurances-Medical Admin Fees,PNL-0039,Posting GL Account,3,NPAT > G&A Expenses > Insurances
+7090100600,Insurances-Fire & All Risk,PNL-0039,Posting GL Account,3,NPAT > G&A Expenses > Insurances
+7090100700,Insurances-Other Coverages,PNL-0039,Posting GL Account,3,NPAT > G&A Expenses > Insurances
+PNL-0040,Duties & Taxes,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Duties & Taxes
+7100100100,Property Tax,PNL-0040,Posting GL Account,3,NPAT > G&A Expenses > Duties & Taxes
+7100100200,"Other Taxes-Revenue Stamps, Stamping Fees",PNL-0040,Posting GL Account,3,NPAT > G&A Expenses > Duties & Taxes
+7100100300,Other Taxes-Withholding Tax,PNL-0040,Posting GL Account,3,NPAT > G&A Expenses > Duties & Taxes
+7100100400,Other Taxes-Others,PNL-0040,Posting GL Account,3,NPAT > G&A Expenses > Duties & Taxes
+7100100500,GST/VAT Expense,PNL-0040,Posting GL Account,3,NPAT > G&A Expenses > Duties & Taxes
+7100100600,GST - MY Input Tax BL,PNL-0040,Posting GL Account,3,NPAT > G&A Expenses > Duties & Taxes
+7100100700,Custom and Exercise Duties,PNL-0040,Posting GL Account,3,NPAT > G&A Expenses > Duties & Taxes
+PNL-0041,Licence & Permit Fees,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Licence & Permit Fees
+7110100100,Licence & Permit Fees-Business/Manuf Licences,PNL-0041,Posting GL Account,3,NPAT > G&A Expenses > Licence & Permit Fees
+7110109900,Licence & Permit Fees-Others,PNL-0041,Posting GL Account,3,NPAT > G&A Expenses > Licence & Permit Fees
+PNL-0042,Utilities,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Utilities
+7120100100,Utility Expenses-Water,PNL-0042,Posting GL Account,3,NPAT > G&A Expenses > Utilities
+7120100200,Utility Expenses-Water-Recovery,PNL-0042,Posting GL Account,3,NPAT > G&A Expenses > Utilities
+7120100300,Utility Expenses-Electricity,PNL-0042,Posting GL Account,3,NPAT > G&A Expenses > Utilities
+7120100400,Utility Expenses-Electricity-Recovery,PNL-0042,Posting GL Account,3,NPAT > G&A Expenses > Utilities
+7120100500,Utility Expenses-Others,PNL-0042,Posting GL Account,3,NPAT > G&A Expenses > Utilities
+7120100600,Utility Expenses-Others-Recovery,PNL-0042,Posting GL Account,3,NPAT > G&A Expenses > Utilities
+PNL-0043,Materials And Supplies,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Materials And Supplies
+7130100100,Gen Item-Cleaning Equipment & Supplies,PNL-0043,Posting GL Account,3,NPAT > G&A Expenses > Materials And Supplies
+7130100200,Gen Item-Food Beverage&Tobacco Products,PNL-0043,Posting GL Account,3,NPAT > G&A Expenses > Materials And Supplies
+7130100300,Gen Item-Drugs &Pharmaceutical Products,PNL-0043,Posting GL Account,3,NPAT > G&A Expenses > Materials And Supplies
+7130100400,Gen Item-Offc Equip. &Access.&Supplies,PNL-0043,Posting GL Account,3,NPAT > G&A Expenses > Materials And Supplies
+7130100500,Gen Item-Apparel&Luggage&Personal Care Prod.,PNL-0043,Posting GL Account,3,NPAT > G&A Expenses > Materials And Supplies
+7130100600,Gen Item-Published Products,PNL-0043,Posting GL Account,3,NPAT > G&A Expenses > Materials And Supplies
+7130100700,Safety Equipment & Supplies,PNL-0043,Posting GL Account,3,NPAT > G&A Expenses > Materials And Supplies
+7130100800,Recreational/Sports Consumables,PNL-0043,Posting GL Account,3,NPAT > G&A Expenses > Materials And Supplies
+7130100900,Medical Services,PNL-0043,Posting GL Account,3,NPAT > G&A Expenses > Materials And Supplies
+7130101000,Photocopying Consumables and Supplies,PNL-0043,Posting GL Account,3,NPAT > G&A Expenses > Materials And Supplies
+PNL-0044,Professional And Purchased Services,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Professional And Purchased Services
+PNL-0045,Audit & Accounting,PNL-0044,Reporting Node,4,NPAT > G&A Expenses > Professional And Purchased Services > Audit & Accounting
+7140100100,Statutory Audit Fees-Current Year,PNL-0045,Posting GL Account,4,NPAT > G&A Expenses > Professional And Purchased Services > Audit & Accounting
+7140100200,Statutory Audit Fees-Prior Year,PNL-0045,Posting GL Account,4,NPAT > G&A Expenses > Professional And Purchased Services > Audit & Accounting
+7140100300,Accounting Services Fees,PNL-0045,Posting GL Account,4,NPAT > G&A Expenses > Professional And Purchased Services > Audit & Accounting
+7140100400,Other Audit/Accounting Charges,PNL-0045,Posting GL Account,4,NPAT > G&A Expenses > Professional And Purchased Services > Audit & Accounting
+7140200100,Legal Fees,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140200200,Secretarial Fees,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140300100,Tax Consultancy Fees,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140400100,Management Consulting Fees & Charges,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140400200,Intercompany Management Services,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140400300,Inspection Services,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140400400,Project Management Services,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140400500,Cleaning Services,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140400600,Preservation Services,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140400700,Security Services,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140400800,Security Services - Recovery,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140400900,Translation Services,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140401000,Manpower Supply Services,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140401100,Engineering Services Fees,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140401200,Personal and Domestic Services,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140401300,QHSE Services,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140401400,QHSE Services - Recovery,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140409900,Other Prof Services,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+7140401500,Laundry Services,PNL-0044,Posting GL Account,3,NPAT > G&A Expenses > Professional And Purchased Services
+PNL-0046,"Advertising, Marketing & Promotion",PNL-0030,Reporting Node,3,"NPAT > G&A Expenses > Advertising, Marketing & Promotion"
+7150100100,Advertising Fees & Expenses,PNL-0046,Posting GL Account,3,"NPAT > G&A Expenses > Advertising, Marketing & Promotion"
+7150100200,Marketing & Promotion-Promotion Exp Sponsorship,PNL-0046,Posting GL Account,3,"NPAT > G&A Expenses > Advertising, Marketing & Promotion"
+7150100300,Marketing & Promotion-Other Promotion Expenses,PNL-0046,Posting GL Account,3,"NPAT > G&A Expenses > Advertising, Marketing & Promotion"
+7150100400,Marketing & Promotion-Exhibitions,PNL-0046,Posting GL Account,3,"NPAT > G&A Expenses > Advertising, Marketing & Promotion"
+PNL-0047,Financial Charges,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Financial Charges
+7160100100,Loan Processing Fees & Charges,PNL-0047,Posting GL Account,3,NPAT > G&A Expenses > Financial Charges
+7160100200,Upfront Charges,PNL-0047,Posting GL Account,3,NPAT > G&A Expenses > Financial Charges
+7160100300,Renewal Charges,PNL-0047,Posting GL Account,3,NPAT > G&A Expenses > Financial Charges
+7160100400,Commitment Fee,PNL-0047,Posting GL Account,3,NPAT > G&A Expenses > Financial Charges
+7160100500,Agency Fees,PNL-0047,Posting GL Account,3,NPAT > G&A Expenses > Financial Charges
+7160100600,Arrangement Fees,PNL-0047,Posting GL Account,3,NPAT > G&A Expenses > Financial Charges
+7160100700,Bank Guarantee Fee,PNL-0047,Posting GL Account,3,NPAT > G&A Expenses > Financial Charges
+7160100800,Other Fin Exp-Bank Charges,PNL-0047,Posting GL Account,3,NPAT > G&A Expenses > Financial Charges
+7160100900,Other Finance Charges,PNL-0047,Posting GL Account,3,NPAT > G&A Expenses > Financial Charges
+PNL-0048,Corporate Contribution & Subscriptions,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Corporate Contribution & Subscriptions
+7170100100,Social/Religious/Recreational Activities,PNL-0048,Posting GL Account,3,NPAT > G&A Expenses > Corporate Contribution & Subscriptions
+7170100200,Magazines/Periodicals/Newspapers/Books,PNL-0048,Posting GL Account,3,NPAT > G&A Expenses > Corporate Contribution & Subscriptions
+7170100300,Corporate Subscription & Membership,PNL-0048,Posting GL Account,3,NPAT > G&A Expenses > Corporate Contribution & Subscriptions
+PNL-0049,Office Expense,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Office Expense
+7180100100,Stationery,PNL-0049,Posting GL Account,3,NPAT > G&A Expenses > Office Expense
+7180100200,Photocopying Consumables and Supplies,PNL-0049,Posting GL Account,3,NPAT > G&A Expenses > Office Expense
+7180100300,Postage/Parcel/Mail/Courier Charges,PNL-0049,Posting GL Account,3,NPAT > G&A Expenses > Office Expense
+PNL-0050,Entertainment,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Entertainment
+7190100100,Catering and Refreshment Services,PNL-0050,Posting GL Account,3,NPAT > G&A Expenses > Entertainment
+7190100200,Entertainment Expenses - Local,PNL-0050,Posting GL Account,3,NPAT > G&A Expenses > Entertainment
+7190100300,Entertainment Expenses - Overseas,PNL-0050,Posting GL Account,3,NPAT > G&A Expenses > Entertainment
+7190100400,Entertainment Expenses - Staff,PNL-0050,Posting GL Account,3,NPAT > G&A Expenses > Entertainment
+PNL-0051,Penalties,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Penalties
+7200100100,Late Payment Charges,PNL-0051,Posting GL Account,3,NPAT > G&A Expenses > Penalties
+7200100200,ESG Penalties,PNL-0051,Posting GL Account,3,NPAT > G&A Expenses > Penalties
+7200100300,Tax Penalties,PNL-0051,Posting GL Account,3,NPAT > G&A Expenses > Penalties
+7200100400,Other Penalties,PNL-0051,Posting GL Account,3,NPAT > G&A Expenses > Penalties
+PNL-0052,Cost Allocation,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Cost Allocation
+7210100100,Corporate Cost Allocation,PNL-0052,Posting GL Account,3,NPAT > G&A Expenses > Cost Allocation
+PNL-0053,Other Operating Expenses,PNL-0030,Reporting Node,3,NPAT > G&A Expenses > Other Operating Expenses
+7599999999,Other Expenses-Miscellaneous Expenses,PNL-0053,Posting GL Account,3,NPAT > G&A Expenses > Other Operating Expenses
+PNL-0054,Other Income & Expenses,NPAT,Reporting Node,1,NPAT > Other Income & Expenses
+PNL-0055,Other Operating Income,PNL-0054,Reporting Node,2,NPAT > Other Income & Expenses > Other Operating Income
+PNL-0056,Rental Income,PNL-0055,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Income > Rental Income
+6010100100,Rental Income-Office,PNL-0056,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Rental Income
+6010100200,Revenue-Local-Rental-Others,PNL-0056,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Rental Income
+PNL-0057,Finance Income,PNL-0055,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020100100,Interest Income-IHA-PETH Related Party,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020200100,Interest Income-Current Account,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020300100,Interest Income-Deposit/Placement,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020400100,Interest Income-Loan to Interco,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020400200,Interest Income-Loan to Intraco,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020400300,Interest Income-Loan to Associates,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020400400,Interest Income-Loan to Joint venture,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020400500,Interest Income-Loan to PETH Related Party,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020400600,Interest Income-Loan to Sub Co,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020500100,Interest Income-Trade Receivable,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020600100,Interest Income-Non-Trade Rec,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020700100,Interest Income-Preference Shares-Subsidary,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020700200,Interest Income-Preference Shares-Associates,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+6020700300,Interest Income-Preference Shares-JV,PNL-0057,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Finance Income
+PNL-0058,Changes in FV Of Hedging Derivatives,PNL-0055,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Income > Changes in FV Of Hedging Derivatives
+6030100100,(Gain)/Loss on Ineffective Hedge-IRS,PNL-0058,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Changes in FV Of Hedging Derivatives
+6030100200,(Gain)/Loss on Ineffctive Hedge-Fwrd Currcy Cntrct,PNL-0058,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Changes in FV Of Hedging Derivatives
+6030100300,Realised (G)/L-Foreign Currency Contract,PNL-0058,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Changes in FV Of Hedging Derivatives
+PNL-0059,Dividend Income,PNL-0055,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040100100,Quoted Inv. from Sub - Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040100200,Quoted Inv. from Sub - Outside Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040100300,Unquoted Inv. from Sub - Outside Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040100400,Unquoted Inv. from Sub - Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040200100,Quoted Inv. from Associates-Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040200200,Quoted Inv. from Associates-Outside Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040200300,Unquoted Inv. from Associates-Outside Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040200400,Unquoted Inv. from Associates-Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040300100,Quoted Inv. from JV-Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040300200,Quoted Inv. from JV-Outside Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040300300,Unquoted Inv. from JV-Outside Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040300400,Unquoted Inv. from JV-Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040400100,Quoted Inv. from Other Equity Investment-Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040400200,Quoted Inv. frm Oth Equity Investment-Outside MY,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040400300,Unquoted Inv.from Oth Equity Investment-Outside MY,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+6040400400,Unquoted Inv. from Oth Equity Investment-Malaysia,PNL-0059,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Dividend Income
+PNL-0060,Other Income,PNL-0055,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050000100,Other Income-Reimbursables,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050000200,Other Income-Fair Value on Quoted Shares,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050000300,Other Income-Training,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050000400,Other Income-Director Fees,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050000500,Receipts from Breach of Cadetship (BOC) Agreement,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050000600,Other Income-Other,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050000700,Other Income-Management Services,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050000800,Other Income-Discount Received,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050000900,Gain on ROU Modification/Termination,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050001000,Gain on Lease Receivable Modification/Termination,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050001100,Borrowings from Third Party Written Off,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050001200,Borrowings from Interco Written Off,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050001300,Received Bank Guarantee Exercised,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+6050001400,Other Income-Insurance Claims,PNL-0060,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Other Income
+PNL-0061,Net Exchange Realised Forex  (Gain)/Loss,PNL-0055,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060000100,Realised Forex (G)/L-NCA-Long Term Loan,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060000200,Realised Forex (G)/L-NCA-Long Term Lease Rcvbl,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060000300,Realised Forex (G)/L-NCA-Other Non Current Assets,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060000400,Realised Forex (G)/L-CA-Inventory,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060000500,Realised Forex (G)/L-CA-Short Term Loan,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060000600,Realised Forex (G)/L-CA-Short Term Lease Rcvbl,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060000700,Realised Forex (G)/L-CA-Trade and Oth Rcvbl,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060000800,Realised Forex (G)/L-CA-Other Current Assets,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060000900,Realised Forex (G)/L-CA-Asset Held For sale,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060001000,"Realised Forex (G)/L-CA-Deposits, Cash & Bank",PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060001100,Realised Forex (G)/L-CL- Short Term Loan,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060001200,Realised Forex (G)/L-CL-Shrt Trm Lease Liabilities,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060001300,Realised Forex (G)/L-CL-Trade & Other Payables,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060001400,Realised Forex (G)/L-CL-Other Current Liabilities,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060001500,Realised Forex (G)/L-NCL-Long Term Loan,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060001600,Realised Forex (G)/L-NCL-Lng Trm Lease Liabilities,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060001700,Realised Forex (G)/L-NCL-Oth Nn Currnt Liabilities,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060001800,Realised Forex (G)/L-FSCM Payment Req-Clearing,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+6060001900,Realised Forex (G)/L-Others,PNL-0061,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Exchange Realised Forex  (Gain)/Loss
+PNL-0062,Net Unrealised Forex (Gain)/Loss,PNL-0055,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070000100,Unrealised Forex (G)/L-NCA-Long Term Loan,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070000200,Unrealised Forex (G)/L-NCA-Long Term Lease Rcvbl,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070000300,Unrealised Forex (G)/L-NCA-Other Non Current Asset,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070000400,Unrealised Forex (G)/L-CA-Inventory,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070000500,Unrealised Forex (G)/L-CA-Short Term Loan,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070000600,Unrealised Forex (G)/L-CA-Short Term Lease Rcvbl,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070000700,Unrealised Forex (G)/L-CA-Trade and Other Rcvbl,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070000800,Unrealised Forex (G)/L-CA-Other Current Assets,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070000900,Unrealised Forex (G)/L-CA-Asset Held For sale,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070001000,"Unrealised Forex (G)/L-CA-Deposits, Cash & Bank",PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070001100,Unrealised Forex (G)/L-CL- Short Term Loan,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070001200,Unrealised Forex (G)/L-CL-Shrt Trm Lease Liab.,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070001300,Unrealised Forex (G)/L-CL-Trade & Other Payables,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070001400,Unrealised Forex (G)/L-CL-Oth Current Liabilities,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070001500,Unrealised Forex (G)/L-NCL-Long Term Loan,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070001600,Unrealised Forex (G)/L-NCL-Lng Trm Lease Liab.,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070001700,Unrealised Forex (G)/L-NCL-Oth Non Current Liab.,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070001800,Unrealised Forex (G)/L-FSCM Payment Req-Clearing,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+6070001900,Unrealised Forex (G)/L-Others,PNL-0062,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Net Unrealised Forex (Gain)/Loss
+PNL-0063,Sale Of Fixed Assets & Inv. (Gain)/Loss,PNL-0055,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Income > Sale Of Fixed Assets & Inv. (Gain)/Loss
+6080000100,(G)/L on Disposal of FA,PNL-0063,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Sale Of Fixed Assets & Inv. (Gain)/Loss
+6080000200,Other Income - Scrap Disposal,PNL-0063,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Sale Of Fixed Assets & Inv. (Gain)/Loss
+PNL-0064,Gain On Investment Disposal,PNL-0055,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Income > Gain On Investment Disposal
+6090100100,(G)/L on Disposal of-Investment in JV,PNL-0064,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Gain On Investment Disposal
+6090100200,(G)/L on Disposal of-Investment in Associate,PNL-0064,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Gain On Investment Disposal
+6090100300,(G)/L on Disposal of-Investment in subsidiaries,PNL-0064,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Gain On Investment Disposal
+6090200100,Gain/Loss On Disposal-Others,PNL-0064,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Income > Gain On Investment Disposal
+PNL-0065,Other Operating Expenses,PNL-0054,Reporting Node,2,NPAT > Other Income & Expenses > Other Operating Expenses
+PNL-0066,Impairment Losses on Investments,PNL-0065,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630100100,Imp. Losses on Quoted Inv. in Sub-Malaysia,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630100200,Imp. Losses on Quoted Inv. in Sub-Outside Malaysia,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630100300,Imp. Losses on Unquoted Inv. in Sub-Malaysia,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630100400,Imp. Losses on Unquoted Inv. in Sub-Outside MY,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630100500,Impairment Losses of Inv. In Sub,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630200100,Imp. Losses on Quoted Inv. in Assoc-Malaysia,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630200200,Imp. Losses on Quoted Inv. in Assoc-Outside MY,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630200300,Imp. Losses on Unquoted Inv. in Assoc-Malaysia,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630200400,Imp. Losses on Unquoted Inv. in Assoc-Outside MY,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630200500,Impairment Losses of Inv. In Assoc,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630300100,Imp. Losses on Quoted Inv. in JV-Malaysia,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630300200,Imp. Losses on Quoted Inv. in JV-Outside Malaysia,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630300300,Imp. Losses on Unquoted Inv. in JV-Malaysia,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630300400,Imp. Losses on Unquoted Inv. in JV-Outside MY,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+7630300500,Impairment Losses of Inv. In JV,PNL-0066,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Investments
+PNL-0067,Impairment Losses on Loans,PNL-0065,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Loans
+7630400100,Impairment on Loan to Subsidiary company,PNL-0067,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Loans
+7630400200,Impairment on Loan to Associates,PNL-0067,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Loans
+7630400300,Impairment on Loan to JV,PNL-0067,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Loans
+7630400400,Impairment on Loan to Intercompany,PNL-0067,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Loans
+PNL-0068,Expected Credit Loss,PNL-0065,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Expenses > Expected Credit Loss
+7640100100,Expected Credit Losses-Trade Receivables-3rd Party,PNL-0068,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Expected Credit Loss
+7640100200,Expected Credit Losses-Trade Receivables-Interco,PNL-0068,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Expected Credit Loss
+7640200100,Expected Credit Losses-Non Trade-3rd Party,PNL-0068,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Expected Credit Loss
+7640200200,Expected Credit Losses-Non Trade-Interco,PNL-0068,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Expected Credit Loss
+7640300100,Expected Credit Losses-Lease Receivables-3rd Party,PNL-0068,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Expected Credit Loss
+7640300200,Expected Credit Losses-Lease Receivables-Interco,PNL-0068,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Expected Credit Loss
+7640400100,Expected Credit Losses-Contract Assets-3rd Party,PNL-0068,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Expected Credit Loss
+7640400200,Expected Credit Losses-Contract Assets-Interco,PNL-0068,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Expected Credit Loss
+PNL-0069,Other Expenses,PNL-0065,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Expenses > Other Expenses
+7650100100,Loss on ROU Modification/Termination,PNL-0069,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Other Expenses
+7650100200,Loss on Lease Receivable Modification/Termination,PNL-0069,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Other Expenses
+7650100300,Borrowing to Interco Written Off,PNL-0069,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Other Expenses
+7650100400,Issued Bank Guarantee Exercised,PNL-0069,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Other Expenses
+PNL-0070,Fixed Asset Expense Off,PNL-0065,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Expenses > Fixed Asset Expense Off
+7660100100,Fixed Asset Expensed Off-Motor Vhcls&Heavy Machine,PNL-0070,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Fixed Asset Expense Off
+7660100200,Fixed Asset Expensed Off-Plant and Machinery,PNL-0070,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Fixed Asset Expense Off
+7660100300,"Fixed Asset Expensed Off-Ofc.Eqp,Furniture&Fitting",PNL-0070,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Fixed Asset Expense Off
+7660100400,Fixed Asset Expensed Off-Computer,PNL-0070,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Fixed Asset Expense Off
+PNL-0071,Adjustment & Write Off,PNL-0065,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Expenses > Adjustment & Write Off
+7670100100,Write-Off Exp-Inventory,PNL-0071,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Adjustment & Write Off
+7670100200,Write-Off Exp-FA,PNL-0071,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Adjustment & Write Off
+7670100300,Adjustments-Purchase Price Diff,PNL-0071,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Adjustment & Write Off
+7670100400,Adjustments-Inventory Revaluation Difference,PNL-0071,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Adjustment & Write Off
+7670100500,Write-Off Exp-Interco-Other Receivable,PNL-0071,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Adjustment & Write Off
+PNL-0072,Appropriation Of Dividend,PNL-0065,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Expenses > Appropriation Of Dividend
+PNL-0073,Appropriation of Dividend,PNL-0072,Reporting Node,4,NPAT > Other Income & Expenses > Other Operating Expenses > Appropriation Of Dividend > Appropriation of Dividend
+7680100100,Appropriations-Dividends,PNL-0073,Posting GL Account,5,NPAT > Other Income & Expenses > Other Operating Expenses > Appropriation Of Dividend > Appropriation of Dividend
+PNL-0074,Impairment Losses on Receivables,PNL-0065,Reporting Node,3,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Receivables
+7620100100,Imp. Losses on Trade A/R-3rd Party,PNL-0074,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Receivables
+7620100200,Imp. Losses on Trade A/R-Interco,PNL-0074,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Receivables
+7620100300,Imp. Losses on Trade A/R-Intraco,PNL-0074,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Receivables
+7620100400,Imp. Losses on Trade A/R-Associates,PNL-0074,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Receivables
+7620100500,Imp. Losses on Trade A/R-JV,PNL-0074,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Receivables
+7620100600,Imp. Losses on Trade A/R-PETH Related Party,PNL-0074,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Receivables
+7620200100,Imp. Losses on Other Receivables A/R-3rd Party,PNL-0074,Posting GL Account,4,NPAT > Other Income & Expenses > Other Operating Expenses > Impairment Losses on Receivables
+PNL-0075,Finance Costs,PNL-0054,Reporting Node,2,NPAT > Other Income & Expenses > Finance Costs
+PNL-0076,Redeemeble Preference Shares,PNL-0075,Reporting Node,3,NPAT > Other Income & Expenses > Finance Costs > Redeemeble Preference Shares
+7810600100,Dividend - Rdm Prfr Shr,PNL-0076,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Redeemeble Preference Shares
+PNL-0077,Unwinding of Discount on Provisions,PNL-0075,Reporting Node,3,NPAT > Other Income & Expenses > Finance Costs > Unwinding of Discount on Provisions
+7810700100,Unwinding of Discount on Provisions,PNL-0077,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Unwinding of Discount on Provisions
+PNL-0078,Borrowings,PNL-0075,Reporting Node,3,NPAT > Other Income & Expenses > Finance Costs > Borrowings
+7810100100,Interest Expense From Interest Rate Swap,PNL-0078,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Borrowings
+7810100200,Interest Expense Borrowing-External,PNL-0078,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Borrowings
+7810100300,Interest Expense Borrowing-Intercompany,PNL-0078,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Borrowings
+7810100400,Interest Expense Borrowing-Intraco,PNL-0078,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Borrowings
+7810100500,Interest Expense Borrowing-Assoc,PNL-0078,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Borrowings
+7810100600,Interest Expense Borrowing-JV,PNL-0078,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Borrowings
+7810100700,Interest Expense Borrowing-PETH Related Party,PNL-0078,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Borrowings
+7810100800,Interest Expense Borrowing-Sub Co,PNL-0078,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Borrowings
+PNL-0079,Lease Liability,PNL-0075,Reporting Node,3,NPAT > Other Income & Expenses > Finance Costs > Lease Liability
+7810200100,Finance Lease Interest Expense,PNL-0079,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Lease Liability
+PNL-0080,Trade Interests,PNL-0075,Reporting Node,3,NPAT > Other Income & Expenses > Finance Costs > Trade Interests
+7810300100,Interest on Trade Payables,PNL-0080,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Trade Interests
+PNL-0081,Non-Trade Interest,PNL-0075,Reporting Node,3,NPAT > Other Income & Expenses > Finance Costs > Non-Trade Interest
+7810400100,Interest on Non-Trade Payables,PNL-0081,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Non-Trade Interest
+PNL-0082,Amortization & Upfront Fees,PNL-0075,Reporting Node,3,NPAT > Other Income & Expenses > Finance Costs > Amortization & Upfront Fees
+7810500100,Amortisation of Upfront Fees for Borrowings,PNL-0082,Posting GL Account,4,NPAT > Other Income & Expenses > Finance Costs > Amortization & Upfront Fees
+PNL-0083,Clearing,PNL-0054,Reporting Node,2,NPAT > Other Income & Expenses > Clearing
+PNL-0084,Adjustment for Consolidation,PNL-0083,Reporting Node,3,NPAT > Other Income & Expenses > Clearing > Adjustment for Consolidation
+7990100100,Depreciation- Adj. for Consolidation -ROU-Building,PNL-0084,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Adjustment for Consolidation
+7990100200,COS-Depreciation - Adj. for Consolidation-ROU-Ship,PNL-0084,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Adjustment for Consolidation
+7990100300,COS-Depreciation - Adj. for Consolidation -ROU-OFA,PNL-0084,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Adjustment for Consolidation
+7990100400,COS-Depreciation - Adj. for Conso-ROU-Workboat,PNL-0084,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Adjustment for Consolidation
+7990100500,Depreciation - Adj. for Consolidation -ROU-Land,PNL-0084,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Adjustment for Consolidation
+7990100600,COS-Depreciation - Adj. for Conso.-ROU-Equip.,PNL-0084,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Adjustment for Consolidation
+7990100700,Depreciation - Adj. for Conso.-ROU-Motor Vehicle,PNL-0084,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Adjustment for Consolidation
+7990100800,Depreciation - Adj. for Conso.ROU-Plant& Machinery,PNL-0084,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Adjustment for Consolidation
+7990100900,Depreciation - Adj. for Conso.ROU-ICT Hardware,PNL-0084,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Adjustment for Consolidation
+7990101000,Depreciation - Adj. for Conso.ROU-ICT Software,PNL-0084,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Adjustment for Consolidation
+PNL-0085,Intercompany Allocation,PNL-0083,Reporting Node,3,NPAT > Other Income & Expenses > Clearing > Intercompany Allocation
+7990200101,CA Clearing 1,PNL-0085,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Intercompany Allocation
+7990200102,CA Clearing 2,PNL-0085,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Intercompany Allocation
+7990200103,CA Clearing 3,PNL-0085,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Intercompany Allocation
+7990200104,CA Clearing 4,PNL-0085,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Intercompany Allocation
+7990300101,Intraco Balancing  ECC Payroll,PNL-0085,Posting GL Account,4,NPAT > Other Income & Expenses > Clearing > Intercompany Allocation
+PNL-0086,Secondary Cost Elements,NPAT,Reporting Node,1,NPAT > Secondary Cost Elements
+8010000010,Cost Allocation - Direct Admin Costs,PNL-0086,Posting GL Account,2,NPAT > Secondary Cost Elements
+8010000020,Cost Allocation - Indirect Admin Costs,PNL-0086,Posting GL Account,2,NPAT > Secondary Cost Elements
+8010000030,Cost Allocation - Indirect Admin Costs 2,PNL-0086,Posting GL Account,2,NPAT > Secondary Cost Elements
+8010000040,Cost Allocation - Fleet Costs,PNL-0086,Posting GL Account,2,NPAT > Secondary Cost Elements
+PNL-0087,Taxation,NPAT,Reporting Node,1,NPAT > Taxation
+7900000100,Corporate Income Tax-Current Year,PNL-0087,Posting GL Account,2,NPAT > Taxation
+7900000200,Corporate Income Tax-Prior Year,PNL-0087,Posting GL Account,2,NPAT > Taxation
+7900000300,Deferred Tax-Current Year,PNL-0087,Posting GL Account,2,NPAT > Taxation
+7900000400,Deferred Tax-Prior Year,PNL-0087,Posting GL Account,2,NPAT > Taxation

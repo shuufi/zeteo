@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { BusinessUnit } from '../data/types';
+  import { scopeState } from '../state/scope.svelte';
+  import { loadScope } from '../data/gl-store.svelte';
   import Autocomplete from './Autocomplete.svelte';
 
   let status = $state<'loading' | 'error' | 'ready'>('loading');
@@ -23,12 +25,28 @@
 
   load();
 
+  // Only sets the input's display text to match whatever scope is already
+  // selected (loaded independently — see App.svelte) — this component isn't
+  // always mounted (routes hide ContextBar while their own data is loading),
+  // so it must never be the sole trigger for the initial GL tree fetch.
   $effect(() => {
     if (defaulted || status !== 'ready' || !inputEl || businessUnits.length === 0) return;
     defaulted = true;
-    const fallback = businessUnits.find((bu) => bu.code === 'AET') ?? businessUnits[0];
+    const fallback = businessUnits.find((bu) => bu.code === scopeState.code) ?? businessUnits[0];
     inputEl.value = fallback.label;
+    if (fallback.code !== scopeState.code) {
+      scopeState.set(fallback.code, fallback.label);
+      loadScope(fallback.code);
+    }
   });
+
+  function handleSelect(option: HTMLElement): void {
+    const code = option.dataset.code;
+    const label = option.textContent?.trim() ?? code;
+    if (!code || !label) return;
+    scopeState.set(code, label);
+    loadScope(code);
+  }
 </script>
 
 <div class="flex items-center gap-1.5">
@@ -40,6 +58,7 @@
     placeholder="Search business or company…"
     wrapperClass="w-64"
     bind:inputEl
+    onselect={handleSelect}
   >
     {#if status === 'loading'}
       <div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">Loading…</div>
@@ -52,6 +71,7 @@
       {#each businessUnits as bu (bu.code)}
         <el-option
           value={bu.label}
+          data-code={bu.code}
           class="block truncate px-3 py-2 font-semibold text-gray-900 select-none aria-selected:bg-indigo-600 aria-selected:text-white dark:text-gray-300 dark:aria-selected:bg-indigo-500"
         >
           {bu.label}
@@ -59,6 +79,7 @@
         {#each bu.companies as company (company.code)}
           <el-option
             value={company.name}
+            data-code={company.code}
             class="block truncate py-2 pr-3 pl-6 text-gray-900 select-none aria-selected:bg-indigo-600 aria-selected:text-white dark:text-gray-300 dark:aria-selected:bg-indigo-500"
           >
             {company.name}
