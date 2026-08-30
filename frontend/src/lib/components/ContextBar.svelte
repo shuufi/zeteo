@@ -33,12 +33,14 @@
     currentLabel = "",
     refreshedAt = "",
     showYtd = false,
+    showPeriod = true,
     ytd = $bindable(false),
   }: {
     ancestors?: Crumb[];
     currentLabel?: string;
     refreshedAt?: string;
     showYtd?: boolean;
+    showPeriod?: boolean;
     ytd?: boolean;
   } = $props();
 </script>
@@ -47,7 +49,9 @@
   class="flex items-center gap-2.5 pb-4 text-xs flex-wrap border-b border-gray-200 dark:border-gray-700"
 >
   <BusinessPicker />
-  <PeriodPicker />
+  {#if showPeriod}
+    <PeriodPicker />
+  {/if}
   {#if showYtd}
     <label
       class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer select-none"

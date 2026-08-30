@@ -254,7 +254,7 @@
 
 <PageHeader title="Financial Trends" />
 <PageBody>
-  <ContextBar showYtd bind:ytd={ytdView} />
+  <ContextBar showYtd showPeriod={false} bind:ytd={ytdView} />
 
   {#if glStore.status === "loading"}
     <div class="pt-4">Loading…</div>
