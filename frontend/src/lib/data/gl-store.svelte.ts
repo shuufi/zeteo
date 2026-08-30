@@ -26,10 +26,12 @@ export const glStore = {
   },
 };
 
-export async function loadScope(scope: string): Promise<void> {
+export async function loadScope(scope: string, periodCode?: string): Promise<void> {
   status = 'loading';
   try {
-    const res = await fetch(`/api/gl/tree?scope=${encodeURIComponent(scope)}`);
+    const params = new URLSearchParams({ scope });
+    if (periodCode) params.set('period', periodCode);
+    const res = await fetch(`/api/gl/tree?${params}`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     const data = await res.json();
     if (data.notYetModelled) {

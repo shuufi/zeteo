@@ -21,10 +21,17 @@ The tabbed screen (`/diagnostic/:id/:tab`) for one VDT node — Diagnose / Bench
 _Avoid_: driver detail page, node detail.
 
 **Context bar**:
-The persistent strip pinned across every screen showing Business / Period / vs Budget filter chips plus, where relevant, the breadcrumb back to the tree root. Period and vs Budget remain decorative (see `docs/adr/0005-inert-filters-live-navigation.md`); the Business chip is a live picker (see `docs/adr/0015-business-chip-live-picker.md`) and the breadcrumb is live navigation.
+The persistent strip pinned across every screen showing Business / Period / vs Budget filter chips, an Apply button, plus, where relevant, the breadcrumb back to the tree root. vs Budget remains decorative (see `docs/adr/0005-inert-filters-live-navigation.md`); the Business chip (`docs/adr/0015-business-chip-live-picker.md`, `docs/adr/0028-company-hierarchical-master-data.md`) and the Period chip (see Period below) are both live pickers, but picking an option only stages a draft — Apply is what actually commits it and refetches (see `docs/adr/0027-context-bar-apply-button.md`). The breadcrumb is live navigation, unaffected by Apply.
+
+**Period**:
+A node in the Year → Quarter → Month hierarchy (e.g. `FY26`, `FY26-Q3`, `FY26-M06`) that scopes actual/budget/prior-year figures on every screen via the Context Bar's Period chip, an accordion-style Year/Quarter/Month dropdown (deliberately not searchable like the Business chip — see `docs/adr/0026`). Financial Performance scopes too: its Income Statement narrows to just the picked period's month columns, and its KPI labels swap "YTD" for the period's own label (e.g. "Revenue Q2") once scoped below the whole year. Only a Month is **postable** — the only grain a GL fact can be recorded against; Year and Quarter exist purely to roll postable Month figures up for reporting, the same relationship Reporting Nodes have to Posting GL Accounts in the VDT node hierarchy. See `docs/adr/0025-period-hierarchical-master-data.md` and `docs/adr/0026-period-chip-live-universal-picker.md`.
+_Avoid_: "period" for an arbitrary date range — it always means one specific node in this hierarchy; "postable" for Year/Quarter nodes (only Month is postable).
+
+**MISC Group**:
+The root of the Business chip's hierarchy — MISC Group → Business Unit → Company, hierarchical master data (`company_node`, adjacency-list, mirrors Period's `Year → Quarter → Month` shape) rather than a curated JSON blob. Selecting it rolls up every Sampled company across all Business Units. See `docs/adr/0028-company-hierarchical-master-data.md`.
 
 **Business Unit (BU)**:
-MISC's internal top-level grouping of legal entities — AET, Offshore Business Unit (OBU), MISC Maritime Services (MMS), Sungai Udang Port Sdn Bhd (SUPSB), ALAM. Each BU groups one or more **Company** records (a specific legal entity, e.g. "AET Tanker Holdings Sdn. Bhd."). This is distinct from the 7 "solution divisions" MISC's public website markets (Petroleum and Product Shipping, Gas Assets and Solutions, etc.) — that's a marketing/segment framing, not the BU grouping the company data actually uses. Zeteo models BU, not the marketing divisions.
+MISC Group's grouping of legal entities — AET, Offshore Business Unit (OBU), MISC Maritime Services (MMS), Sungai Udang Port Sdn Bhd (SUPSB), ALAM. Each BU groups one or more **Company** records (a specific legal entity, e.g. "AET Tanker Holdings Sdn. Bhd."). This is distinct from the 7 "solution divisions" MISC's public website markets (Petroleum and Product Shipping, Gas Assets and Solutions, etc.) — that's a marketing/segment framing, not the BU grouping the company data actually uses. Zeteo models BU, not the marketing divisions.
 _Avoid_: "business segment" for BU (that's the website's marketing term, not this data's grouping); "subsidiary" alone for Company (BU is also a kind of grouping, be specific about which level).
 
 **Not-yet-modelled (state)**:
@@ -36,8 +43,8 @@ One of the 9 companies (3 per Business Unit, or all of a BU's companies where it
 _Avoid_: modelled company (overloads "modelled," already used for diagnostic depth in Not-yet-modelled).
 
 **Partial BU total**:
-The figure shown when a Business Unit (not a specific company) is selected — the sum of only that BU's Sampled companies, visibly labelled with the count (e.g. "3 of 57 companies") rather than presented as the BU's true total.
-_Avoid_: BU total alone (implies a completeness the figure doesn't have).
+The figure shown when a Business Unit or MISC Group (not a specific company) is selected — the sum of only that scope's Sampled companies, visibly labelled with the count (e.g. "3 of 57 companies", or "9 of 86 companies" for the whole Group) rather than presented as the scope's true total.
+_Avoid_: BU total / Group total alone (implies a completeness the figure doesn't have).
 
 **Attention item (exception)**:
 The single highlighted card on Home surfacing the largest adverse variance needing investigation. Distinct from a "top adverse driver" (a plain ranked list row) — an attention item is the one thing Home foregrounds for immediate action.

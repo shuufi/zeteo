@@ -1,14 +1,14 @@
 export type Direction = 'adverse' | 'favourable' | 'neutral';
 
-export interface Company {
-  code: string;
-  name: string;
-}
+export type CompanyNodeType = 'Group' | 'Business Unit' | 'Company';
 
-export interface BusinessUnit {
-  code: string;
+/** A node in the MISC Group -> Business Unit -> Company hierarchy served by GET /api/companies — see docs/adr/0028. */
+export interface CompanyNode {
+  id: string;
   label: string;
-  companies: Company[];
+  companyType: CompanyNodeType;
+  parentId: string | null;
+  childIds: string[];
 }
 
 export interface KpiCard {
@@ -129,6 +129,18 @@ export interface RankedNode extends VdtNode {
   varAbs: number;
   rank: number;
   contributionWidthPct: number;
+}
+
+export type PeriodType = 'Year' | 'Quarter' | 'Month';
+
+/** A node in the Year/Quarter/Month hierarchy served by GET /api/periods — see docs/adr/0025. */
+export interface PeriodNode {
+  id: string;
+  label: string;
+  periodType: PeriodType;
+  parentId: string | null;
+  childIds: string[];
+  order: number;
 }
 
 export interface DriverLink {

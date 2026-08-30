@@ -9,13 +9,16 @@
   import NotYetModelled from '../lib/components/NotYetModelled.svelte';
   import { glStore } from '../lib/data/gl-store.svelte';
   import { getNode, getAncestors } from '../lib/data/gl-client';
+  import { periodState } from '../lib/state/period.svelte';
   import { formatRm, formatVar, pct } from '../lib/data/format';
 
   let { params }: { params: { id: string; tab?: string } } = $props();
 
   const node = $derived(getNode(glStore.tree, params.id));
   const tab = $derived(params.tab ?? 'diagnose');
-  const ancestors = $derived(node ? getAncestors(glStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}` })) : []);
+  const ancestors = $derived(
+    node ? getAncestors(glStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}?period=${periodState.code}` })) : []
+  );
 
   // Locally-overridable statuses for Validate/Reject, keyed "nodeId:entryId".
   let statusOverrides = $state<Record<string, string>>({});
