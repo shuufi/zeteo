@@ -22,6 +22,18 @@ class Scenario(str, Enum):
     PRIOR_YEAR = "prior_year"
 
 
+class PeriodType(str, Enum):
+    YEAR = "Year"
+    QUARTER = "Quarter"
+    MONTH = "Month"
+
+
+class CompanyNodeType(str, Enum):
+    GROUP = "Group"
+    BUSINESS_UNIT = "Business Unit"
+    COMPANY = "Company"
+
+
 class OperationalUnit(str, Enum):
     USD_PER_DAY = "usd-per-day"
     USD_PER_MONTH = "usd-per-month"
@@ -48,14 +60,54 @@ class GLNode(SQLModel, table=True):
     unit: Optional[OperationalUnit] = None
 
 
+class Period(SQLModel, table=True):
+    """A position in the Year/Quarter/Month hierarchy — see docs/adr/0025.
+
+    Only Month rows are postable (carry gl_fact rows); Year and Quarter exist
+    purely to roll postable Month figures up, the same relationship Reporting
+    Nodes have to Posting GL Accounts in GLNode. `order` is 1-based position
+    among siblings (Month: 1-12, Quarter: 1-4, Year: always 1) — used to index
+    a node's monthly-array position without parsing the code string.
+    """
+
+    __tablename__ = "period"
+
+    code: str = Field(primary_key=True)
+    label: str
+    parent_code: Optional[str] = Field(default=None, foreign_key="period.code")
+    period_type: PeriodType
+    order: int
+
+
+class CompanyNode(SQLModel, table=True):
+    """A position in the MISC Group -> Business Unit -> Company hierarchy — see docs/adr/0028.
+
+    Mirrors GLNode/Period's adjacency-list shape. Only Company rows are ever
+    referenced by gl_fact.company; `is_sampled` marks which Companies carry
+    real fake fact data (see docs/adr/0024) — Group and Business Unit rows
+    are pure rollup groupings, the same relationship Year/Quarter have to
+    Month in the period hierarchy. `order` is 1-based position among
+    siblings, for stable display ordering.
+    """
+
+    __tablename__ = "company_node"
+
+    code: str = Field(primary_key=True)
+    label: str
+    parent_code: Optional[str] = Field(default=None, foreign_key="company_node.code")
+    node_type: CompanyNodeType
+    order: int
+    is_sampled: bool = False
+
+
 class GLFact(SQLModel, table=True):
-    """An actual/budget/prior-year amount for one node, company and month."""
+    """An actual/budget/prior-year amount for one node, company and Month period."""
 
     __tablename__ = "gl_fact"
 
     id: Optional[int] = Field(default=None, primary_key=True)
     code: str = Field(foreign_key="gl_node.code", index=True)
-    company: str = Field(index=True)
-    month: int
+    company: str = Field(foreign_key="company_node.code", index=True)
+    period_code: str = Field(foreign_key="period.code", index=True)
     scenario: Scenario
     amount: float
