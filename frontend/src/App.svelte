@@ -3,6 +3,7 @@
   import Router from 'svelte-spa-router';
   import NavBar from './lib/components/NavBar.svelte';
   import { scopeState } from './lib/state/scope.svelte';
+  import { periodState } from './lib/state/period.svelte';
   import { loadScope } from './lib/data/gl-store.svelte';
   import Home from './routes/Home.svelte';
   import FinancialPerformance from './routes/FinancialPerformance.svelte';
@@ -26,11 +27,11 @@
     '*': NotFound,
   };
 
-  // Independent of BusinessPicker's mount — several routes hide ContextBar
-  // (and so BusinessPicker) while their own data is loading, so the initial
-  // GL tree fetch can't depend on that component ever rendering.
+  // Independent of BusinessPicker's/PeriodPicker's mount — several routes hide
+  // ContextBar (and so both pickers) while their own data is loading, so the
+  // initial GL tree fetch can't depend on either component ever rendering.
   onMount(() => {
-    loadScope(scopeState.code);
+    loadScope(scopeState.code, periodState.code);
   });
 </script>
 

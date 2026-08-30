@@ -1,13 +1,12 @@
 import type { KpiCard, Exception, DriverLink, LeadingIndicator } from './types';
 
 /**
- * Mock context for the whole prototype: FY26 Q3, vs Budget.
- * Period/comparison chips render this but are inert (see docs/adr/0005).
- * Business is a live picker (see docs/adr/0015, revised by docs/adr/0024) fed
- * by /api/companies + /api/gl/tree, not this mock.
+ * Mock context for the whole prototype: vs Budget.
+ * The comparison chip renders this but is inert (see docs/adr/0005).
+ * Business and Period are live pickers (see docs/adr/0015/0024 and
+ * docs/adr/0025/0026) fed by their own endpoints, not this mock.
  */
 export const context = {
-  period: 'FY26 Q3',
   comparison: 'vs Budget',
   refreshedAt: '03:00 today',
 };

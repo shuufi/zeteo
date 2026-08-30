@@ -21,36 +21,17 @@ export function getAncestors(tree: Record<string, VdtNode>, id: string): VdtNode
 }
 
 /**
- * Re-scopes a node's actual/budget/priorYear to a single month. Budget/
- * priorYear have no monthly curve of their own, so they're prorated by the
- * month's share of the node's annual actual (see docs/adr/0022, and the old
- * zeteo-data.ts getMonthlyNodeView this replaces).
- */
-export function getMonthlyNodeView(tree: Record<string, VdtNode>, nodeId: string, monthIndex: number): VdtNode | undefined {
-  const node = tree[nodeId];
-  if (!node) return undefined;
-  const actual = node.monthlyActual[monthIndex];
-  if (actual === undefined) return node;
-  const share = node.actual !== 0 ? actual / node.actual : 0;
-  return {
-    ...node,
-    actual,
-    budget: Number((node.budget * share).toFixed(3)),
-    priorYear: Number((node.priorYear * share).toFixed(3)),
-  };
-}
-
-/**
  * Children ranked by |actual - budget| variance — the real GL/FSI tree has no
  * curated per-node rank, so every node's children rank live off this one
  * generic walk instead of the old mock's hand-picked ref lists. Operational
  * Driver children are excluded: their units (rate/%/days) aren't comparable
- * to a financial variance in RM_M.
+ * to a financial variance in RM_M. Nodes already reflect whatever period was
+ * requested from GET /api/gl/tree (see docs/adr/0025) — no client-side
+ * re-scoping needed here.
  */
-export function rankChildren(tree: Record<string, VdtNode>, node: VdtNode, monthIndex: number | null = null): RankedNode[] {
+export function rankChildren(tree: Record<string, VdtNode>, node: VdtNode): RankedNode[] {
   const children = getChildren(tree, node).filter((c) => c.nodeType !== 'Operational Driver');
-  const scoped = monthIndex === null ? children : children.map((c) => getMonthlyNodeView(tree, c.id, monthIndex) ?? c);
-  const ranked = [...scoped].sort((a, b) => Math.abs(b.actual - b.budget) - Math.abs(a.actual - a.budget));
+  const ranked = [...children].sort((a, b) => Math.abs(b.actual - b.budget) - Math.abs(a.actual - a.budget));
   const maxAbs = Math.max(...ranked.map((n) => Math.abs(n.actual - n.budget)), 1);
   return ranked.map((n, i) => ({
     ...n,

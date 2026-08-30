@@ -2,7 +2,6 @@
   import { SvelteFlow, Background, Controls, MiniMap, Position, type Node, type Edge } from '@xyflow/svelte';
   import '@xyflow/svelte/dist/style.css';
   import { stratify, tree as d3tree } from 'd3-hierarchy';
-  import { getMonthlyNodeView } from '../data/gl-client';
   import { glStore } from '../data/gl-store.svelte';
   import type { VdtNode } from '../data/types';
 
@@ -11,7 +10,7 @@
   const LEVEL_GAP = 100;
   const SIBLING_GAP = 20;
 
-  let { rootId, monthIndex = null }: { rootId: string; monthIndex?: number | null } = $props();
+  let { rootId }: { rootId: string } = $props();
 
   // The root starts expanded. Deeper branches open only when their parent is
   // clicked, keeping large GL hierarchies readable without hiding siblings.
@@ -59,9 +58,7 @@
     const laidOut = layout(root).descendants();
 
     nodes = laidOut.map((item) => {
-      const node = monthIndex === null
-        ? item.data
-        : (getMonthlyNodeView(glStore.tree, item.data.id, monthIndex) ?? item.data);
+      const node = item.data;
       const hasChildren = item.data.childIds.length > 0;
       const isExpanded = expandedIds.has(item.data.id);
       const marker = hasChildren ? (isExpanded ? '▼' : `▶ +${item.data.childIds.length}`) : '';

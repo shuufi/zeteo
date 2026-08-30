@@ -8,20 +8,86 @@ Run with: python backend/seed.py
 """
 
 import csv
+import json
 import random
 from pathlib import Path
 
 from sqlmodel import Session, delete
 
-from companies import sample_companies
 from db import engine, init_db
-from models import GLFact, GLNode, NodeType, NormalBalance, OperationalUnit, Scenario
+from models import CompanyNode, CompanyNodeType, GLFact, GLNode, NodeType, NormalBalance, OperationalUnit, Period, PeriodType, Scenario
 
 REPO_ROOT = Path(__file__).parent.parent
 CSV_PATH = REPO_ROOT / "docs" / "anaplan_is_master_data.csv"
+COMPANIES_JSON_PATH = Path(__file__).parent / "data" / "companies.json"
 
 SEED = 42
 MONTHS = range(1, 13)
+
+# Root of the Business chip's hierarchy — see docs/adr/0028. Not itself in
+# companies.json (that file only holds the real BU/Company data); synthesised
+# here the same way build_periods() synthesises FY26's Year row.
+GROUP_CODE = "MISC"
+GROUP_LABEL = "MISC Group"
+
+# One fiscal year, calendar-aligned (Jan start) — see docs/adr/0025. The
+# schema doesn't prevent more years, this just isn't asked to carry them yet.
+FISCAL_YEAR = "FY26"
+QUARTER_MONTHS = {1: (1, 2, 3), 2: (4, 5, 6), 3: (7, 8, 9), 4: (10, 11, 12)}
+MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def month_period_code(month: int) -> str:
+    return f"{FISCAL_YEAR}-M{month:02d}"
+
+
+def build_periods() -> list[Period]:
+    periods = [Period(code=FISCAL_YEAR, label=FISCAL_YEAR, parent_code=None, period_type=PeriodType.YEAR, order=1)]
+    for quarter, months in QUARTER_MONTHS.items():
+        quarter_code = f"{FISCAL_YEAR}-Q{quarter}"
+        periods.append(Period(code=quarter_code, label=f"Q{quarter}", parent_code=FISCAL_YEAR, period_type=PeriodType.QUARTER, order=quarter))
+        for month in months:
+            periods.append(
+                Period(
+                    code=month_period_code(month),
+                    label=MONTH_LABELS[month - 1],
+                    parent_code=quarter_code,
+                    period_type=PeriodType.MONTH,
+                    order=month,
+                )
+            )
+    return periods
+
+
+# 3 companies per BU, or all of them where a BU has 3 or fewer, carry fake
+# fact data — see docs/adr/0024.
+SAMPLED_PER_BU = 3
+
+
+def build_company_nodes() -> list[CompanyNode]:
+    data = json.loads(COMPANIES_JSON_PATH.read_text(encoding="utf-8"))
+    nodes = [CompanyNode(code=GROUP_CODE, label=GROUP_LABEL, parent_code=None, node_type=CompanyNodeType.GROUP, order=1)]
+    for bu_order, bu in enumerate(data["businessUnits"], start=1):
+        nodes.append(
+            CompanyNode(code=bu["code"], label=bu["label"], parent_code=GROUP_CODE, node_type=CompanyNodeType.BUSINESS_UNIT, order=bu_order)
+        )
+        for company_order, company in enumerate(bu["companies"], start=1):
+            nodes.append(
+                CompanyNode(
+                    code=company["code"],
+                    label=company["name"],
+                    parent_code=bu["code"],
+                    node_type=CompanyNodeType.COMPANY,
+                    order=company_order,
+                    is_sampled=company_order <= SAMPLED_PER_BU,
+                )
+            )
+    return nodes
+
+
+def sampled_company_codes(company_nodes: list[CompanyNode]) -> list[str]:
+    return [n.code for n in company_nodes if n.node_type == CompanyNodeType.COMPANY and n.is_sampled]
+
 
 # First digit of a Posting GL Account code -> normal balance, derived from the
 # CSV itself (docs/adr/0023): every leaf under a given SAP account-number
@@ -147,7 +213,7 @@ def prorate(monthly_actual: list[float], scaled_total: float) -> list[float]:
     return [round(v * scaled_total / actual_total, 3) for v in monthly_actual]
 
 
-def generate_gl_facts(rng: random.Random, leaves: list[GLNode], companies: list[dict]) -> list[GLFact]:
+def generate_gl_facts(rng: random.Random, leaves: list[GLNode], companies: list[str]) -> list[GLFact]:
     leaf_count_by_prefix = {prefix: sum(1 for leaf in leaves if leaf.code[0] == prefix) for prefix in CATEGORY_ANNUAL_TARGET}
     leaf_mean_by_prefix = {prefix: CATEGORY_ANNUAL_TARGET[prefix] / count for prefix, count in leaf_count_by_prefix.items()}
 
@@ -161,13 +227,14 @@ def generate_gl_facts(rng: random.Random, leaves: list[GLNode], companies: list[
             monthly_prior = prorate(monthly_actual, annual_actual * rng.uniform(0.85, 1.15))
             for month in MONTHS:
                 i = month - 1
-                facts.append(GLFact(code=leaf.code, company=company["code"], month=month, scenario=Scenario.ACTUAL, amount=monthly_actual[i]))
-                facts.append(GLFact(code=leaf.code, company=company["code"], month=month, scenario=Scenario.BUDGET, amount=monthly_budget[i]))
-                facts.append(GLFact(code=leaf.code, company=company["code"], month=month, scenario=Scenario.PRIOR_YEAR, amount=monthly_prior[i]))
+                period_code = month_period_code(month)
+                facts.append(GLFact(code=leaf.code, company=company, period_code=period_code, scenario=Scenario.ACTUAL, amount=monthly_actual[i]))
+                facts.append(GLFact(code=leaf.code, company=company, period_code=period_code, scenario=Scenario.BUDGET, amount=monthly_budget[i]))
+                facts.append(GLFact(code=leaf.code, company=company, period_code=period_code, scenario=Scenario.PRIOR_YEAR, amount=monthly_prior[i]))
     return facts
 
 
-def generate_operational_facts(rng: random.Random, companies: list[dict]) -> list[GLFact]:
+def generate_operational_facts(rng: random.Random, companies: list[str]) -> list[GLFact]:
     facts = []
     for code, _description, _parent_code, _unit, (lo, hi) in OPERATIONAL_DRIVERS:
         for company in companies:
@@ -175,7 +242,7 @@ def generate_operational_facts(rng: random.Random, companies: list[dict]) -> lis
             for month in MONTHS:
                 drift = rng.uniform(-0.05, 0.05) * (hi - lo)
                 value = min(max(base + drift * month / 12, lo), hi)
-                facts.append(GLFact(code=code, company=company["code"], month=month, scenario=Scenario.ACTUAL, amount=round(value, 2)))
+                facts.append(GLFact(code=code, company=company, period_code=month_period_code(month), scenario=Scenario.ACTUAL, amount=round(value, 2)))
     return facts
 
 
@@ -185,9 +252,11 @@ def main() -> None:
     hierarchy = load_hierarchy_nodes()
     operational_nodes = load_operational_driver_nodes(hierarchy)
     all_nodes = hierarchy + operational_nodes
+    periods = build_periods()
+    company_nodes = build_company_nodes()
 
     leaves = [n for n in hierarchy if n.node_type == NodeType.POSTING_GL_ACCOUNT]
-    companies = sample_companies()
+    companies = sampled_company_codes(company_nodes)
 
     facts = generate_gl_facts(rng, leaves, companies)
     facts += generate_operational_facts(rng, companies)
@@ -196,15 +265,21 @@ def main() -> None:
     with Session(engine) as session:
         session.exec(delete(GLFact))
         session.exec(delete(GLNode))
+        session.exec(delete(Period))
+        session.exec(delete(CompanyNode))
         session.commit()
 
         session.add_all(all_nodes)
+        session.add_all(periods)
+        session.add_all(company_nodes)
         session.commit()
 
         session.add_all(facts)
         session.commit()
 
     print(f"Seeded {len(all_nodes)} nodes ({len(hierarchy)} GL/FSI + {len(operational_nodes)} operational driver)")
+    print(f"Seeded {len(periods)} periods ({FISCAL_YEAR}: 1 year + 4 quarters + 12 months)")
+    print(f"Seeded {len(company_nodes)} company nodes ({GROUP_LABEL} + BUs + companies, {len(companies)} sampled)")
     print(f"Seeded {len(facts)} facts across {len(companies)} sampled companies")
     print(f"Fully-modelled example node: {FULLY_MODELLED_NODE}")
 

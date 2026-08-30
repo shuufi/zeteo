@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { link } from "svelte-spa-router";
   import { slide } from "svelte/transition";
   import PageHeader from "../lib/components/PageHeader.svelte";
@@ -15,10 +16,49 @@
     buildDisplayRows,
     indentClass,
   } from "../lib/data/gl-client";
+  import { periodState, DEFAULT_PERIOD_CODE } from "../lib/state/period.svelte";
+  import { periodStore, loadPeriods, periodLabel } from "../lib/data/period-store.svelte";
   import { months, formatRmAuto, cumulative } from "../lib/data/format";
-  import type { DisplayRow, OperationalUnit } from "../lib/data/types";
+  import type { DisplayRow, OperationalUnit, PeriodNode } from "../lib/data/types";
 
   let ytdView = $state(false);
+
+  onMount(loadPeriods);
+
+  // Month order (1-12) is global on Period.order (see docs/adr/0025), so a
+  // plain numeric sort aligns 1:1 with `months` regardless of quarter.
+  const monthPeriodCodes = $derived(
+    Object.values(periodStore.tree)
+      .filter((p) => p.periodType === "Month")
+      .sort((a, b) => a.order - b.order)
+      .map((p) => p.id),
+  );
+
+  // Financial Performance now scopes to the Period chip like every other
+  // screen (see docs/adr/0026) — but its statement table is a grid of month
+  // *columns*, so "scoping" here means narrowing which of the 12 columns
+  // show, not just filtering a single scalar the way VDT Explorer does.
+  // 0-based month-order indices (see docs/adr/0025) covered by the current
+  // period; all 12 for the whole year or before periods have loaded.
+  function monthOrderIndices(code: string): number[] {
+    const period = periodStore.tree[code];
+    if (!period || period.periodType === "Year") return monthPeriodCodes.map((_, i) => i);
+    function collect(p: PeriodNode): number[] {
+      if (p.periodType === "Month") return [p.order - 1];
+      return p.childIds
+        .map((id) => periodStore.tree[id])
+        .filter((c): c is PeriodNode => c !== undefined)
+        .flatMap(collect);
+    }
+    return collect(period).sort((a, b) => a - b);
+  }
+  const visibleMonthIndices = $derived(monthOrderIndices(periodState.code));
+  const gridTemplateColumns = $derived(
+    `minmax(240px,1.3fr) repeat(${visibleMonthIndices.length}, minmax(64px,1fr))`,
+  );
+  // "YTD" only reads correctly for the whole year — otherwise say which
+  // Quarter/Month the KPIs are scoped to.
+  const periodQualifier = $derived(periodState.code === DEFAULT_PERIOD_CODE ? "YTD" : periodLabel(periodState.code));
 
   const pnlRows = $derived(buildDisplayRows(glStore.tree));
   const rowsByNodeId = $derived(
@@ -71,11 +111,14 @@
   const rows = $derived(
     pnlRows
       .filter(isVisible)
-      .map((row) => ({
-        row,
-        node: getNode(glStore.tree, row.nodeId),
-        monthly: getNode(glStore.tree, row.nodeId)?.monthlyActual ?? [],
-      }))
+      .map((row) => {
+        const monthlyActual = getNode(glStore.tree, row.nodeId)?.monthlyActual ?? [];
+        return {
+          row,
+          node: getNode(glStore.tree, row.nodeId),
+          monthly: visibleMonthIndices.map((i) => monthlyActual[i] ?? 0),
+        };
+      })
       .filter((r) => r.row.kind === "operational" || r.node !== undefined),
   );
 
@@ -101,32 +144,36 @@
   const taxation = $derived(getNode(glStore.tree, "PNL-0087"));
   const npat = $derived(getNode(glStore.tree, "NPAT"));
 
+  function scoped(monthlyActual: number[]): number[] {
+    return visibleMonthIndices.map((i) => monthlyActual[i] ?? 0);
+  }
+
   const financialKpis = $derived(
     revenue && costOfRevenue && grossProfit && npat
       ? [
           {
             id: "revenue-ytd",
-            label: "Revenue YTD",
+            label: `Revenue ${periodQualifier}`,
             value: formatRmAuto(revenue.actual),
-            trend: cumulative(revenue.monthlyActual),
+            trend: cumulative(scoped(revenue.monthlyActual)),
           },
           {
             id: "cost-of-revenue-ytd",
-            label: "Cost of Revenue YTD",
+            label: `Cost of Revenue ${periodQualifier}`,
             value: formatRmAuto(Math.abs(costOfRevenue.actual)),
-            trend: cumulative(costOfRevenue.monthlyActual.map(Math.abs)),
+            trend: cumulative(scoped(costOfRevenue.monthlyActual).map(Math.abs)),
           },
           {
             id: "gross-profit-ytd",
-            label: "Gross Profit YTD",
+            label: `Gross Profit ${periodQualifier}`,
             value: formatRmAuto(grossProfit.actual),
-            trend: cumulative(grossProfit.monthlyActual),
+            trend: cumulative(scoped(grossProfit.monthlyActual)),
           },
           {
             id: "npat-ytd",
-            label: "NPAT YTD",
+            label: `NPAT ${periodQualifier}`,
             value: formatRmAuto(npat.actual),
-            trend: cumulative(npat.monthlyActual),
+            trend: cumulative(scoped(npat.monthlyActual)),
           },
         ]
       : [],
@@ -135,13 +182,14 @@
   const monthlyPerformanceChart = $derived(
     revenue && costOfRevenue && grossProfit && npat
       ? [
-          { label: "Revenue", values: revenue.monthlyActual },
-          { label: "COR", values: costOfRevenue.monthlyActual.map(Math.abs) },
-          { label: "GP", values: grossProfit.monthlyActual },
-          { label: "NPAT", values: npat.monthlyActual },
+          { label: "Revenue", values: scoped(revenue.monthlyActual) },
+          { label: "COR", values: scoped(costOfRevenue.monthlyActual).map(Math.abs) },
+          { label: "GP", values: scoped(grossProfit.monthlyActual) },
+          { label: "NPAT", values: scoped(npat.monthlyActual) },
         ]
       : [],
   );
+  const visibleMonthLabels = $derived(visibleMonthIndices.map((i) => months[i]));
 
   // Bridge steps map 1:1 onto NPAT's real direct children — no curated ref
   // lists needed, values already carry the right sign (see docs/adr/0023).
@@ -190,9 +238,6 @@
         ]
       : [],
   );
-
-  const statementGridCols =
-    "grid-cols-[minmax(240px,1.3fr)_repeat(12,minmax(64px,1fr))]";
 
   // Values already carry the right sign server-side (see docs/adr/0023) — a
   // negative number is a subtraction/loss, shown in parens.
@@ -244,7 +289,7 @@
 
       <div class="flex max-[900px]:flex-col gap-4">
         <Card class="flex-1 min-w-0" title="Income Statement Key Items">
-          <MonthlyTrendChart series={monthlyPerformanceChart} {months} />
+          <MonthlyTrendChart series={monthlyPerformanceChart} months={visibleMonthLabels} />
         </Card>
 
         <Card class="flex-1 min-w-0" title="Profit Bridge: Revenue to NPAT">
@@ -266,38 +311,44 @@
         <div class="overflow-x-auto">
           <div class="flex flex-col min-w-[1080px]">
             <div
-              class="grid {statementGridCols} items-center py-1 text-xs text-indigo-700 dark:text-indigo-300 border-b border-indigo-200 dark:border-indigo-900"
+              class="grid items-center py-1 text-xs text-indigo-700 dark:text-indigo-300 border-b border-indigo-200 dark:border-indigo-900"
+              style="grid-template-columns: {gridTemplateColumns}"
             >
               <span>Line item</span>
-              {#each months as m (m)}
+              {#each visibleMonthIndices as monthIdx (monthIdx)}
                 <span class="flex items-center justify-end gap-1">
-                  {m}
+                  {months[monthIdx]}
                   <svg class="w-3 h-3 shrink-0 invisible" viewBox="0 0 24 24"
                     ><circle cx="10.5" cy="10.5" r="6.5" /></svg
                   >
                 </span>
               {/each}
             </div>
-            {#snippet monthCell(nodeId: string, month: string, display: string)}
-              <a
-                class="group/cell flex items-center justify-end gap-1 no-underline text-inherit tabular-nums"
-                href="/vdt/{nodeId}?month={month}"
-                use:link
-                onclick={(e) => e.stopPropagation()}
-                title="Explore {month} in VDT Explorer"
-              >
-                <span>{display}</span>
-                <svg
-                  class="w-3 h-3 shrink-0 text-indigo-500 dark:text-indigo-400 opacity-0 group-hover/cell:opacity-100 transition-opacity"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
+            {#snippet monthCell(nodeId: string, periodCode: string | undefined, month: string, display: string)}
+              {#if periodCode}
+                <a
+                  class="group/cell flex items-center justify-end gap-1 no-underline text-inherit tabular-nums"
+                  href="/vdt/{nodeId}?period={periodCode}"
+                  use:link
+                  onclick={(e) => e.stopPropagation()}
+                  title="Explore {month} in VDT Explorer"
                 >
-                  <circle cx="10.5" cy="10.5" r="6.5" />
-                  <line x1="16" y1="16" x2="21" y2="21" />
-                </svg>
-              </a>
+                  <span>{display}</span>
+                  <svg
+                    class="w-3 h-3 shrink-0 text-indigo-500 dark:text-indigo-400 opacity-0 group-hover/cell:opacity-100 transition-opacity"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <circle cx="10.5" cy="10.5" r="6.5" />
+                    <line x1="16" y1="16" x2="21" y2="21" />
+                  </svg>
+                </a>
+              {:else}
+                <!-- periods haven't loaded (or failed to) — plain text, no dead/undefined link -->
+                <span class="flex items-center justify-end tabular-nums">{display}</span>
+              {/if}
             {/snippet}
             {#each displayRows as { row, values } (row.nodeId)}
               {#if collapsibleIds.has(row.nodeId)}
@@ -312,9 +363,10 @@
                     }
                   }}
                   transition:slide={{ duration: 150 }}
-                  class="grid {statementGridCols} items-center py-1.5 text-sm cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 {row.isSubtotal
+                  class="grid items-center py-1.5 text-sm cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 {row.isSubtotal
                     ? 'font-bold bg-indigo-50 dark:bg-indigo-900/30 rounded'
                     : ''}"
+                  style="grid-template-columns: {gridTemplateColumns}"
                 >
                   <span
                     class="flex items-center gap-1.5 {indentClass(
@@ -337,7 +389,8 @@
                   {#each values as value, i (i)}
                     {@render monthCell(
                       row.nodeId,
-                      months[i],
+                      monthPeriodCodes[visibleMonthIndices[i]],
+                      months[visibleMonthIndices[i]],
                       statementValue(value),
                     )}
                   {/each}
@@ -345,7 +398,8 @@
               {:else if row.kind === "operational"}
                 <div
                   transition:slide={{ duration: 150 }}
-                  class="grid {statementGridCols} items-center py-1.5 text-sm text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-400/10"
+                  class="grid items-center py-1.5 text-sm text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-400/10"
+                  style="grid-template-columns: {gridTemplateColumns}"
                 >
                   <span
                     class="{indentClass(row.indent)} flex items-center gap-1.5"
@@ -365,11 +419,12 @@
               {:else}
                 <div
                   transition:slide={{ duration: 150 }}
-                  class="grid {statementGridCols} items-center py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 {row.isSubtotal
+                  class="grid items-center py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 {row.isSubtotal
                     ? 'font-bold bg-indigo-50 dark:bg-indigo-900/30 rounded'
                     : ''} {row.isFinal
                     ? 'bg-indigo-600 dark:bg-indigo-500 text-white rounded pl-1.5'
                     : ''}"
+                  style="grid-template-columns: {gridTemplateColumns}"
                 >
                   <span
                     class={row.indent > 0
@@ -379,7 +434,8 @@
                   {#each values as value, i (i)}
                     {@render monthCell(
                       row.nodeId,
-                      months[i],
+                      monthPeriodCodes[visibleMonthIndices[i]],
+                      months[visibleMonthIndices[i]],
                       statementValue(value),
                     )}
                   {/each}

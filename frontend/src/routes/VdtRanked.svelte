@@ -7,26 +7,47 @@
   import Sparkline from '../lib/components/Sparkline.svelte';
   import ChipRow from '../lib/components/ChipRow.svelte';
   import NotYetModelled from '../lib/components/NotYetModelled.svelte';
-  import { glStore } from '../lib/data/gl-store.svelte';
-  import { getNode, getAncestors, getMonthlyNodeView, rankChildren } from '../lib/data/gl-client';
-  import { months, formatRm, formatVar, pct } from '../lib/data/format';
+  import { glStore, loadScope } from '../lib/data/gl-store.svelte';
+  import { getNode, getAncestors, rankChildren } from '../lib/data/gl-client';
+  import { periodState, DEFAULT_PERIOD_CODE } from '../lib/state/period.svelte';
+  import { periodStore, periodLabel } from '../lib/data/period-store.svelte';
+  import { scopeState } from '../lib/state/scope.svelte';
+  import { formatRm, formatVar, pct } from '../lib/data/format';
 
   let { params }: { params: { id: string } } = $props();
 
-  const monthIndex = $derived(months.indexOf(new URLSearchParams(router.querystring ?? '').get('month') ?? ''));
-  const selectedMonth = $derived(monthIndex >= 0 ? months[monthIndex] : null);
-  const monthQuery = $derived(selectedMonth ? `?month=${selectedMonth}` : '');
-
-  const baseNode = $derived(getNode(glStore.tree, params.id));
-  const node = $derived(
-    baseNode && selectedMonth ? (getMonthlyNodeView(glStore.tree, baseNode.id, monthIndex) ?? baseNode) : baseNode
+  const periodCode = $derived(new URLSearchParams(router.querystring ?? '').get('period'));
+  const periodQuery = $derived(`?period=${periodState.code}`);
+  // Explicit truthy check (not `!== 'Year'`) so this defaults to false while
+  // periodStore hasn't loaded yet, rather than flashing "Scoped to FY26".
+  const isScoped = $derived(
+    periodStore.tree[periodState.code]?.periodType === 'Quarter' || periodStore.tree[periodState.code]?.periodType === 'Month'
   );
+  // Derived from periodStore.tree on every read (see periodLabel), so a
+  // deep-link arriving before periods have loaded shows the raw code only
+  // momentarily — it corrects itself once periodStore is ready, rather than
+  // freezing on the raw code (see docs/adr/0026).
+  const scopedLabel = $derived(periodLabel(periodState.code));
+
+  // Syncs the URL's ?period= into the shared periodState + refetches when it
+  // differs — e.g. arriving via a Financial Performance P&L cell deep-link
+  // (see docs/adr/0026). Once glStore.tree reflects the requested period, its
+  // nodes' actual/budget/priorYear are already scoped server-side — no
+  // client-side re-derivation needed (contrast with the old getMonthlyNodeView).
+  $effect(() => {
+    if (periodCode && periodCode !== periodState.code) {
+      periodState.set(periodCode);
+      loadScope(scopeState.code, periodCode);
+    }
+  });
+
+  const node = $derived(getNode(glStore.tree, params.id));
   const ancestors = $derived(
-    node ? getAncestors(glStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}${monthQuery}` })) : []
+    node ? getAncestors(glStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}${periodQuery}` })) : []
   );
   // Real GL/FSI nodes carry no curated rank — every child ranks live by
   // contribution magnitude instead (see gl-client.ts rankChildren).
-  const rankedChildren = $derived(node ? rankChildren(glStore.tree, node, selectedMonth ? monthIndex : null) : []);
+  const rankedChildren = $derived(node ? rankChildren(glStore.tree, node) : []);
 
 </script>
 
@@ -40,15 +61,15 @@
     <NotYetModelled label="No GL data modelled for the selected company/BU yet." />
   </PageBody>
 {:else if node}
-  <PageHeader title={selectedMonth ? `${node.name} — ${selectedMonth}` : node.name} />
+  <PageHeader title={isScoped ? `${node.name} — ${scopedLabel}` : node.name} />
   <PageBody>
     <ContextBar {ancestors} />
 
     <div class="flex flex-col gap-4 pt-4">
-    {#if selectedMonth}
+    {#if isScoped}
       <div class="text-xs text-indigo-700 dark:text-indigo-300">
-        Scoped to {selectedMonth} ·
-        <a class="no-underline hover:underline" href="/vdt/{node.id}" use:link>view full year →</a>
+        Scoped to {scopedLabel} ·
+        <a class="no-underline hover:underline" href="/vdt/{node.id}?period={DEFAULT_PERIOD_CODE}" use:link>view full year →</a>
       </div>
     {/if}
     <div class="flex gap-4">
@@ -121,7 +142,7 @@
           </div>
         </div>
         <div class="h-[34rem]">
-          <ValueDriverFlow rootId={node.id} monthIndex={selectedMonth ? monthIndex : null} />
+          <ValueDriverFlow rootId={node.id} />
         </div>
       </div>
     {/if}
