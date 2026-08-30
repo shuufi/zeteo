@@ -16,10 +16,9 @@
     buildDisplayRows,
     indentClass,
   } from "../lib/data/gl-client";
-  import { periodState, DEFAULT_PERIOD_CODE } from "../lib/state/period.svelte";
-  import { periodStore, loadPeriods, periodLabel } from "../lib/data/period-store.svelte";
+  import { periodStore, loadPeriods } from "../lib/data/period-store.svelte";
   import { months, formatRmAuto, cumulative } from "../lib/data/format";
-  import type { DisplayRow, OperationalUnit, PeriodNode } from "../lib/data/types";
+  import type { DisplayRow, OperationalUnit } from "../lib/data/types";
 
   let ytdView = $state(false);
 
@@ -34,31 +33,17 @@
       .map((p) => p.id),
   );
 
-  // Financial Performance now scopes to the Period chip like every other
-  // screen (see docs/adr/0026) — but its statement table is a grid of month
-  // *columns*, so "scoping" here means narrowing which of the 12 columns
-  // show, not just filtering a single scalar the way VDT Explorer does.
-  // 0-based month-order indices (see docs/adr/0025) covered by the current
-  // period; all 12 for the whole year or before periods have loaded.
-  function monthOrderIndices(code: string): number[] {
-    const period = periodStore.tree[code];
-    if (!period || period.periodType === "Year") return monthPeriodCodes.map((_, i) => i);
-    function collect(p: PeriodNode): number[] {
-      if (p.periodType === "Month") return [p.order - 1];
-      return p.childIds
-        .map((id) => periodStore.tree[id])
-        .filter((c): c is PeriodNode => c !== undefined)
-        .flatMap(collect);
-    }
-    return collect(period).sort((a, b) => a - b);
-  }
-  const visibleMonthIndices = $derived(monthOrderIndices(periodState.code));
+  // Financial Performance always shows the whole fiscal year — unlike VDT
+  // Explorer/Driver Diagnostic, it doesn't scope to the Period chip (see
+  // docs/adr/0026, reverted from genuinely scoping per follow-up feedback):
+  // its Income Statement is a grid of all 12 month columns and its KPI cards
+  // are explicitly YTD, so the chip stays visible/interactive here (picking
+  // still affects the other two screens) but this page ignores it.
+  const visibleMonthIndices = $derived(monthPeriodCodes.map((_, i) => i));
   const gridTemplateColumns = $derived(
     `minmax(240px,1.3fr) repeat(${visibleMonthIndices.length}, minmax(64px,1fr))`,
   );
-  // "YTD" only reads correctly for the whole year — otherwise say which
-  // Quarter/Month the KPIs are scoped to.
-  const periodQualifier = $derived(periodState.code === DEFAULT_PERIOD_CODE ? "YTD" : periodLabel(periodState.code));
+  const periodQualifier = "YTD";
 
   const pnlRows = $derived(buildDisplayRows(glStore.tree));
   const rowsByNodeId = $derived(
