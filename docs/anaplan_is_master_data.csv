@@ -201,199 +201,210 @@ PNL-0020,Cos Depreciation & Impairment,PNL-0011,Reporting Node,3,NPAT > Gross Pr
 5100215500,COS - Corporate Subscription & Membership,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
 5090101500,COS  Amort. & Depn- Intangible  Priv.Agrment,PNL-0020,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Cos Depreciation & Impairment
 PNL-0021,Manpower Cost,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100100100,COS-Crew costs-Salary & Wages,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100100200,COS-Crew costs-Salary & Wages-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100100300,COS-Crew costs-Overtime,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100100400,COS-Crew costs-Leave Pay,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100100500,COS-Crew costs-Bonus,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100100600,COS-Crew costs-Allowance,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100100700,COS-Crew costs-Allowance-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100100800,COS-Crew costs-EPF,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100100900,COS-Crew costs-CPF,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100101000,COS-Crew costs-SOCSO,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100101100,COS-Crew costs-Other Statutory Contribution,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100101200,COS-Crew costs-Medical-Sickness/Injury,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100101300,COS-Crew costs-Insurance,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100101400,COS-Crew Recruitment,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100101500,COS-Crew Recruitment-Medical Check Up,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100101600,COS-Crew Training-Course-Fees & Charges,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100101700,COS-Crew Training-Course-Sea (CBT),PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100101800,COS-Crew Training-Course-Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100101900,COS-Crew Training-Shore Attach/Succession Planning,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100102000,COS-Crew Training-Higher Sponsorship,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100102100,COS-Crew Training-Airfare,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100102200,COS-Crew Training-Transportation,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100102300,COS-Crew Training-Accommodation,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100102400,COS-Crew Training-Project Capability,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100102500,COS-Crew costs-Others,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100102600,COS-Crew costs-Union Fee,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100102700,COS-Crew costs-HRDF,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100102800,COS-Crew costs-Overtime-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100102900,COS-Crew costs-Leave Pay-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100103000,COS-Crew costs-Bonus-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100103100,COS-Crew costs-EPF-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100103200,COS-Crew costs-CPF-Foreign,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100103300,COS-Crew costs-Awards,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100103400,COS-Crew Reloc-Trvl Fares & Exp-Transferred,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100103500,COS-Crew Reloc-Trvl Fares & Exp-Air Travel,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100103600,COS-Crew Reloc-Trvl Fares & Exp-Accommodation,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100103700,COS-Crew Reloc-Trvl Fares & Exp-Pre MedicalCheckup,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100103800,COS-Crew Reloc-Trvl Fares & Exp-Other related cost,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100103900,COS-Crew Reloc-Others-Transferred,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100200100,"COS-Salary/Wages-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100200200,COS-Salary/Wages-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100200300,COS-Salary/Wages-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100200400,COS-Salary/Wages-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100200500,COS-Salary/Wages-Contract Staff-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100200600,COS-Salary/Wages-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100200700,COS-Salary/Wages-Contract Staff-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100200800,COS-Director Fees - Attendance Allowances-BOD,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100200900,"COS-Non-Exec Dir Fees&Allow-Dir,Snr Mgt &Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100201000,"COS-Bonus-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100201100,COS-Bonus-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100201200,COS-Bonus-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100201300,COS-Bonus-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100201400,COS-Bonus-Contract Staff-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100201500,COS-Bonus-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100201600,COS-Bonus-Contract Staff-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100201700,"COS-Overtime-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100201800,COS-Overtime-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100201900,COS-Overtime-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100202000,COS-Overtime-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100202100,COS-Overtime-Contract Staff-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100202200,COS-Overtime-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100202300,COS-Overtime-Contract Staff-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100202400,"COS-House All & Sub-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100202500,COS-House All & Sub-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100202600,COS-House All & Sub-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100202700,"COS-OCOLA-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100202800,COS-OCOLA-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100202900,COS-OCOLA-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100203000,COS-All-in-Compensation-Interns & Apprentices,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100203100,COS-Co Ctrbn to KWSP-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100203200,COS-Co Ctrbn to KWSP-Contract Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100203300,COS-Co Ctrbn to KWSP-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100203400,COS-Co Ctrbn to KWSP-Contract Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100203500,"COS-Co Ctrbn to PRBF-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100203600,COS-Co Ctrbn to PRBF-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100203700,COS-Co Ctrbn to PRBF-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100203800,COS-Co Ctrbn to PRBF-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100203900,COS-Co Ctrbn to PRBF-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100204000,COS-Co Ctrbn to PRBF-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100204100,COS-Co Ctrbn to PRBF-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100204200,"COS-Co Ctrbn to KWSP-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100204300,COS-Co Ctrbn to KWSP-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100204400,COS-Co Ctrbn to KWSP-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100204500,"COS-Co Ctrbn to SOCSO-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100204600,COS-Co Ctrbn to SOCSO-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100204700,COS-Co Ctrbn to SOCSO-EIS Permanent Exec,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100204800,COS-Co Ctrbn to SOCSO-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100204900,COS-Co Ctrbn to SOCSO-Contract Staff-Expat-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100205000,COS-Co Ctrbn to SOCSO-Contrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100205100,COS-Co Ctrbn to SOCSO-Contract Staff-Local-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100205200,COS-Co Ctrbn to SOCSO-Contrct Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100205300,"COS-Co Ctrbn to EIS-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100205400,COS-Co Ctrbn to EIS-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100205500,COS-Co Ctrbn to EIS-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100205600,COS-Co Ctrbn to EIS-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100205700,COS-Co Ctrbn to EIS-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100205800,COS-Co Ctrbn to EIS-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100205900,COS-Co Ctrbn to EIS-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100206000,"COS-Co Ctrbn to HRM Dev Fund-Dir,Snr Mgt&Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100206100,COS-Co Ctrbn to HRM Devt Fund-Permanent Non-Exec,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100206200,COS-Co Ctrbn to HRM Devt Fund-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100206300,"COS-Shift Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100206400,COS-Shift Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100206500,COS-Shift Allowance-Temporary Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100206600,COS-Shift Allowance-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100206700,COS-Shift Allowance-Contract Staff-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100206800,COS-Shift Allowance-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100206900,COS-Shift Allowance-Contract Staff-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100207000,"COS-Acting Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100207100,COS-Acting Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100207200,COS-Acting Allowance-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100207300,COS-Acting Allowance-Contract Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100207400,COS-Acting Allowance-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100207500,COS-Acting Allowance-Contract Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100207600,"COS-Covering Allowance-Dir,Snr Mgt& Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100207700,COS-Covering Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100207800,COS-Covering Allowance-Contrct Staff-Expat-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100207900,COS-Covering Allowance-Cntrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100208000,COS-Covering Allowance-Contrct Staff-Local-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100208100,COS-Covering Allowance-Cntrct Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100208200,"COS-Performance Allow-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100208300,COS-Performance Allow-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100208400,COS-Performance Allow-Contract Staff-Expat-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100208500,COS-Performance Allow-Contrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100208600,COS-Performance Allow-Contract Staff-Local-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100208700,COS-Performance Allow-Contrct Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100208800,"COS-Hardship Allowance-Dir,Snr Mgt &Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100208900,COS-Hardship Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100209000,COS-Hardship Allowance-Contrct Staff-Expat-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100209100,COS-Hardship Allowance-Cntrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100209200,COS-Hardship Allowance-Cntrct Staff-Local-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100209300,COS-Hardship Allowance-Cntrct Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100209400,"COS-Driver Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100209500,"COS-Laundry Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100209600,COS-Laundry Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100209700,COS-Laundry Allowance-Contract Staff-Expat-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100209800,COS-Laundry Allowance-Contrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100209900,COS-Laundry Allowance-Contract Staff-Local-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100210000,COS-Laundry Allowance-Contrct Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100210100,"COS-Meal Allowance-OT-Dir,Snr Mgt & Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100210200,COS-Meal Allowance-Overtime-Permanent Non-Exec.,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100210300,COS-Meal Allowance-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100210400,COS-Meal Allowance-Contract Staff-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100210500,COS-Meal Allowance-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100210600,COS-Meal Allowance-Contract Staff-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100210700,"COS-Interim Allowance-Dir,Snr Mgt & Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100210800,COS-Interim Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100210900,COS-Interim Allowance-Contract Staff-Expat-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100211000,COS-Interim Allowance-Contrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100211100,COS-Interim Allowance-Contract Staff-Local-OnShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100211200,COS-Interim Allowance-Contrct Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100211300,"COS-Charge Allowance-Dir,Snr Mgt & Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100211400,COS-Charge Allowance-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100211500,COS-Charge Allowance-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100211600,COS-Charge Allowance-Contrct Staff-Expat-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100211700,COS-Charge Allowance-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100211800,COS-Charge Allowance-Contract Staff-Local-OffShore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100211900,"COS-Other Allowances-Dir,Snr Mgt & Permanent Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100212000,COS-Other Allowances-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100212100,COS-Other Allowance-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100212200,COS-Other Allowance-Contract Staff-Expat-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100212300,COS-Other Allowance-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100212400,COS-Other Allowance-Contract Staff-Local-Off Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100212500,COS-Travelling/Accomodation - Courses - Local,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100212600,COS-Travelling/Accomodation - Courses - Overseas,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100212700,COS-Other Training Expenses -Courses - Local,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100212800,COS-Other Training Expenses -Courses - Overseas,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100212900,Direct Labour Cost,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100213000,Subcontractor-Labour,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100213100,COS-Children Tuition Fees - Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100213200,COS- Staff Medical Exp-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100213300,COS-Staff Med Exp-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100213400,COS-Staff Med Exp-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100213500,COS-Staff Med Exp-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100213600,COS-Dental Exp-Exec & Above,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100213700,COS- Staff Dependent Med Exp-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100213800,COS-Staff Med Exp-Contract Staff-Expat-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100213900,COS-Staff Med Exp-Contract Staff-Local-On Shore,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100214000,"COS-Children Tuition Fees-Dir,Snr Mgt & Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100214100,COS-Gratuity-Cntrt Staff Gratuity-Cntrt Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100214200,"COS-Gratuity-Dir, Snr Mgt & Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100214300,COS-Separation Compensn-Permanent Non-Executives,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100214400,"COS-Separation Compensn-Dir,Snr Mgt & Perm Exec",PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100214500,COS-Staff Recruiting-Overseas Travel Fares & Exp,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100214600,COS-Staff Recruiting-Local Travel Fares & Expenses,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100214700,COS-Clubs & Corporate Credit Card Fees & Subs,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100214800,COS-Staff Subscriptions to Professional Bodies,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100214900,COS-Staff Medical - Onshore - Executive,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100215000,COS-Staff Medical - Onshore -Non-Executive,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100215100,COS-Staff Dental - Onshore - Executive,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100215200,COS-Staff Dental - Onshore - Non-Executive,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100215300,COS-Staff Subscriptions to Professional Bodies,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
-5100215400,Dependent Med Exp-Contract Staff,PNL-0021,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost
+PNL-0088,Crew Costs (Payroll & Statutory),PNL-0021,Reporting Node,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+PNL-0089,Crew Recruitment & Training,PNL-0021,Reporting Node,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Recruitment & Training
+PNL-0090,Crew Relocation & Travel,PNL-0021,Reporting Node,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Relocation & Travel
+PNL-0091,"Shore Staff Salary, Wages & Bonus",PNL-0021,Reporting Node,4,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+PNL-0092,Shore Staff Allowances,PNL-0021,Reporting Node,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+PNL-0093,Statutory Contributions,PNL-0021,Reporting Node,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+PNL-0094,Staff Training & Development,PNL-0021,Reporting Node,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Training & Development
+PNL-0095,Staff Medical & Welfare,PNL-0021,Reporting Node,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+PNL-0096,"Staff Recruitment, Subscriptions & Clubs",PNL-0021,Reporting Node,4,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Recruitment, Subscriptions & Clubs"
+PNL-0097,Gratuity & Separation,PNL-0021,Reporting Node,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Gratuity & Separation
+PNL-0098,Contract & Subcontract Labour,PNL-0021,Reporting Node,4,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Contract & Subcontract Labour
+5100100100,COS-Crew costs-Salary & Wages,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100100200,COS-Crew costs-Salary & Wages-Foreign,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100100300,COS-Crew costs-Overtime,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100100400,COS-Crew costs-Leave Pay,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100100500,COS-Crew costs-Bonus,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100100600,COS-Crew costs-Allowance,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100100700,COS-Crew costs-Allowance-Foreign,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100100800,COS-Crew costs-EPF,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100100900,COS-Crew costs-CPF,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100101000,COS-Crew costs-SOCSO,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100101100,COS-Crew costs-Other Statutory Contribution,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100101200,COS-Crew costs-Medical-Sickness/Injury,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100101300,COS-Crew costs-Insurance,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100101400,COS-Crew Recruitment,PNL-0089,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Recruitment & Training
+5100101500,COS-Crew Recruitment-Medical Check Up,PNL-0089,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Recruitment & Training
+5100101600,COS-Crew Training-Course-Fees & Charges,PNL-0089,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Recruitment & Training
+5100101700,COS-Crew Training-Course-Sea (CBT),PNL-0089,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Recruitment & Training
+5100101800,COS-Crew Training-Course-Shore,PNL-0089,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Recruitment & Training
+5100101900,COS-Crew Training-Shore Attach/Succession Planning,PNL-0089,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Recruitment & Training
+5100102000,COS-Crew Training-Higher Sponsorship,PNL-0089,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Recruitment & Training
+5100102100,COS-Crew Training-Airfare,PNL-0089,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Recruitment & Training
+5100102200,COS-Crew Training-Transportation,PNL-0089,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Recruitment & Training
+5100102300,COS-Crew Training-Accommodation,PNL-0089,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Recruitment & Training
+5100102400,COS-Crew Training-Project Capability,PNL-0089,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Recruitment & Training
+5100102500,COS-Crew costs-Others,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100102600,COS-Crew costs-Union Fee,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100102700,COS-Crew costs-HRDF,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100102800,COS-Crew costs-Overtime-Foreign,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100102900,COS-Crew costs-Leave Pay-Foreign,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100103000,COS-Crew costs-Bonus-Foreign,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100103100,COS-Crew costs-EPF-Foreign,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100103200,COS-Crew costs-CPF-Foreign,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100103300,COS-Crew costs-Awards,PNL-0088,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Costs (Payroll & Statutory)
+5100103400,COS-Crew Reloc-Trvl Fares & Exp-Transferred,PNL-0090,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Relocation & Travel
+5100103500,COS-Crew Reloc-Trvl Fares & Exp-Air Travel,PNL-0090,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Relocation & Travel
+5100103600,COS-Crew Reloc-Trvl Fares & Exp-Accommodation,PNL-0090,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Relocation & Travel
+5100103700,COS-Crew Reloc-Trvl Fares & Exp-Pre MedicalCheckup,PNL-0090,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Relocation & Travel
+5100103800,COS-Crew Reloc-Trvl Fares & Exp-Other related cost,PNL-0090,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Relocation & Travel
+5100103900,COS-Crew Reloc-Others-Transferred,PNL-0090,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Crew Relocation & Travel
+5100200100,"COS-Salary/Wages-Dir,Snr Mgt & Permanent Exec",PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100200200,COS-Salary/Wages-Permanent Non-Executives,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100200300,COS-Salary/Wages-Temporary Staff,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100200400,COS-Salary/Wages-Contract Staff-Expat-On Shore,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100200500,COS-Salary/Wages-Contract Staff-Expat-Off Shore,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100200600,COS-Salary/Wages-Contract Staff-Local-On Shore,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100200700,COS-Salary/Wages-Contract Staff-Local-Off Shore,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100200800,COS-Director Fees - Attendance Allowances-BOD,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100200900,"COS-Non-Exec Dir Fees&Allow-Dir,Snr Mgt &Perm Exec",PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100201000,"COS-Bonus-Dir,Snr Mgt & Permanent Exec",PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100201100,COS-Bonus-Permanent Non-Executives,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100201200,COS-Bonus-Temporary Staff,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100201300,COS-Bonus-Contract Staff-Expat-On Shore,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100201400,COS-Bonus-Contract Staff-Expat-Off Shore,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100201500,COS-Bonus-Contract Staff-Local-On Shore,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100201600,COS-Bonus-Contract Staff-Local-Off Shore,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100201700,"COS-Overtime-Dir,Snr Mgt & Permanent Exec",PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100201800,COS-Overtime-Permanent Non-Executives,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100201900,COS-Overtime-Temporary Staff,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100202000,COS-Overtime-Contract Staff-Expat-On Shore,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100202100,COS-Overtime-Contract Staff-Expat-Off Shore,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100202200,COS-Overtime-Contract Staff-Local-On Shore,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100202300,COS-Overtime-Contract Staff-Local-Off Shore,PNL-0091,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Salary, Wages & Bonus"
+5100202400,"COS-House All & Sub-Dir,Snr Mgt & Permanent Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100202500,COS-House All & Sub-Permanent Non-Executives,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100202600,COS-House All & Sub-Contract Staff,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100202700,"COS-OCOLA-Dir,Snr Mgt & Permanent Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100202800,COS-OCOLA-Permanent Non-Executives,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100202900,COS-OCOLA-Contract Staff,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100203000,COS-All-in-Compensation-Interns & Apprentices,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100203100,COS-Co Ctrbn to KWSP-Contract Staff-Expat-On Shore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100203200,COS-Co Ctrbn to KWSP-Contract Staff-Expat-OffShore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100203300,COS-Co Ctrbn to KWSP-Contract Staff-Local-On Shore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100203400,COS-Co Ctrbn to KWSP-Contract Staff-Local-OffShore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100203500,"COS-Co Ctrbn to PRBF-Dir,Snr Mgt & Permanent Exec",PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100203600,COS-Co Ctrbn to PRBF-Permanent Non-Executives,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100203700,COS-Co Ctrbn to PRBF-Temporary Staff,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100203800,COS-Co Ctrbn to PRBF-Expat-On Shore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100203900,COS-Co Ctrbn to PRBF-Expat-Off Shore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100204000,COS-Co Ctrbn to PRBF-Local-On Shore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100204100,COS-Co Ctrbn to PRBF-Local-Off Shore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100204200,"COS-Co Ctrbn to KWSP-Dir,Snr Mgt & Permanent Exec",PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100204300,COS-Co Ctrbn to KWSP-Permanent Non-Executives,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100204400,COS-Co Ctrbn to KWSP-Temporary Staff,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100204500,"COS-Co Ctrbn to SOCSO-Dir,Snr Mgt & Permanent Exec",PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100204600,COS-Co Ctrbn to SOCSO-Permanent Non-Executives,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100204700,COS-Co Ctrbn to SOCSO-EIS Permanent Exec,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100204800,COS-Co Ctrbn to SOCSO-Contract Staff,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100204900,COS-Co Ctrbn to SOCSO-Contract Staff-Expat-OnShore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100205000,COS-Co Ctrbn to SOCSO-Contrct Staff-Expat-OffShore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100205100,COS-Co Ctrbn to SOCSO-Contract Staff-Local-OnShore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100205200,COS-Co Ctrbn to SOCSO-Contrct Staff-Local-OffShore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100205300,"COS-Co Ctrbn to EIS-Dir,Snr Mgt & Permanent Exec",PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100205400,COS-Co Ctrbn to EIS-Permanent Non-Executives,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100205500,COS-Co Ctrbn to EIS-Temporary Staff,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100205600,COS-Co Ctrbn to EIS-Expat-On Shore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100205700,COS-Co Ctrbn to EIS-Expat-Off Shore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100205800,COS-Co Ctrbn to EIS-Local-On Shore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100205900,COS-Co Ctrbn to EIS-Local-Off Shore,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100206000,"COS-Co Ctrbn to HRM Dev Fund-Dir,Snr Mgt&Perm Exec",PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100206100,COS-Co Ctrbn to HRM Devt Fund-Permanent Non-Exec,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100206200,COS-Co Ctrbn to HRM Devt Fund-Contract Staff,PNL-0093,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Statutory Contributions
+5100206300,"COS-Shift Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100206400,COS-Shift Allowance-Permanent Non-Executives,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100206500,COS-Shift Allowance-Temporary Staff,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100206600,COS-Shift Allowance-Contract Staff-Expat-On Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100206700,COS-Shift Allowance-Contract Staff-Expat-Off Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100206800,COS-Shift Allowance-Contract Staff-Local-On Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100206900,COS-Shift Allowance-Contract Staff-Local-Off Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100207000,"COS-Acting Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100207100,COS-Acting Allowance-Permanent Non-Executives,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100207200,COS-Acting Allowance-Contract Staff-Expat-On Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100207300,COS-Acting Allowance-Contract Staff-Expat-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100207400,COS-Acting Allowance-Contract Staff-Local-On Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100207500,COS-Acting Allowance-Contract Staff-Local-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100207600,"COS-Covering Allowance-Dir,Snr Mgt& Permanent Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100207700,COS-Covering Allowance-Permanent Non-Executives,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100207800,COS-Covering Allowance-Contrct Staff-Expat-OnShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100207900,COS-Covering Allowance-Cntrct Staff-Expat-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100208000,COS-Covering Allowance-Contrct Staff-Local-OnShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100208100,COS-Covering Allowance-Cntrct Staff-Local-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100208200,"COS-Performance Allow-Dir,Snr Mgt & Permanent Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100208300,COS-Performance Allow-Permanent Non-Executives,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100208400,COS-Performance Allow-Contract Staff-Expat-OnShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100208500,COS-Performance Allow-Contrct Staff-Expat-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100208600,COS-Performance Allow-Contract Staff-Local-OnShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100208700,COS-Performance Allow-Contrct Staff-Local-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100208800,"COS-Hardship Allowance-Dir,Snr Mgt &Permanent Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100208900,COS-Hardship Allowance-Permanent Non-Executives,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100209000,COS-Hardship Allowance-Contrct Staff-Expat-OnShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100209100,COS-Hardship Allowance-Cntrct Staff-Expat-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100209200,COS-Hardship Allowance-Cntrct Staff-Local-OnShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100209300,COS-Hardship Allowance-Cntrct Staff-Local-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100209400,"COS-Driver Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100209500,"COS-Laundry Allowance-Dir,Snr Mgt & Permanent Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100209600,COS-Laundry Allowance-Permanent Non-Executives,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100209700,COS-Laundry Allowance-Contract Staff-Expat-OnShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100209800,COS-Laundry Allowance-Contrct Staff-Expat-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100209900,COS-Laundry Allowance-Contract Staff-Local-OnShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100210000,COS-Laundry Allowance-Contrct Staff-Local-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100210100,"COS-Meal Allowance-OT-Dir,Snr Mgt & Perm Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100210200,COS-Meal Allowance-Overtime-Permanent Non-Exec.,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100210300,COS-Meal Allowance-Contract Staff-Expat-On Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100210400,COS-Meal Allowance-Contract Staff-Expat-Off Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100210500,COS-Meal Allowance-Contract Staff-Local-On Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100210600,COS-Meal Allowance-Contract Staff-Local-Off Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100210700,"COS-Interim Allowance-Dir,Snr Mgt & Perm Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100210800,COS-Interim Allowance-Permanent Non-Executives,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100210900,COS-Interim Allowance-Contract Staff-Expat-OnShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100211000,COS-Interim Allowance-Contrct Staff-Expat-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100211100,COS-Interim Allowance-Contract Staff-Local-OnShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100211200,COS-Interim Allowance-Contrct Staff-Local-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100211300,"COS-Charge Allowance-Dir,Snr Mgt & Perm Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100211400,COS-Charge Allowance-Permanent Non-Executives,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100211500,COS-Charge Allowance-Contract Staff-Expat-On Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100211600,COS-Charge Allowance-Contrct Staff-Expat-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100211700,COS-Charge Allowance-Contract Staff-Local-On Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100211800,COS-Charge Allowance-Contract Staff-Local-OffShore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100211900,"COS-Other Allowances-Dir,Snr Mgt & Permanent Exec",PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100212000,COS-Other Allowances-Permanent Non-Executives,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100212100,COS-Other Allowance-Contract Staff-Expat-On Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100212200,COS-Other Allowance-Contract Staff-Expat-Off Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100212300,COS-Other Allowance-Contract Staff-Local-On Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100212400,COS-Other Allowance-Contract Staff-Local-Off Shore,PNL-0092,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Shore Staff Allowances
+5100212500,COS-Travelling/Accomodation - Courses - Local,PNL-0094,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Training & Development
+5100212600,COS-Travelling/Accomodation - Courses - Overseas,PNL-0094,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Training & Development
+5100212700,COS-Other Training Expenses -Courses - Local,PNL-0094,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Training & Development
+5100212800,COS-Other Training Expenses -Courses - Overseas,PNL-0094,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Training & Development
+5100212900,Direct Labour Cost,PNL-0098,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Contract & Subcontract Labour
+5100213000,Subcontractor-Labour,PNL-0098,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Contract & Subcontract Labour
+5100213100,COS-Children Tuition Fees - Contract Staff,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100213200,COS- Staff Medical Exp-Contract Staff,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100213300,COS-Staff Med Exp-Contract Staff-Expat-On Shore,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100213400,COS-Staff Med Exp-Contract Staff-Local-On Shore,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100213500,COS-Staff Med Exp-Contract Staff-Local-On Shore,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100213600,COS-Dental Exp-Exec & Above,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100213700,COS- Staff Dependent Med Exp-Contract Staff,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100213800,COS-Staff Med Exp-Contract Staff-Expat-On Shore,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100213900,COS-Staff Med Exp-Contract Staff-Local-On Shore,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100214000,"COS-Children Tuition Fees-Dir,Snr Mgt & Perm Exec",PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100214100,COS-Gratuity-Cntrt Staff Gratuity-Cntrt Staff,PNL-0097,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Gratuity & Separation
+5100214200,"COS-Gratuity-Dir, Snr Mgt & Perm Exec",PNL-0097,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Gratuity & Separation
+5100214300,COS-Separation Compensn-Permanent Non-Executives,PNL-0097,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Gratuity & Separation
+5100214400,"COS-Separation Compensn-Dir,Snr Mgt & Perm Exec",PNL-0097,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Gratuity & Separation
+5100214500,COS-Staff Recruiting-Overseas Travel Fares & Exp,PNL-0096,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Recruitment, Subscriptions & Clubs"
+5100214600,COS-Staff Recruiting-Local Travel Fares & Expenses,PNL-0096,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Recruitment, Subscriptions & Clubs"
+5100214700,COS-Clubs & Corporate Credit Card Fees & Subs,PNL-0096,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Recruitment, Subscriptions & Clubs"
+5100214800,COS-Staff Subscriptions to Professional Bodies,PNL-0096,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Recruitment, Subscriptions & Clubs"
+5100214900,COS-Staff Medical - Onshore - Executive,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100215000,COS-Staff Medical - Onshore -Non-Executive,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100215100,COS-Staff Dental - Onshore - Executive,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100215200,COS-Staff Dental - Onshore - Non-Executive,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
+5100215300,COS-Staff Subscriptions to Professional Bodies,PNL-0096,Posting GL Account,5,"NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Recruitment, Subscriptions & Clubs"
+5100215400,Dependent Med Exp-Contract Staff,PNL-0095,Posting GL Account,5,NPAT > Gross Profit > Cost of Revenue > Manpower Cost > Staff Medical & Welfare
 PNL-0022,Materials And Supplies,PNL-0011,Reporting Node,3,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
 5110100100,COS-Engineering Equipments & Materials,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies
 5110100200,COS-Safety Equipment,PNL-0022,Posting GL Account,4,NPAT > Gross Profit > Cost of Revenue > Materials And Supplies

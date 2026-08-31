@@ -66,6 +66,17 @@
         .filter((g): g is string => g !== undefined),
     ),
   );
+  // Groups above hierarchy level 1 auto-expand; level 1 and deeper (Posting
+  // GL Account leaves and whatever's nested under them) start collapsed — see
+  // docs/adr/0029. A group's own row.indent tracks its real GL hierarchy
+  // depth (walk() increments indent 1:1 with GLNode.level).
+  const summaryGroupIds = $derived(
+    new Set(
+      [...collapsibleIds].filter(
+        (id) => (rowsByNodeId.get(id)?.indent ?? 0) < 1,
+      ),
+    ),
+  );
 
   let expandedGroups = $state<Set<string>>(new Set());
   let expandedGroupsInitialised = false;
@@ -73,7 +84,7 @@
     if (expandedGroupsInitialised || pnlRows.length === 0) return;
     expandedGroupsInitialised = true;
     expandedGroups = new Set(
-      [...collapsibleIds].filter((id) => !operationalGroupIds.has(id)),
+      [...summaryGroupIds].filter((id) => !operationalGroupIds.has(id)),
     );
   });
 
@@ -97,7 +108,8 @@
     pnlRows
       .filter(isVisible)
       .map((row) => {
-        const monthlyActual = getNode(glStore.tree, row.nodeId)?.monthlyActual ?? [];
+        const monthlyActual =
+          getNode(glStore.tree, row.nodeId)?.monthlyActual ?? [];
         return {
           row,
           node: getNode(glStore.tree, row.nodeId),
@@ -146,7 +158,9 @@
             id: "cost-of-revenue-ytd",
             label: `Cost of Revenue ${periodQualifier}`,
             value: formatRmAuto(Math.abs(costOfRevenue.actual)),
-            trend: cumulative(scoped(costOfRevenue.monthlyActual).map(Math.abs)),
+            trend: cumulative(
+              scoped(costOfRevenue.monthlyActual).map(Math.abs),
+            ),
           },
           {
             id: "gross-profit-ytd",
@@ -168,13 +182,18 @@
     revenue && costOfRevenue && grossProfit && npat
       ? [
           { label: "Revenue", values: scoped(revenue.monthlyActual) },
-          { label: "COR", values: scoped(costOfRevenue.monthlyActual).map(Math.abs) },
+          {
+            label: "COR",
+            values: scoped(costOfRevenue.monthlyActual).map(Math.abs),
+          },
           { label: "GP", values: scoped(grossProfit.monthlyActual) },
           { label: "NPAT", values: scoped(npat.monthlyActual) },
         ]
       : [],
   );
-  const visibleMonthLabels = $derived(visibleMonthIndices.map((i) => months[i]));
+  const visibleMonthLabels = $derived(
+    visibleMonthIndices.map((i) => months[i]),
+  );
 
   // Bridge steps map 1:1 onto NPAT's real direct children — no curated ref
   // lists needed, values already carry the right sign (see docs/adr/0023).
@@ -274,7 +293,10 @@
 
       <div class="flex max-[900px]:flex-col gap-4">
         <Card class="flex-1 min-w-0" title="Income Statement Key Items">
-          <MonthlyTrendChart series={monthlyPerformanceChart} months={visibleMonthLabels} />
+          <MonthlyTrendChart
+            series={monthlyPerformanceChart}
+            months={visibleMonthLabels}
+          />
         </Card>
 
         <Card class="flex-1 min-w-0" title="Profit Bridge: Revenue to NPAT">
@@ -309,7 +331,12 @@
                 </span>
               {/each}
             </div>
-            {#snippet monthCell(nodeId: string, periodCode: string | undefined, month: string, display: string)}
+            {#snippet monthCell(
+              nodeId: string,
+              periodCode: string | undefined,
+              month: string,
+              display: string,
+            )}
               {#if periodCode}
                 <a
                   class="group/cell flex items-center justify-end gap-1 no-underline text-inherit tabular-nums"
@@ -332,7 +359,9 @@
                 </a>
               {:else}
                 <!-- periods haven't loaded (or failed to) — plain text, no dead/undefined link -->
-                <span class="flex items-center justify-end tabular-nums">{display}</span>
+                <span class="flex items-center justify-end tabular-nums"
+                  >{display}</span
+                >
               {/if}
             {/snippet}
             {#each displayRows as { row, values } (row.nodeId)}
