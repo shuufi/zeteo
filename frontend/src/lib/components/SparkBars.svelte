@@ -15,9 +15,11 @@
     class?: string;
     /** Bars before this index render at reduced opacity (e.g. the prior-year half of a trailing-24-month series). */
     splitAt?: number;
-    /** Per-bar hover text (native SVG `<title>`), e.g. "Jan (Prior Year): RM188.9m". */
+    /** Per-bar hover text, e.g. "Jan (Prior Year): RM188.9m". */
     tooltips?: string[];
   } = $props();
+
+  let hoveredIndex = $state<number | null>(null);
 
   const bars = $derived.by(() => {
     if (!values.length) return [];
@@ -37,15 +39,36 @@
         height: barHeight,
         opacity: splitAt !== undefined && i < splitAt ? 0.4 : 1,
         tooltip: tooltips[i],
+        leftPct: ((i * step + barWidth / 2) / width) * 100,
       };
     });
   });
+
+  const hovered = $derived(hoveredIndex !== null ? bars[hoveredIndex] : undefined);
 </script>
 
-<svg viewBox="0 0 {width} {height}" preserveAspectRatio="none" class={className}>
-  {#each bars as bar, i (i)}
-    <rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} opacity={bar.opacity} class={fillClass}>
-      {#if bar.tooltip}<title>{bar.tooltip}</title>{/if}
-    </rect>
-  {/each}
-</svg>
+<div class="relative">
+  <svg viewBox="0 0 {width} {height}" preserveAspectRatio="none" class={className}>
+    {#each bars as bar, i (i)}
+      <rect
+        x={bar.x}
+        y={bar.y}
+        width={bar.width}
+        height={bar.height}
+        opacity={bar.opacity}
+        class={fillClass}
+        role="presentation"
+        onmouseenter={() => (hoveredIndex = i)}
+        onmouseleave={() => (hoveredIndex = null)}
+      />
+    {/each}
+  </svg>
+  {#if hovered?.tooltip}
+    <div
+      class="pointer-events-none absolute bottom-full z-30 mb-1 -translate-x-1/2 whitespace-nowrap rounded bg-gray-900 dark:bg-gray-700 px-2 py-1 text-xs font-normal text-white shadow-lg"
+      style="left: {hovered.leftPct}%"
+    >
+      {hovered.tooltip}
+    </div>
+  {/if}
+</div>
