@@ -60,10 +60,10 @@ function stripRedundantRevenueWord(name: string): string {
 }
 
 /**
- * Flattens the GL/FSI tree into Financial Performance's statement rows.
- * Posting GL Account leaves (1083 of them) are never shown individually —
- * only Reporting Root/Node subtotals and attached Operational Driver rows,
- * matching the old mock's curated summary-only P&L (see docs/adr/0022).
+ * Flattens the GL/FSI tree into Financial Performance's statement rows,
+ * walking all the way down to Posting GL Account leaves (see docs/adr/0029)
+ * — each Reporting Node/Root and each leaf is collapsible, and any
+ * Operational Driver rows render nested beneath their leaf.
  */
 export function buildDisplayRows(tree: Record<string, VdtNode>, rootId = 'NPAT'): DisplayRow[] {
   const rows: DisplayRow[] = [];
@@ -73,7 +73,9 @@ export function buildDisplayRows(tree: Record<string, VdtNode>, rootId = 'NPAT')
     if (!node) return;
     const isRoot = node.parentId === null;
     const children = getChildren(tree, node);
-    const financialChildren = children.filter((c) => c.nodeType === 'Reporting Node' || c.nodeType === 'Reporting Root');
+    const financialChildren = children.filter(
+      (c) => c.nodeType === 'Reporting Node' || c.nodeType === 'Reporting Root' || c.nodeType === 'Posting GL Account',
+    );
     const operationalChildren = children.filter((c) => c.nodeType === 'Operational Driver');
 
     if (!isRoot) {

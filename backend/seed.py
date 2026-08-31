@@ -108,22 +108,24 @@ NODE_TYPE_BY_CSV_VALUE = {
 }
 
 # Old mock's 6 curated revenue segments, remapped onto the real CSV's revenue
-# Reporting Nodes (children of PNL-0002 "Revenue") — not a 1:1 name match,
-# best-effort per docs/adr/0023.
+# Posting GL Account leaves (children of PNL-0002 "Revenue"'s Reporting Nodes)
+# — not a 1:1 name match, best-effort per docs/adr/0023. Parented to the
+# specific leaf each driver most directly explains, not the Reporting Node,
+# so drivers render below the leaf (see docs/adr/0029).
 OPERATIONAL_DRIVERS = [
     # (code, description, parent_code, unit, value_range)
-    ("OPD-0001", "Avg. Daily Charter Rate", "PNL-0003", OperationalUnit.USD_PER_DAY, (18000, 32000)),
-    ("OPD-0002", "Utilization / On-hire Rate", "PNL-0003", OperationalUnit.PERCENT, (92, 99)),
-    ("OPD-0003", "Off-hire Days (fleet)", "PNL-0003", OperationalUnit.DAYS, (2, 12)),
-    ("OPD-0004", "Avg. Spot/Voyage TCE Rate", "PNL-0005", OperationalUnit.USD_PER_DAY, (15000, 45000)),
-    ("OPD-0005", "Spot Voyage Days (fleet)", "PNL-0005", OperationalUnit.DAYS, (10, 28)),
-    ("OPD-0006", "Avg. Daily Charter Rate (Finance Lease)", "PNL-0004", OperationalUnit.USD_PER_DAY, (20000, 38000)),
-    ("OPD-0007", "Fleet Uptime / Availability", "PNL-0004", OperationalUnit.PERCENT, (94, 99.5)),
-    ("OPD-0008", "Avg. Project Completion Rate", "PNL-0007", OperationalUnit.PERCENT, (40, 95)),
-    ("OPD-0009", "Active Projects", "PNL-0007", OperationalUnit.COUNT, (2, 9)),
-    ("OPD-0010", "Demurrage Days Billed", "PNL-0006", OperationalUnit.DAYS, (5, 20)),
-    ("OPD-0011", "Vessels Under Management", "PNL-0008", OperationalUnit.COUNT, (8, 25)),
-    ("OPD-0012", "Avg. Fee per Vessel", "PNL-0008", OperationalUnit.USD_PER_MONTH, (12000, 28000)),
+    ("OPD-0001", "Avg. Daily Charter Rate", "4010100100", OperationalUnit.USD_PER_DAY, (18000, 32000)),
+    ("OPD-0002", "Utilization / On-hire Rate", "4010100100", OperationalUnit.PERCENT, (92, 99)),
+    ("OPD-0003", "Off-hire Days (fleet)", "4010100100", OperationalUnit.DAYS, (2, 12)),
+    ("OPD-0004", "Avg. Spot/Voyage TCE Rate", "4030100500", OperationalUnit.USD_PER_DAY, (15000, 45000)),
+    ("OPD-0005", "Spot Voyage Days (fleet)", "4030100500", OperationalUnit.DAYS, (10, 28)),
+    ("OPD-0006", "Avg. Daily Charter Rate (Finance Lease)", "4020100100", OperationalUnit.USD_PER_DAY, (20000, 38000)),
+    ("OPD-0007", "Fleet Uptime / Availability", "4020100100", OperationalUnit.PERCENT, (94, 99.5)),
+    ("OPD-0008", "Avg. Project Completion Rate", "4050100200", OperationalUnit.PERCENT, (40, 95)),
+    ("OPD-0009", "Active Projects", "4050100200", OperationalUnit.COUNT, (2, 9)),
+    ("OPD-0010", "Demurrage Days Billed", "4040100300", OperationalUnit.DAYS, (5, 20)),
+    ("OPD-0011", "Vessels Under Management", "4060100100", OperationalUnit.COUNT, (8, 25)),
+    ("OPD-0012", "Avg. Fee per Vessel", "4060100100", OperationalUnit.USD_PER_MONTH, (12000, 28000)),
 ]
 
 # The one node that keeps full Driver Diagnostic depth (trend/drivers/
