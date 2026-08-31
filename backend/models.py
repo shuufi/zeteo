@@ -45,11 +45,11 @@ class OperationalUnit(str, Enum):
 class GLNode(SQLModel, table=True):
     """A position in the SAP GL/FSI hierarchy — see docs/adr/0022 and 0023."""
 
-    __tablename__ = "gl_node"
+    __tablename__ = "general_ledger"
 
     code: str = Field(primary_key=True)
     description: str
-    parent_code: Optional[str] = Field(default=None, foreign_key="gl_node.code")
+    parent_code: Optional[str] = Field(default=None, foreign_key="general_ledger.code")
     node_type: NodeType
     level: int
     # Only meaningful for Posting GL Account leaves (derived from the account
@@ -90,11 +90,11 @@ class CompanyNode(SQLModel, table=True):
     siblings, for stable display ordering.
     """
 
-    __tablename__ = "company_node"
+    __tablename__ = "company"
 
     code: str = Field(primary_key=True)
     label: str
-    parent_code: Optional[str] = Field(default=None, foreign_key="company_node.code")
+    parent_code: Optional[str] = Field(default=None, foreign_key="company.code")
     node_type: CompanyNodeType
     order: int
     is_sampled: bool = False
@@ -103,11 +103,11 @@ class CompanyNode(SQLModel, table=True):
 class GLFact(SQLModel, table=True):
     """An actual/budget/prior-year amount for one node, company and Month period."""
 
-    __tablename__ = "gl_fact"
+    __tablename__ = "financial"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    code: str = Field(foreign_key="gl_node.code", index=True)
-    company: str = Field(foreign_key="company_node.code", index=True)
+    code: str = Field(foreign_key="general_ledger.code", index=True)
+    company: str = Field(foreign_key="company.code", index=True)
     period_code: str = Field(foreign_key="period.code", index=True)
     scenario: Scenario
     amount: float

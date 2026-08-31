@@ -1,4 +1,4 @@
-"""Rebuild backend/data/gl.db from the real GL/FSI hierarchy plus fake facts.
+"""Rebuild backend/data/zeteo.db from the real GL/FSI hierarchy plus fake facts.
 
 Source of truth for the hierarchy is docs/anaplan_is_master_data.csv (a real
 SAP GL/FSI export). Fact amounts are fabricated with a fixed RNG seed so the

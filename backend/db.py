@@ -2,7 +2,7 @@ from pathlib import Path
 
 from sqlmodel import Session, SQLModel, create_engine
 
-DB_PATH = Path(__file__).parent / "data" / "gl.db"
+DB_PATH = Path(__file__).parent / "data" / "zeteo.db"
 
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
