@@ -40,8 +40,40 @@
   // are explicitly YTD, so the chip stays visible/interactive here (picking
   // still affects the other two screens) but this page ignores it.
   const visibleMonthIndices = $derived(monthPeriodCodes.map((_, i) => i));
+
+  // User-resizable via the drag handle next to the header — width persists
+  // for the session but isn't saved beyond it (no ask for that).
+  let lineItemWidth = $state(280);
+  const LINE_ITEM_MIN_WIDTH = 160;
+  const LINE_ITEM_MAX_WIDTH = 640;
+
+  function startResize(event: PointerEvent): void {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = lineItemWidth;
+    function onMove(e: PointerEvent): void {
+      lineItemWidth = Math.min(
+        LINE_ITEM_MAX_WIDTH,
+        Math.max(LINE_ITEM_MIN_WIDTH, startWidth + (e.clientX - startX)),
+      );
+    }
+    function onUp(): void {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    }
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  }
+
+  // Off by default — the GL code is noise until you need to cross-reference
+  // SAP, so it's opt-in via the checkbox next to the table title.
+  let showGlCode = $state(false);
+  function displayLabel(row: DisplayRow): string {
+    return showGlCode ? `${row.nodeId} ${row.label}` : row.label;
+  }
+
   const gridTemplateColumns = $derived(
-    `minmax(240px,1.3fr) repeat(${visibleMonthIndices.length}, minmax(64px,1fr))`,
+    `${lineItemWidth}px repeat(${visibleMonthIndices.length}, minmax(64px,1fr))`,
   );
   const periodQualifier = "YTD";
 
@@ -310,13 +342,36 @@
             <div class="font-bold text-sm text-gray-900 dark:text-gray-50">
               Income Statement
             </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
-              RM millions
+            <div class="flex items-center gap-3">
+              <label
+                class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none"
+              >
+                <input
+                  type="checkbox"
+                  bind:checked={showGlCode}
+                  class="h-3 w-3"
+                />
+                Show GL code
+              </label>
+              <div class="text-xs text-gray-500 dark:text-gray-400">
+                RM millions
+              </div>
             </div>
           </div>
         {/snippet}
         <div class="overflow-x-auto">
-          <div class="flex flex-col min-w-[1080px]">
+          <div class="relative flex flex-col min-w-[1080px]">
+            <div
+              role="separator"
+              aria-orientation="vertical"
+              onpointerdown={startResize}
+              class="absolute top-0 bottom-0 w-2.5 -translate-x-1/2 cursor-col-resize touch-none z-10 group/resize"
+              style="left: {lineItemWidth}px"
+            >
+              <div
+                class="mx-auto h-full w-px bg-transparent group-hover/resize:bg-indigo-400 dark:group-hover/resize:bg-indigo-500"
+              ></div>
+            </div>
             <div
               class="grid items-center py-1 text-xs text-indigo-700 dark:text-indigo-300 border-b border-indigo-200 dark:border-indigo-900"
               style="grid-template-columns: {gridTemplateColumns}"
@@ -364,6 +419,16 @@
                 >
               {/if}
             {/snippet}
+            {#snippet truncatedLabel(row: DisplayRow)}
+              <span class="group/label relative min-w-0">
+                <span class="truncate block">{displayLabel(row)}</span>
+                <span
+                  class="pointer-events-none absolute left-0 top-full z-30 mt-1 hidden whitespace-nowrap rounded bg-gray-900 dark:bg-gray-700 px-2 py-1 text-xs font-normal text-white shadow-lg group-hover/label:block"
+                >
+                  {displayLabel(row)}
+                </span>
+              </span>
+            {/snippet}
             {#each displayRows as { row, values } (row.nodeId)}
               {#if collapsibleIds.has(row.nodeId)}
                 <div
@@ -383,14 +448,14 @@
                   style="grid-template-columns: {gridTemplateColumns}"
                 >
                   <span
-                    class="flex items-center gap-1.5 {indentClass(
+                    class="flex items-center gap-1.5 min-w-0 {indentClass(
                       row.indent,
                     )} {row.indent > 0
                       ? 'text-gray-500 dark:text-gray-400'
                       : ''}"
                   >
                     <span
-                      class="inline-block w-4 text-base leading-none text-indigo-600 dark:text-indigo-400 transition-transform duration-150 {expandedGroups.has(
+                      class="inline-block w-4 shrink-0 text-base leading-none text-indigo-600 dark:text-indigo-400 transition-transform duration-150 {expandedGroups.has(
                         row.nodeId,
                       )
                         ? 'rotate-90'
@@ -398,7 +463,7 @@
                     >
                       ▸
                     </span>
-                    {row.label}
+                    {@render truncatedLabel(row)}
                   </span>
                   {#each values as value, i (i)}
                     {@render monthCell(
@@ -416,13 +481,15 @@
                   style="grid-template-columns: {gridTemplateColumns}"
                 >
                   <span
-                    class="{indentClass(row.indent)} flex items-center gap-1.5"
+                    class="{indentClass(
+                      row.indent,
+                    )} flex items-center gap-1.5 min-w-0"
                   >
                     <span
-                      class="text-[9px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-400/40 rounded px-1"
+                      class="text-[9px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-400/40 rounded px-1 shrink-0"
                       >Ops</span
                     >
-                    {row.label}
+                    {@render truncatedLabel(row)}
                   </span>
                   {#each values as value, i (i)}
                     <span class="text-right tabular-nums"
@@ -441,10 +508,12 @@
                   style="grid-template-columns: {gridTemplateColumns}"
                 >
                   <span
-                    class={row.indent > 0
+                    class="flex min-w-0 {row.indent > 0
                       ? `${indentClass(row.indent)} text-gray-500 dark:text-gray-400`
-                      : undefined}>{row.label}</span
+                      : ''}"
                   >
+                    {@render truncatedLabel(row)}
+                  </span>
                   {#each values as value, i (i)}
                     {@render monthCell(
                       row.nodeId,
