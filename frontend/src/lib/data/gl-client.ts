@@ -44,7 +44,11 @@ export function rankChildren(tree: Record<string, VdtNode>, node: VdtNode): Rank
   }));
 }
 
-const INDENT_CLASSES = ['pl-0', 'pl-4', 'pl-8', 'pl-12', 'pl-16', 'pl-20'];
+// The GL/FSI hierarchy itself bottoms out at indent 5 (Posting GL Account
+// leaf) — the extra entries are for the driver graph nested beneath a leaf
+// (Driver Formula / Driver, recursing arbitrarily — see docs/adr/0030),
+// which would otherwise clamp to the leaf's own indent and look unnested.
+const INDENT_CLASSES = ['pl-0', 'pl-4', 'pl-8', 'pl-12', 'pl-16', 'pl-20', 'pl-24', 'pl-28', 'pl-32', 'pl-36', 'pl-40'];
 
 export function indentClass(indent: number): string {
   return INDENT_CLASSES[Math.min(indent, INDENT_CLASSES.length - 1)];

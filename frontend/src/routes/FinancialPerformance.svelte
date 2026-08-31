@@ -469,27 +469,35 @@
               </span>
             {/snippet}
             {#snippet operationalCells(row: DisplayRow, values: number[], isCollapsible: boolean)}
-              <span
-                class="{indentClass(
-                  row.indent,
-                )} flex items-center gap-1.5 min-w-0"
-              >
-                {#if isCollapsible}
+              <span class="{indentClass(row.indent)} flex flex-col min-w-0">
+                <span class="flex items-center gap-1.5 min-w-0">
+                  {#if isCollapsible}
+                    <span
+                      class="inline-block w-4 shrink-0 text-base leading-none text-amber-600 dark:text-amber-400 transition-transform duration-150 {expandedGroups.has(
+                        row.nodeId,
+                      )
+                        ? 'rotate-90'
+                        : ''}"
+                    >
+                      ▸
+                    </span>
+                  {/if}
                   <span
-                    class="inline-block w-4 shrink-0 text-base leading-none text-amber-600 dark:text-amber-400 transition-transform duration-150 {expandedGroups.has(
-                      row.nodeId,
-                    )
-                      ? 'rotate-90'
-                      : ''}"
+                    class="text-[9px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-400/40 rounded px-1 shrink-0"
+                    >{row.driverNodeType === "formula" ? "Formula" : "Ops"}</span
                   >
-                    ▸
+                  {@render truncatedLabel(row)}
+                </span>
+                {#if row.driverNodeType === "formula" && row.expression}
+                  <span
+                    class="truncate text-[10px] font-normal normal-case tracking-normal text-amber-600/70 dark:text-amber-400/60 {isCollapsible
+                      ? 'pl-6'
+                      : ''}"
+                    title={row.expression}
+                  >
+                    {row.expression}
                   </span>
                 {/if}
-                <span
-                  class="text-[9px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-400/40 rounded px-1 shrink-0"
-                  >{row.driverNodeType === "formula" ? "Formula" : "Ops"}</span
-                >
-                {@render truncatedLabel(row)}
               </span>
               {#each values as value, i (i)}
                 <span class="text-right tabular-nums"
@@ -513,7 +521,6 @@
                     transition:slide={{ duration: 150 }}
                     class="grid items-center py-1.5 text-sm cursor-pointer text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-400/10"
                     style="grid-template-columns: {gridTemplateColumns}"
-                    title={row.expression}
                   >
                     {@render operationalCells(row, values, true)}
                   </div>
@@ -522,7 +529,6 @@
                     transition:slide={{ duration: 150 }}
                     class="grid items-center py-1.5 text-sm text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-400/10"
                     style="grid-template-columns: {gridTemplateColumns}"
-                    title={row.expression}
                   >
                     {@render operationalCells(row, values, false)}
                   </div>
