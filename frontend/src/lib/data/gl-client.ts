@@ -23,14 +23,17 @@ export function getAncestors(tree: Record<string, VdtNode>, id: string): VdtNode
 /**
  * Children ranked by |actual - budget| variance — the real GL/FSI tree has no
  * curated per-node rank, so every node's children rank live off this one
- * generic walk instead of the old mock's hand-picked ref lists. Operational
- * Driver children are excluded: their units (rate/%/days) aren't comparable
- * to a financial variance in RM_M. Nodes already reflect whatever period was
- * requested from GET /api/gl/tree (see docs/adr/0025) — no client-side
- * re-scoping needed here.
+ * generic walk instead of the old mock's hand-picked ref lists. Driver graph
+ * children (Driver Formula / Driver, see docs/adr/0030) are excluded: their
+ * units (rate/%/days, or a formula's own RM_M that would double-count its
+ * leaf) aren't comparable to a financial variance the way sibling GL nodes
+ * are. Nodes already reflect whatever period was requested from GET
+ * /api/gl/tree (see docs/adr/0025) — no client-side re-scoping needed here.
  */
 export function rankChildren(tree: Record<string, VdtNode>, node: VdtNode): RankedNode[] {
-  const children = getChildren(tree, node).filter((c) => c.nodeType !== 'Operational Driver');
+  const children = getChildren(tree, node).filter(
+    (c) => c.nodeType !== 'Driver Formula' && c.nodeType !== 'Driver',
+  );
   const ranked = [...children].sort((a, b) => Math.abs(b.actual - b.budget) - Math.abs(a.actual - a.budget));
   const maxAbs = Math.max(...ranked.map((n) => Math.abs(n.actual - n.budget)), 1);
   return ranked.map((n, i) => ({
@@ -41,7 +44,11 @@ export function rankChildren(tree: Record<string, VdtNode>, node: VdtNode): Rank
   }));
 }
 
-const INDENT_CLASSES = ['pl-0', 'pl-4', 'pl-8', 'pl-12', 'pl-16', 'pl-20'];
+// The GL/FSI hierarchy itself bottoms out at indent 5 (Posting GL Account
+// leaf) — the extra entries are for the driver graph nested beneath a leaf
+// (Driver Formula / Driver, recursing arbitrarily — see docs/adr/0030),
+// which would otherwise clamp to the leaf's own indent and look unnested.
+const INDENT_CLASSES = ['pl-0', 'pl-4', 'pl-8', 'pl-12', 'pl-16', 'pl-20', 'pl-24', 'pl-28', 'pl-32', 'pl-36', 'pl-40'];
 
 export function indentClass(indent: number): string {
   return INDENT_CLASSES[Math.min(indent, INDENT_CLASSES.length - 1)];
@@ -62,8 +69,10 @@ function stripRedundantRevenueWord(name: string): string {
 /**
  * Flattens the GL/FSI tree into Financial Performance's statement rows,
  * walking all the way down to Posting GL Account leaves (see docs/adr/0029)
- * — each Reporting Node/Root and each leaf is collapsible, and any
- * Operational Driver rows render nested beneath their leaf.
+ * — each Reporting Node/Root and each leaf is collapsible. Driver Formula /
+ * Driver rows (see docs/adr/0030) render nested beneath the leaf (or Driver)
+ * they're bound to, and recurse the same way — a Formula-driven Driver
+ * expands into its own Formula, arbitrarily deep.
  */
 export function buildDisplayRows(tree: Record<string, VdtNode>, rootId = 'NPAT'): DisplayRow[] {
   const rows: DisplayRow[] = [];
@@ -72,34 +81,24 @@ export function buildDisplayRows(tree: Record<string, VdtNode>, rootId = 'NPAT')
     const node = tree[code];
     if (!node) return;
     const isRoot = node.parentId === null;
+    const isDriverGraph = node.nodeType === 'Driver Formula' || node.nodeType === 'Driver';
     const children = getChildren(tree, node);
-    const financialChildren = children.filter(
-      (c) => c.nodeType === 'Reporting Node' || c.nodeType === 'Reporting Root' || c.nodeType === 'Posting GL Account',
-    );
-    const operationalChildren = children.filter((c) => c.nodeType === 'Operational Driver');
 
     if (!isRoot) {
       rows.push({
         nodeId: code,
         label: node.parentId === REVENUE_NODE_ID ? stripRedundantRevenueWord(node.name) : node.name,
         indent,
-        isSubtotal: financialChildren.length > 0 || operationalChildren.length > 0,
+        isSubtotal: children.length > 0 && !isDriverGraph,
         group: node.parentId ?? undefined,
+        kind: isDriverGraph ? 'operational' : undefined,
+        driverNodeType: node.nodeType === 'Driver Formula' ? 'formula' : node.nodeType === 'Driver' ? 'driver' : undefined,
+        unit: isDriverGraph ? (node.unit as DisplayRow['unit']) : undefined,
+        expression: node.nodeType === 'Driver Formula' ? node.expression : undefined,
       });
     }
 
-    for (const opChild of operationalChildren) {
-      rows.push({
-        nodeId: opChild.id,
-        label: opChild.name,
-        indent: indent + 1,
-        kind: 'operational',
-        unit: opChild.unit as DisplayRow['unit'],
-        group: code,
-      });
-    }
-
-    for (const child of financialChildren) {
+    for (const child of children) {
       walk(child.id, indent + 1);
     }
 

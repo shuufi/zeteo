@@ -5,8 +5,20 @@ The diagnostic dashboard UI for Zeteo — the Value Driver Tree explorer, driver
 ## Language
 
 **VDT node**:
-A single addressable point in the Value Driver Tree — a GL/FSI hierarchy position (reporting root, reporting/subtotal node, posting GL account) or an operational driver — carrying its own actual/budget/variance and, optionally, trend, contribution drivers, benchmark and root-cause data. Identified by a stable `nodeId`, the real SAP GL/FSI code (e.g. `PNL-0024`, `4010100100`) rather than a curated slug. See `docs/adr/0022-gl-fsi-hierarchy-replaces-mock-vdt-tree.md`.
-_Avoid_: item, row, entry (too generic — use "node" whenever it's a VDT tree position); GL account alone for a VDT node (a node can also be a reporting/subtotal node or operational driver, not just a posting account).
+A single addressable point in the Value Driver Tree — a GL/FSI hierarchy position (reporting root, reporting/subtotal node, posting GL account) or a driver-graph position (a Driver Formula, or a Driver that a Formula computes) — carrying its own actual/budget/variance and, optionally, trend, contribution drivers, benchmark and root-cause data. Identified by a stable `nodeId` — the real SAP GL/FSI code (e.g. `PNL-0024`, `4010100100`) for hierarchy positions, a synthetic id for Formula/Driver positions. See `docs/adr/0022-gl-fsi-hierarchy-replaces-mock-vdt-tree.md` and `docs/adr/0030-driver-formula-computed-gl-values.md`.
+_Avoid_: item, row, entry (too generic — use "node" whenever it's a VDT tree position); GL account alone for a VDT node (a node can also be a reporting/subtotal node or a driver-graph position, not just a posting account); "operational driver" for this concept (retired — see Driver / Driver Formula below).
+
+**Driver**:
+A reusable named quantity (e.g. Crew Complement, Payroll Rate) valued per company × month × scenario, with no fixed tree position of its own — the same Driver can feed multiple Driver Formulas. A Driver is either terminal (a raw value) or itself computed by one or more Driver Formulas bound to it as their target, which is what lets driver decomposition recurse to any depth. A Driver with no Formula and not referenced as anyone's term (e.g. the legacy charter-rate/utilization drivers) carries an optional `displayed_under` pointer to the GL leaf it historically explained — a display-only anchor, not part of the compute graph. See `docs/adr/0030-driver-formula-computed-gl-values.md`.
+_Avoid_: Operational Driver (retired `GLNode`-based concept this replaces).
+
+**Driver Formula**:
+A named expression, restricted to sum-of-products (ordered terms, each a chain of Drivers combined by `×` or `÷`, terms summed with an optional per-formula sign), that computes the value of exactly one target — a GL Posting Account leaf or another Driver. Multiple Formulas may drive the same target; the target's value is the sum of all of them, replacing any independently-fabricated fact row for that target. Formulas never contain raw numeric literals or nested/parenthesized sub-expressions — a constant is modelled as a flat-valued Driver. See `docs/adr/0030-driver-formula-computed-gl-values.md`.
+_Avoid_: "formula" alone (say Driver Formula — this is a specific bound, sum-of-products expression, not a general spreadsheet formula); "calculation" (too generic).
+
+**Target (of a Driver Formula)**:
+The single GL Posting Account leaf or Driver whose value a Driver Formula computes. A target can have multiple Formulas bound to it (summed); a Driver can itself be a target for other Formulas, letting driver decomposition recurse.
+_Avoid_: "output" (implies a UI artifact rather than the bound relationship it actually is).
 
 **VDT Explorer**:
 The screen family for browsing the tree, reached via the **Value Driver** nav item. Has two independent view modes reached by separate routes — Ranked (`/vdt/:id`, a summary card + a children table ranked by contribution) and Tree (`/vdt-tree/:id`, a horizontal decomposition diagram). They are not tabs of one screen; each has its own click model (Ranked rows open Driver Diagnostic directly; Tree nodes re-centre the diagram).

@@ -315,19 +315,27 @@
 
   function operationalValue(
     value: number,
-    unit: OperationalUnit | undefined,
+    unit: OperationalUnit | "RM_M" | undefined,
   ): string {
     switch (unit) {
+      case "RM_M":
+        // A Driver Formula bound to a GL leaf produces money — same signed,
+        // parens-for-negative treatment as any other statement row.
+        return statementValue(value);
       case "usd-per-day":
-        return `$${value.toFixed(0)}k/d`;
+        // Small values (e.g. an RM_M-scaled Driver Formula term — see
+        // docs/adr/0030) need more than 0 decimals or they'd all show "$0k/d".
+        return value < 10 ? `$${value.toFixed(3)}k/d` : `$${value.toFixed(0)}k/d`;
       case "usd-per-month":
-        return `$${value.toFixed(0)}k/mo`;
+        return value < 10 ? `$${value.toFixed(3)}k/mo` : `$${value.toFixed(0)}k/mo`;
       case "percent":
         return `${value.toFixed(1)}%`;
       case "days":
         return value.toFixed(1);
       case "count":
         return value.toFixed(0);
+      case "ratio":
+        return `${value.toFixed(2)}×`;
       default:
         return value.toFixed(1);
     }
@@ -460,8 +468,72 @@
                 </span>
               </span>
             {/snippet}
+            {#snippet operationalCells(row: DisplayRow, values: number[], isCollapsible: boolean)}
+              <span class="{indentClass(row.indent)} flex flex-col min-w-0">
+                <span class="flex items-center gap-1.5 min-w-0">
+                  {#if isCollapsible}
+                    <span
+                      class="inline-block w-4 shrink-0 text-base leading-none text-amber-600 dark:text-amber-400 transition-transform duration-150 {expandedGroups.has(
+                        row.nodeId,
+                      )
+                        ? 'rotate-90'
+                        : ''}"
+                    >
+                      ▸
+                    </span>
+                  {/if}
+                  <span
+                    class="text-[9px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-400/40 rounded px-1 shrink-0"
+                    >{row.driverNodeType === "formula" ? "Formula" : "Ops"}</span
+                  >
+                  {@render truncatedLabel(row)}
+                </span>
+                {#if row.driverNodeType === "formula" && row.expression}
+                  <span
+                    class="truncate text-[10px] font-normal normal-case tracking-normal text-amber-600/70 dark:text-amber-400/60 {isCollapsible
+                      ? 'pl-6'
+                      : ''}"
+                    title={row.expression}
+                  >
+                    {row.expression}
+                  </span>
+                {/if}
+              </span>
+              {#each values as value, i (i)}
+                <span class="text-right tabular-nums"
+                  >{operationalValue(value, row.unit)}</span
+                >
+              {/each}
+            {/snippet}
             {#each displayRows as { row, values } (row.nodeId)}
-              {#if collapsibleIds.has(row.nodeId)}
+              {#if row.kind === "operational"}
+                {#if collapsibleIds.has(row.nodeId)}
+                  <div
+                    role="button"
+                    tabindex="0"
+                    onclick={() => toggleGroup(row.nodeId)}
+                    onkeydown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleGroup(row.nodeId);
+                      }
+                    }}
+                    transition:slide={{ duration: 150 }}
+                    class="grid items-center py-1.5 text-sm cursor-pointer text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-400/10"
+                    style="grid-template-columns: {gridTemplateColumns}"
+                  >
+                    {@render operationalCells(row, values, true)}
+                  </div>
+                {:else}
+                  <div
+                    transition:slide={{ duration: 150 }}
+                    class="grid items-center py-1.5 text-sm text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-400/10"
+                    style="grid-template-columns: {gridTemplateColumns}"
+                  >
+                    {@render operationalCells(row, values, false)}
+                  </div>
+                {/if}
+              {:else if collapsibleIds.has(row.nodeId)}
                 <div
                   role="button"
                   tabindex="0"
@@ -503,29 +575,6 @@
                       months[visibleMonthIndices[i]],
                       statementValue(value),
                     )}
-                  {/each}
-                </div>
-              {:else if row.kind === "operational"}
-                <div
-                  transition:slide={{ duration: 150 }}
-                  class="grid items-center py-1.5 text-sm text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-400/10"
-                  style="grid-template-columns: {gridTemplateColumns}"
-                >
-                  <span
-                    class="{indentClass(
-                      row.indent,
-                    )} flex items-center gap-1.5 min-w-0"
-                  >
-                    <span
-                      class="text-[9px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-400/40 rounded px-1 shrink-0"
-                      >Ops</span
-                    >
-                    {@render truncatedLabel(row)}
-                  </span>
-                  {#each values as value, i (i)}
-                    <span class="text-right tabular-nums"
-                      >{operationalValue(value, row.unit)}</span
-                    >
                   {/each}
                 </div>
               {:else}

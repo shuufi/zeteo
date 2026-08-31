@@ -15,7 +15,23 @@ from pathlib import Path
 from sqlmodel import Session, delete
 
 from db import engine, init_db
-from models import CompanyNode, CompanyNodeType, GLFact, GLNode, NodeType, NormalBalance, OperationalUnit, Period, PeriodType, Scenario
+from models import (
+    CompanyNode,
+    CompanyNodeType,
+    Driver,
+    DriverFact,
+    DriverFormula,
+    DriverFormulaTerm,
+    FormulaOperator,
+    GLFact,
+    GLNode,
+    NodeType,
+    NormalBalance,
+    OperationalUnit,
+    Period,
+    PeriodType,
+    Scenario,
+)
 
 REPO_ROOT = Path(__file__).parent.parent
 CSV_PATH = REPO_ROOT / "docs" / "anaplan_is_master_data.csv"
@@ -107,25 +123,88 @@ NODE_TYPE_BY_CSV_VALUE = {
     "Posting GL Account": NodeType.POSTING_GL_ACCOUNT,
 }
 
-# Old mock's 6 curated revenue segments, remapped onto the real CSV's revenue
-# Posting GL Account leaves (children of PNL-0002 "Revenue"'s Reporting Nodes)
-# — not a 1:1 name match, best-effort per docs/adr/0023. Parented to the
-# specific leaf each driver most directly explains, not the Reporting Node,
-# so drivers render below the leaf (see docs/adr/0029).
-OPERATIONAL_DRIVERS = [
-    # (code, description, parent_code, unit, value_range)
-    ("OPD-0001", "Avg. Daily Charter Rate", "4010100100", OperationalUnit.USD_PER_DAY, (18000, 32000)),
-    ("OPD-0002", "Utilization / On-hire Rate", "4010100100", OperationalUnit.PERCENT, (92, 99)),
-    ("OPD-0003", "Off-hire Days (fleet)", "4010100100", OperationalUnit.DAYS, (2, 12)),
-    ("OPD-0004", "Avg. Spot/Voyage TCE Rate", "4030100500", OperationalUnit.USD_PER_DAY, (15000, 45000)),
-    ("OPD-0005", "Spot Voyage Days (fleet)", "4030100500", OperationalUnit.DAYS, (10, 28)),
-    ("OPD-0006", "Avg. Daily Charter Rate (Finance Lease)", "4020100100", OperationalUnit.USD_PER_DAY, (20000, 38000)),
-    ("OPD-0007", "Fleet Uptime / Availability", "4020100100", OperationalUnit.PERCENT, (94, 99.5)),
-    ("OPD-0008", "Avg. Project Completion Rate", "4050100200", OperationalUnit.PERCENT, (40, 95)),
-    ("OPD-0009", "Active Projects", "4050100200", OperationalUnit.COUNT, (2, 9)),
-    ("OPD-0010", "Demurrage Days Billed", "4040100300", OperationalUnit.DAYS, (5, 20)),
-    ("OPD-0011", "Vessels Under Management", "4060100100", OperationalUnit.COUNT, (8, 25)),
-    ("OPD-0012", "Avg. Fee per Vessel", "4060100100", OperationalUnit.USD_PER_MONTH, (12000, 28000)),
+# Legacy context-only Drivers (formerly Operational Driver GLNode rows, old
+# mock's 6 curated revenue segments remapped onto the real CSV's revenue
+# Posting GL Account leaves — not a 1:1 name match, best-effort per
+# docs/adr/0023). Migrated into the Driver table per docs/adr/0030: no
+# Formula computes them, so `displayed_under` is what keeps them rendering
+# below the leaf they've always explained (see docs/adr/0029).
+# (code, description, unit, value_range, displayed_under)
+LEGACY_DRIVERS = [
+    ("OPD-0001", "Avg. Daily Charter Rate", OperationalUnit.USD_PER_DAY, (18000, 32000), "4010100100"),
+    ("OPD-0002", "Utilization / On-hire Rate", OperationalUnit.PERCENT, (92, 99), "4010100100"),
+    ("OPD-0003", "Off-hire Days (fleet)", OperationalUnit.DAYS, (2, 12), "4010100100"),
+    ("OPD-0004", "Avg. Spot/Voyage TCE Rate", OperationalUnit.USD_PER_DAY, (15000, 45000), "4030100500"),
+    ("OPD-0005", "Spot Voyage Days (fleet)", OperationalUnit.DAYS, (10, 28), "4030100500"),
+    ("OPD-0006", "Avg. Daily Charter Rate (Finance Lease)", OperationalUnit.USD_PER_DAY, (20000, 38000), "4020100100"),
+    ("OPD-0007", "Fleet Uptime / Availability", OperationalUnit.PERCENT, (94, 99.5), "4020100100"),
+    ("OPD-0008", "Avg. Project Completion Rate", OperationalUnit.PERCENT, (40, 95), "4050100200"),
+    ("OPD-0009", "Active Projects", OperationalUnit.COUNT, (2, 9), "4050100200"),
+    ("OPD-0010", "Demurrage Days Billed", OperationalUnit.DAYS, (5, 20), "4040100300"),
+    ("OPD-0011", "Vessels Under Management", OperationalUnit.COUNT, (8, 25), "4060100100"),
+    ("OPD-0012", "Avg. Fee per Vessel", OperationalUnit.USD_PER_MONTH, (12000, 28000), "4060100100"),
+]
+
+# Fictitious POC drivers demonstrating Driver Formula composition, reuse and
+# recursion — see docs/adr/0030. Bound to real Manpower Cost leaves under
+# PNL-0088 "Crew Costs (Payroll & Statutory)" (docs/anaplan_is_master_data.csv).
+# `value_range=None` marks a Formula-driven driver: no facts are generated for
+# it, its value is always computed (see DRIVER_FORMULAS below).
+#
+# No unit conversion happens between a Driver's own value and the RM_M scale
+# its Formula's target leaf expects (see docs/adr/0030) — currency-flavoured
+# drivers here are deliberately expressed already-in-RM_M (e.g. 0.001 means
+# "RM 1,000/head/month"), the formula author's job, so Complement x RankMix x
+# PayrollRate lands in the same RM_M ballpark as every other GL leaf.
+MANPOWER_DRIVERS = [
+    ("DRV-0001", "Crew Complement", OperationalUnit.COUNT, (700, 950), None),
+    ("DRV-0002", "Rank Mix Factor", OperationalUnit.RATIO, (1.15, 1.40), None),
+    ("DRV-0003", "Base Payroll Rate", OperationalUnit.USD_PER_MONTH, (0.0009, 0.0011), None),
+    ("DRV-0004", "Annual Increment Factor", OperationalUnit.RATIO, (1.02, 1.08), None),
+    ("DRV-0005", "Payroll Rate", OperationalUnit.USD_PER_MONTH, None, None),
+    ("DRV-0006", "Contribution Base", OperationalUnit.USD_PER_MONTH, (0.05, 0.09), None),
+    ("DRV-0007", "EPF Rate", OperationalUnit.RATIO, (0.12, 0.14), None),
+]
+
+DRIVERS = LEGACY_DRIVERS + MANPOWER_DRIVERS
+
+# (code, description, target_code, sign, terms)
+# terms: list of (term_index, operand_index, driver_code, operator)
+DRIVER_FORMULAS = [
+    (
+        "FORM-0001",
+        "Crew Salary & Wages Formula",
+        "5100100100",  # COS-Crew costs-Salary & Wages
+        1,
+        [
+            (0, 0, "DRV-0001", FormulaOperator.MULTIPLY),
+            (0, 1, "DRV-0002", FormulaOperator.MULTIPLY),
+            (0, 2, "DRV-0005", FormulaOperator.MULTIPLY),
+            (1, 0, "DRV-0006", FormulaOperator.MULTIPLY),
+        ],
+    ),
+    (
+        "FORM-0002",
+        "Payroll Rate Formula",
+        "DRV-0005",  # Payroll Rate — recursion: a Driver driven by a Formula
+        1,
+        [
+            (0, 0, "DRV-0003", FormulaOperator.MULTIPLY),
+            (0, 1, "DRV-0004", FormulaOperator.MULTIPLY),
+        ],
+    ),
+    (
+        "FORM-0003",
+        "Crew EPF Formula",
+        "5100100800",  # COS-Crew costs-EPF
+        1,
+        [
+            (0, 0, "DRV-0001", FormulaOperator.MULTIPLY),
+            (0, 1, "DRV-0002", FormulaOperator.MULTIPLY),
+            (0, 2, "DRV-0005", FormulaOperator.MULTIPLY),
+            (0, 3, "DRV-0007", FormulaOperator.MULTIPLY),
+        ],
+    ),
 ]
 
 # The one node that keeps full Driver Diagnostic depth (trend/drivers/
@@ -184,20 +263,29 @@ def load_hierarchy_nodes() -> list[GLNode]:
     return nodes
 
 
-def load_operational_driver_nodes(hierarchy: list[GLNode]) -> list[GLNode]:
-    level_by_code = {n.code: n.level for n in hierarchy}
+def load_drivers() -> list[Driver]:
     return [
-        GLNode(
-            code=code,
-            description=description,
-            parent_code=parent_code,
-            node_type=NodeType.OPERATIONAL_DRIVER,
-            level=level_by_code[parent_code] + 1,
-            normal_balance=None,
-            unit=unit,
-        )
-        for code, description, parent_code, unit, _range in OPERATIONAL_DRIVERS
+        Driver(code=code, description=description, unit=unit, displayed_under=displayed_under)
+        for code, description, unit, _value_range, displayed_under in DRIVERS
     ]
+
+
+def load_driver_formulas() -> tuple[list[DriverFormula], list[DriverFormulaTerm]]:
+    formulas = []
+    terms = []
+    for code, description, target_code, sign, term_defs in DRIVER_FORMULAS:
+        formulas.append(DriverFormula(code=code, description=description, target_code=target_code, sign=sign))
+        for term_index, operand_index, driver_code, operator in term_defs:
+            terms.append(
+                DriverFormulaTerm(
+                    formula_code=code,
+                    term_index=term_index,
+                    operand_index=operand_index,
+                    driver_code=driver_code,
+                    operator=operator,
+                )
+            )
+    return formulas, terms
 
 
 def monthly_curve(rng: random.Random, annual_total: float) -> list[float]:
@@ -236,15 +324,29 @@ def generate_gl_facts(rng: random.Random, leaves: list[GLNode], companies: list[
     return facts
 
 
-def generate_operational_facts(rng: random.Random, companies: list[str]) -> list[GLFact]:
+def generate_driver_facts(rng: random.Random, companies: list[str]) -> list[DriverFact]:
+    """Fabricated actual/budget/prior-year values for every terminal Driver.
+
+    Formula-driven Drivers (`value_range is None`, e.g. Payroll Rate) get no
+    facts at all — their value is always computed via DriverEngine, never
+    stored (see docs/adr/0030).
+    """
     facts = []
-    for code, _description, _parent_code, _unit, (lo, hi) in OPERATIONAL_DRIVERS:
+    for code, _description, _unit, value_range, _displayed_under in DRIVERS:
+        if value_range is None:
+            continue
+        lo, hi = value_range
         for company in companies:
-            base = rng.uniform(lo, hi)
-            for month in MONTHS:
-                drift = rng.uniform(-0.05, 0.05) * (hi - lo)
-                value = min(max(base + drift * month / 12, lo), hi)
-                facts.append(GLFact(code=code, company=company, period_code=month_period_code(month), scenario=Scenario.ACTUAL, amount=round(value, 2)))
+            base_actual = rng.uniform(lo, hi)
+            base_budget = min(max(base_actual * rng.uniform(0.95, 1.05), lo), hi)
+            base_prior = min(max(base_actual * rng.uniform(0.90, 1.10), lo), hi)
+            for scenario, base in ((Scenario.ACTUAL, base_actual), (Scenario.BUDGET, base_budget), (Scenario.PRIOR_YEAR, base_prior)):
+                for month in MONTHS:
+                    drift = rng.uniform(-0.05, 0.05) * (hi - lo)
+                    value = min(max(base + drift * month / 12, lo), hi)
+                    facts.append(
+                        DriverFact(code=code, company=company, period_code=month_period_code(month), scenario=scenario, amount=round(value, 6))
+                    )
     return facts
 
 
@@ -252,8 +354,8 @@ def main() -> None:
     rng = random.Random(SEED)
 
     hierarchy = load_hierarchy_nodes()
-    operational_nodes = load_operational_driver_nodes(hierarchy)
-    all_nodes = hierarchy + operational_nodes
+    drivers = load_drivers()
+    driver_formulas, driver_formula_terms = load_driver_formulas()
     periods = build_periods()
     company_nodes = build_company_nodes()
 
@@ -261,28 +363,40 @@ def main() -> None:
     companies = sampled_company_codes(company_nodes)
 
     facts = generate_gl_facts(rng, leaves, companies)
-    facts += generate_operational_facts(rng, companies)
+    driver_facts = generate_driver_facts(rng, companies)
 
     init_db()
     with Session(engine) as session:
         session.exec(delete(GLFact))
+        session.exec(delete(DriverFact))
+        session.exec(delete(DriverFormulaTerm))
+        session.exec(delete(DriverFormula))
+        session.exec(delete(Driver))
         session.exec(delete(GLNode))
         session.exec(delete(Period))
         session.exec(delete(CompanyNode))
         session.commit()
 
-        session.add_all(all_nodes)
+        session.add_all(hierarchy)
+        session.add_all(drivers)
         session.add_all(periods)
         session.add_all(company_nodes)
         session.commit()
 
-        session.add_all(facts)
+        session.add_all(driver_formulas)
+        session.commit()
+        session.add_all(driver_formula_terms)
         session.commit()
 
-    print(f"Seeded {len(all_nodes)} nodes ({len(hierarchy)} GL/FSI + {len(operational_nodes)} operational driver)")
+        session.add_all(facts)
+        session.add_all(driver_facts)
+        session.commit()
+
+    print(f"Seeded {len(hierarchy)} GL/FSI nodes")
+    print(f"Seeded {len(drivers)} drivers, {len(driver_formulas)} driver formulas ({len(driver_formula_terms)} terms)")
     print(f"Seeded {len(periods)} periods ({FISCAL_YEAR}: 1 year + 4 quarters + 12 months)")
     print(f"Seeded {len(company_nodes)} company nodes ({GROUP_LABEL} + BUs + companies, {len(companies)} sampled)")
-    print(f"Seeded {len(facts)} facts across {len(companies)} sampled companies")
+    print(f"Seeded {len(facts)} GL facts + {len(driver_facts)} driver facts across {len(companies)} sampled companies")
     print(f"Fully-modelled example node: {FULLY_MODELLED_NODE}")
 
 
