@@ -1,7 +1,7 @@
 <script lang="ts">
   import { link } from 'svelte-spa-router';
   import type { KpiCard } from '../data/types';
-  import Sparkline from './Sparkline.svelte';
+  import SparkBars from './SparkBars.svelte';
 
   let { kpi }: { kpi: KpiCard } = $props();
 
@@ -25,7 +25,17 @@
     <div class="text-xs font-semibold {deltaColorClass}">{kpi.delta}</div>
   {/if}
   {#if kpi.trend?.length}
-    <div class="mt-2"><Sparkline points={kpi.trend} width={70} height={20} /></div>
+    <div class="mt-2">
+      <SparkBars
+        values={kpi.trend}
+        width={200}
+        height={56}
+        class="w-full h-14"
+        fillClass={kpi.trendFillClass}
+        splitAt={kpi.trend.length / 2}
+        tooltips={kpi.trendTooltips}
+      />
+    </div>
   {/if}
 {/snippet}
 

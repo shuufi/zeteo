@@ -37,8 +37,8 @@
   // Explorer/Driver Diagnostic, it doesn't scope to the Period chip (see
   // docs/adr/0026, reverted from genuinely scoping per follow-up feedback):
   // its Income Statement is a grid of all 12 month columns and its KPI cards
-  // are explicitly YTD, so the chip stays visible/interactive here (picking
-  // still affects the other two screens) but this page ignores it.
+  // summarize the full year, so the chip stays visible/interactive here
+  // (picking still affects the other two screens) but this page ignores it.
   const visibleMonthIndices = $derived(monthPeriodCodes.map((_, i) => i));
 
   // User-resizable via the drag handle next to the header — width persists
@@ -75,7 +75,6 @@
   const gridTemplateColumns = $derived(
     `${lineItemWidth}px repeat(${visibleMonthIndices.length}, minmax(64px,1fr))`,
   );
-  const periodQualifier = "YTD";
 
   const pnlRows = $derived(buildDisplayRows(glStore.tree));
   const rowsByNodeId = $derived(
@@ -177,34 +176,66 @@
     return visibleMonthIndices.map((i) => monthlyActual[i] ?? 0);
   }
 
+  // Trailing 24 months for the KPI card bar charts — prior year's monthly
+  // figures followed by the current year's, in chronological order (see
+  // gl_tree.py's monthlyPriorYear, sourced from the prior_year GLFact scenario).
+  function trailing24(
+    node: { monthlyActual: number[]; monthlyPriorYear: number[] },
+    abs = false,
+  ): { trend: number[]; tooltips: string[] } {
+    const transform = abs ? Math.abs : (v: number) => v;
+    const monthLabels = visibleMonthIndices.map((i) => months[i]);
+    const trend = [
+      ...scoped(node.monthlyPriorYear).map(transform),
+      ...scoped(node.monthlyActual).map(transform),
+    ];
+    const tooltips = trend.map((v, i) => {
+      const year = i < monthLabels.length ? "Prior Year" : "This Year";
+      const month = monthLabels[i % monthLabels.length];
+      return `${month} (${year}): ${formatRmAuto(v)}`;
+    });
+    return { trend, tooltips };
+  }
+
+  const revenueTrend = $derived(revenue && trailing24(revenue));
+  const costOfRevenueTrend = $derived(costOfRevenue && trailing24(costOfRevenue, true));
+  const grossProfitTrend = $derived(grossProfit && trailing24(grossProfit));
+  const npatTrend = $derived(npat && trailing24(npat));
+
   const financialKpis = $derived(
-    revenue && costOfRevenue && grossProfit && npat
+    revenue && costOfRevenue && grossProfit && npat && revenueTrend && costOfRevenueTrend && grossProfitTrend && npatTrend
       ? [
           {
             id: "revenue-ytd",
-            label: `Revenue ${periodQualifier}`,
+            label: "Revenue",
             value: formatRmAuto(revenue.actual),
-            trend: cumulative(scoped(revenue.monthlyActual)),
+            trend: revenueTrend.trend,
+            trendTooltips: revenueTrend.tooltips,
+            trendFillClass: "fill-gray-900 dark:fill-gray-50",
           },
           {
             id: "cost-of-revenue-ytd",
-            label: `Cost of Revenue ${periodQualifier}`,
+            label: "Cost of Revenue",
             value: formatRmAuto(Math.abs(costOfRevenue.actual)),
-            trend: cumulative(
-              scoped(costOfRevenue.monthlyActual).map(Math.abs),
-            ),
+            trend: costOfRevenueTrend.trend,
+            trendTooltips: costOfRevenueTrend.tooltips,
+            trendFillClass: "fill-red-600 dark:fill-red-400",
           },
           {
             id: "gross-profit-ytd",
-            label: `Gross Profit ${periodQualifier}`,
+            label: "Gross Profit",
             value: formatRmAuto(grossProfit.actual),
-            trend: cumulative(scoped(grossProfit.monthlyActual)),
+            trend: grossProfitTrend.trend,
+            trendTooltips: grossProfitTrend.tooltips,
+            trendFillClass: "fill-emerald-600 dark:fill-emerald-400",
           },
           {
             id: "npat-ytd",
-            label: `NPAT ${periodQualifier}`,
+            label: "NPAT",
             value: formatRmAuto(npat.actual),
-            trend: cumulative(scoped(npat.monthlyActual)),
+            trend: npatTrend.trend,
+            trendTooltips: npatTrend.tooltips,
+            trendFillClass: "fill-blue-600 dark:fill-blue-400",
           },
         ]
       : [],

@@ -73,6 +73,7 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
                 period_len = len(scope_indices) if scope_indices is not None else 12
                 entry = {
                     "monthlyActual": actual_monthly,
+                    "monthlyPriorYear": prior_monthly,
                     "actual": scoped_sum(actual_monthly) / period_len,
                     "budget": scoped_sum(budget_monthly) / period_len,
                     "priorYear": scoped_sum(prior_monthly) / period_len,
@@ -80,8 +81,10 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
             else:
                 sign = 1 if node.normal_balance == NormalBalance.CREDIT else -1
                 monthly_actual = [v * sign for v in actual_monthly]
+                monthly_prior = [v * sign for v in prior_monthly]
                 entry = {
                     "monthlyActual": monthly_actual,
+                    "monthlyPriorYear": monthly_prior,
                     "actual": scoped_sum(monthly_actual),
                     "budget": scoped_sum(budget_monthly) * sign,
                     "priorYear": scoped_sum(prior_monthly) * sign,
@@ -90,8 +93,10 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
             child_codes = [c for c in children_by_parent.get(code, []) if node_by_code[c].node_type != NodeType.OPERATIONAL_DRIVER]
             child_entries = [compute(c) for c in child_codes]
             monthly_actual = [sum(e["monthlyActual"][i] for e in child_entries) for i in range(12)]
+            monthly_prior = [sum(e["monthlyPriorYear"][i] for e in child_entries) for i in range(12)]
             entry = {
                 "monthlyActual": monthly_actual,
+                "monthlyPriorYear": monthly_prior,
                 "actual": sum(e["actual"] for e in child_entries),
                 "budget": sum(e["budget"] for e in child_entries),
                 "priorYear": sum(e["priorYear"] for e in child_entries),
@@ -119,6 +124,7 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
             "budget": round(entry["budget"], 3),
             "priorYear": round(entry["priorYear"], 3),
             "monthlyActual": [round(v, 3) for v in entry["monthlyActual"]],
+            "monthlyPriorYear": [round(v, 3) for v in entry["monthlyPriorYear"]],
             "direction": _direction(entry["actual"], entry["budget"]),
             "hasFullData": full_data is not None,
             **(full_data or {}),

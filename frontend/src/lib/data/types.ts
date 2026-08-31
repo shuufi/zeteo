@@ -20,6 +20,10 @@ export interface KpiCard {
   highlighted?: boolean;
   nodeId?: string;
   trend?: number[];
+  /** Tailwind fill classes for the trend bar chart, e.g. 'fill-red-600 dark:fill-red-400'. */
+  trendFillClass?: string;
+  /** Per-bar hover text for the trend bar chart, e.g. "Jan (Prior Year): RM188.9m". */
+  trendTooltips?: string[];
 }
 
 export type OperationalUnit = 'usd-per-day' | 'usd-per-month' | 'percent' | 'days' | 'count';
@@ -114,6 +118,7 @@ export interface VdtNode {
   budget: number;
   priorYear: number;
   monthlyActual: number[];
+  monthlyPriorYear: number[];
   direction: Direction;
   hasFullData: boolean;
   trend?: number[];
