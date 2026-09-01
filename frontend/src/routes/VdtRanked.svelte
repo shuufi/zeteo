@@ -30,7 +30,7 @@
   const scopedLabel = $derived(periodLabel(periodState.code));
 
   // Syncs the URL's ?period= into the shared periodState + refetches when it
-  // differs — e.g. arriving via a Financial Performance P&L cell deep-link
+  // differs — e.g. arriving via a Financial P&L cell deep-link
   // (see docs/adr/0026). Once glStore.tree reflects the requested period, its
   // nodes' actual/budget/priorYear are already scoped server-side — no
   // client-side re-derivation needed (contrast with the old getMonthlyNodeView).

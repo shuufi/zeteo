@@ -67,7 +67,7 @@ function stripRedundantRevenueWord(name: string): string {
 }
 
 /**
- * Flattens the GL/FSI tree into Financial Performance's statement rows,
+ * Flattens the GL/FSI tree into Financial's statement rows,
  * walking all the way down to Posting GL Account leaves (see docs/adr/0029)
  * — each Reporting Node/Root and each leaf is collapsible. Driver Formula /
  * Driver rows (see docs/adr/0030) render nested beneath the leaf (or Driver)

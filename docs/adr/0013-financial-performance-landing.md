@@ -1,6 +1,6 @@
-# Financial Performance is its own nav item and route, not a VDT Explorer view mode
+# Financial is its own nav item and route, not a VDT Explorer view mode
 
-Design 2a introduced a full-P&L overview screen, framed in the wireframe as "VDT Explorer's landing state, before drilling into a line." Rather than folding it into VDT Explorer as a third view mode (alongside Ranked and Tree), it became its own top-level nav item and route — **Financial Performance** at `/financial` — with VDT Explorer's existing entry point renamed **Value Driver** and left at `/vdt/expenses`. Financial Performance's nav item is active only on `/financial` itself; Value Driver's stays active across the whole `/vdt/*`, `/vdt-tree/*`, `/diagnostic/*` journey, since that's the branch the IA doc (wireframe option 1a) already treats as one continuous flow. This was an explicit user decision during scoping, not a default.
+Design 2a introduced a full-P&L overview screen, framed in the wireframe as "VDT Explorer's landing state, before drilling into a line." Rather than folding it into VDT Explorer as a third view mode (alongside Ranked and Tree), it became its own top-level nav item and route — **Financial** at `/financial` — with VDT Explorer's existing entry point renamed **Value Driver** and left at `/vdt/expenses`. Financial's nav item is active only on `/financial` itself; Value Driver's stays active across the whole `/vdt/*`, `/vdt-tree/*`, `/diagnostic/*` journey, since that's the branch the IA doc (wireframe option 1a) already treats as one continuous flow. This was an explicit user decision during scoping, not a default.
 
 Two consequences for `frontend/src/lib/data/zeteo-data.ts`:
 
