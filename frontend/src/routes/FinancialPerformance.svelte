@@ -33,7 +33,7 @@
       .map((p) => p.id),
   );
 
-  // Financial Performance always shows the whole fiscal year — unlike VDT
+  // Financial always shows the whole fiscal year — unlike VDT
   // Explorer/Driver Diagnostic, it doesn't scope to the Period chip (see
   // docs/adr/0026, reverted from genuinely scoping per follow-up feedback):
   // its Income Statement is a grid of all 12 month columns and its KPI cards
