@@ -7,13 +7,11 @@
   import Card from '../lib/components/Card.svelte';
   import ProfitBridge from '../lib/components/ProfitBridge.svelte';
   import NotYetModelled from '../lib/components/NotYetModelled.svelte';
-  import NodePicker from '../lib/components/NodePicker.svelte';
-  import PeriodSelect from '../lib/components/PeriodSelect.svelte';
   import { scopeState } from '../lib/state/scope.svelte';
   import { comparisonStore, loadComparison } from '../lib/data/comparison-store.svelte';
   import { getComparisonNode, getComparisonChildren, buildComparisonRows } from '../lib/data/comparison-client';
   import { indentClass } from '../lib/data/gl-client';
-  import { periodStore, loadPeriods, periodLabel } from '../lib/data/period-store.svelte';
+  import { loadPeriods, periodLabel } from '../lib/data/period-store.svelte';
   import type { DisplayRow, OperationalUnit, PeriodType, Direction, BridgeStep, ComparisonNode } from '../lib/data/types';
 
   onMount(loadPeriods);
@@ -22,27 +20,6 @@
   let grain = $state<PeriodType>('Month');
   let periodA = $state<string | undefined>(undefined);
   let periodB = $state<string | undefined>(undefined);
-
-  const periodsForGrain = $derived({
-    Month: Object.values(periodStore.tree)
-      .filter((p) => p.periodType === 'Month')
-      .sort((a, b) => a.order - b.order),
-    Quarter: Object.values(periodStore.tree)
-      .filter((p) => p.periodType === 'Quarter')
-      .sort((a, b) => a.order - b.order),
-    Year: Object.values(periodStore.tree)
-      .filter((p) => p.periodType === 'Year')
-      .sort((a, b) => a.order - b.order),
-  });
-
-  // Comparing two periods only makes sense at the same grain (see docs/adr/0031)
-  // — switching grain clears both picks rather than leaving a stale cross-grain pair.
-  function setGrain(g: PeriodType): void {
-    if (g === grain) return;
-    grain = g;
-    periodA = undefined;
-    periodB = undefined;
-  }
 
   $effect(() => {
     const node = comparisonNodeId;
@@ -204,35 +181,7 @@
 
 <PageHeader title="Financial Comparison" />
 <PageBody>
-  <ContextBar showYtd={false} showPeriod={false} />
-
-  <div class="flex flex-wrap items-end gap-4 pt-4 pb-2">
-    <div class="w-72">
-      <NodePicker bind:value={comparisonNodeId} />
-    </div>
-
-    <div class="flex items-center gap-1.5">
-      <span class="text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">Grain:</span>
-      <div class="inline-flex rounded-md shadow-xs">
-        {#each grains as g (g)}
-          <button
-            type="button"
-            onclick={() => setGrain(g)}
-            disabled={periodsForGrain[g].length < 2}
-            class="px-3 py-1.5 text-xs font-medium border first:rounded-l-md last:rounded-r-md -ml-px first:ml-0 disabled:cursor-not-allowed disabled:opacity-40 {grain === g
-              ? 'bg-indigo-600 border-indigo-600 text-white z-10'
-              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-white/5 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/10'}"
-          >
-            {g}
-          </button>
-        {/each}
-      </div>
-    </div>
-
-    <PeriodSelect label="Period A" periods={periodsForGrain[grain]} bind:value={periodA} />
-    <span class="text-xs text-gray-400 dark:text-gray-500">vs</span>
-    <PeriodSelect label="Period B" periods={periodsForGrain[grain]} bind:value={periodB} />
-  </div>
+  <ContextBar showYtd={false} showPeriod={false} showComparison bind:comparisonNode={comparisonNodeId} bind:grain bind:periodA bind:periodB />
 
   {#if !comparisonNodeId || !periodA || !periodB}
     <div class="pt-4 text-sm text-gray-500 dark:text-gray-400">Pick a comparison node and two periods to compare.</div>
