@@ -64,6 +64,11 @@ def resolve_scope(session: Session, scope: str) -> dict:
     descendants = collect_companies(scope)
     sampled = [c.code for c in descendants if c.is_sampled]
     kind = "group" if node.node_type == CompanyNodeType.GROUP else "bu"
+    if not sampled:
+        # No sampled company anywhere under this BU/Group — an all-zero tree
+        # would misleadingly look like a real, empty company rather than
+        # unmodelled scope (see docs/adr/0032, focus narrowed to one company).
+        return {"kind": kind, "companies": [], "notYetModelled": True}
     return {
         "kind": kind,
         "companies": sampled,

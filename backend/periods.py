@@ -1,8 +1,8 @@
-"""Year/Quarter/Month period hierarchy — see docs/adr/0025.
+"""Year/Quarter/Month period hierarchy — see docs/adr/0025 and docs/adr/0032.
 
 Mirrors gl_tree.py's adjacency-list-walk shape, but for the much smaller
-period dimension (17 rows for one fiscal year: 1 Year + 4 Quarters + 12
-Months).
+period dimension (17 rows per fiscal year: 1 Year + 4 Quarters + 12 Months —
+multiple fiscal years coexist as sibling Year roots, not one shared tree).
 """
 
 from collections import defaultdict

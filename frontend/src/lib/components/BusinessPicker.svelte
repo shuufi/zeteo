@@ -67,8 +67,10 @@
   $effect(() => {
     if (defaulted || companyStore.status !== 'ready' || !group) return;
     defaulted = true;
-    const businessUnits = childrenOf(group);
-    const fallback = businessUnits.find((bu) => bu.id === scopeState.code) ?? businessUnits[0];
+    // scopeState's default can be any node in the hierarchy (a Company, not
+    // just a top-level BU — see docs/adr/0032) — only fall back to the first
+    // BU if that default doesn't actually exist in the loaded tree.
+    const fallback = companyStore.tree[scopeState.code] ?? childrenOf(group)[0];
     if (fallback && fallback.id !== scopeState.code) {
       scopeState.set(fallback.id, fallback.label);
       loadScope(fallback.id, periodState.code);

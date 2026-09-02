@@ -13,7 +13,13 @@
   let expanded = $state(new Set<string>());
   let rootEl = $state<HTMLDivElement | null>(null);
 
-  const year = $derived(Object.values(periodStore.tree).find((p) => p.parentId === null));
+  // Three real fiscal years coexist as sibling roots now (see docs/adr/0032)
+  // — sorted newest-first so the current year sits at the top of the list.
+  const years = $derived(
+    Object.values(periodStore.tree)
+      .filter((p) => p.parentId === null)
+      .sort((a, b) => b.order - a.order),
+  );
 
   function childrenOf(node: PeriodNode): PeriodNode[] {
     return node.childIds.map((id) => periodStore.tree[id]).filter((p): p is PeriodNode => p !== undefined);
@@ -123,8 +129,10 @@
             Couldn't load periods.
             <button type="button" class="ml-2 cursor-pointer border-0 bg-transparent p-0 text-indigo-600 underline dark:text-indigo-400" onclick={loadPeriods}>Retry</button>
           </div>
-        {:else if year}
-          {@render row(year, 0)}
+        {:else}
+          {#each years as year (year.id)}
+            {@render row(year, 0)}
+          {/each}
         {/if}
       </div>
     {/if}
