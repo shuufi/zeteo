@@ -7,6 +7,7 @@
   import { loadScope } from './lib/data/gl-store.svelte';
   import Home from './routes/Home.svelte';
   import FinancialPerformance from './routes/FinancialPerformance.svelte';
+  import FinancialComparison from './routes/FinancialComparison.svelte';
   import VdtRanked from './routes/VdtRanked.svelte';
   import VdtFlow from './routes/VdtFlow.svelte';
   import DriverDiagnostic from './routes/DriverDiagnostic.svelte';
@@ -17,6 +18,7 @@
   const routes = {
     '/': Home,
     '/financial': FinancialPerformance,
+    '/financial/compare': FinancialComparison,
     '/vdt/:id': VdtRanked,
     '/vdt-flow': VdtFlow,
     '/vdt-flow/:id': VdtFlow,

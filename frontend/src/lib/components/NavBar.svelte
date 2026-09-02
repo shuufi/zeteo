@@ -4,9 +4,24 @@
   import active from 'svelte-spa-router/active';
   import { initTheme, toggleTheme, watchSystemTheme, type Theme } from '../theme';
 
-  const navLinks: { href: string; label: string; activePath: string | RegExp }[] = [
+  interface NavLink {
+    href: string;
+    label: string;
+    activePath: string | RegExp;
+    children?: { href: string; label: string; activePath: string | RegExp }[];
+  }
+
+  const navLinks: NavLink[] = [
     { href: '/', label: 'Home', activePath: '/' },
-    { href: '/financial', label: 'Financial', activePath: '/financial' },
+    {
+      href: '/financial',
+      label: 'Financial',
+      activePath: /^\/financial(\/.*)?$/,
+      children: [
+        { href: '/financial', label: 'Trends', activePath: '/financial' },
+        { href: '/financial/compare', label: 'Comparison', activePath: '/financial/compare' },
+      ],
+    },
     { href: '/vdt/NPAT', label: 'Value Driver', activePath: /^\/(vdt|diagnostic)(\/.*)?$/ },
     { href: '/ask', label: 'Ask Zeteo', activePath: '/ask' },
     { href: '/initiatives', label: 'Initiatives', activePath: '/initiatives' },
@@ -44,14 +59,50 @@
         <div class="hidden lg:ml-10 lg:block">
           <div class="flex space-x-4">
             {#each navLinks as l (l.href)}
-              <a
-                href={l.href}
-                use:link
-                use:active={{ path: l.activePath, className: 'is-active' }}
-                class="rounded-md px-3 py-2 text-sm font-medium text-white no-underline hover:bg-indigo-500/75 dark:hover:bg-indigo-700/75 [&.is-active]:bg-indigo-700 dark:[&.is-active]:bg-indigo-950/40"
-              >
-                {l.label}
-              </a>
+              {#if l.children}
+                <div class="group relative">
+                  <a
+                    href={l.href}
+                    use:link
+                    use:active={{ path: l.activePath, className: 'is-active' }}
+                    class="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-white no-underline hover:bg-indigo-500/75 dark:hover:bg-indigo-700/75 [&.is-active]:bg-indigo-700 dark:[&.is-active]:bg-indigo-950/40"
+                  >
+                    {l.label}
+                    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="size-3.5 text-indigo-200 transition-transform duration-150 group-hover:rotate-180">
+                      <path
+                        fill-rule="evenodd"
+                        d="M5.22 5.22a.75.75 0 0 1 1.06 0L8 6.94l1.72-1.72a.75.75 0 1 1 1.06 1.06l-2.25 2.25a.75.75 0 0 1-1.06 0L5.22 6.28a.75.75 0 0 1 0-1.06Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </a>
+
+                  <!-- pt-2 keeps the hover region contiguous between trigger and panel, so the pointer never leaves `.group` while moving down into it -->
+                  <div class="invisible absolute left-0 top-full z-20 w-48 pt-2 opacity-0 transition duration-100 group-hover:visible group-hover:opacity-100">
+                    <div class="rounded-md bg-white py-1 shadow-lg outline-1 outline-black/5 dark:bg-gray-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10">
+                      {#each l.children as c (c.href)}
+                        <a
+                          href={c.href}
+                          use:link
+                          use:active={{ path: c.activePath, className: 'is-active' }}
+                          class="block px-4 py-2 text-sm text-gray-700 no-underline hover:bg-gray-100 [&.is-active]:font-semibold [&.is-active]:text-indigo-600 dark:text-gray-200 dark:hover:bg-white/5 dark:[&.is-active]:text-indigo-400"
+                        >
+                          {c.label}
+                        </a>
+                      {/each}
+                    </div>
+                  </div>
+                </div>
+              {:else}
+                <a
+                  href={l.href}
+                  use:link
+                  use:active={{ path: l.activePath, className: 'is-active' }}
+                  class="rounded-md px-3 py-2 text-sm font-medium text-white no-underline hover:bg-indigo-500/75 dark:hover:bg-indigo-700/75 [&.is-active]:bg-indigo-700 dark:[&.is-active]:bg-indigo-950/40"
+                >
+                  {l.label}
+                </a>
+              {/if}
             {/each}
           </div>
         </div>
@@ -122,6 +173,19 @@
         >
           {l.label}
         </a>
+        {#if l.children}
+          {#each l.children as c (c.href)}
+            <a
+              href={c.href}
+              use:link
+              use:active={{ path: c.activePath, className: 'is-active' }}
+              onclick={closeMobilePanel}
+              class="block rounded-md py-2 pr-3 pl-6 text-sm font-medium text-indigo-100 no-underline hover:bg-indigo-500/75 dark:hover:bg-indigo-700/75 [&.is-active]:bg-indigo-700 dark:[&.is-active]:bg-indigo-950/40"
+            >
+              {c.label}
+            </a>
+          {/each}
+        {/if}
       {/each}
     </div>
     <div class="border-t border-indigo-700 pt-4 pb-3 dark:border-indigo-800">
