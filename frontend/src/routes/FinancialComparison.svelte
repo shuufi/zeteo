@@ -18,6 +18,7 @@
 
   let comparisonNodeId = $state<string | undefined>('NPAT');
   let grain = $state<PeriodType>('Month');
+  let bridgeEmphasis = $state(0.7);
   let periodA = $state<string | undefined>(undefined);
   let periodB = $state<string | undefined>(undefined);
 
@@ -193,8 +194,19 @@
     </div>
   {:else if comparisonRoot}
     <div class="flex flex-col gap-4 pt-2">
-      <Card title="Change from {periodLabel(comparisonStore.meta?.periodA ?? '')} to {periodLabel(comparisonStore.meta?.periodB ?? '')}">
-        <ProfitBridge steps={deltaBridgeSteps} height={Math.max(220, deltaBridgeSteps.length * 32)} />
+      <Card>
+        {#snippet header()}
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+            <div class="font-bold text-sm text-gray-900 dark:text-gray-50">
+              Change from {periodLabel(comparisonStore.meta?.periodA ?? '')} to {periodLabel(comparisonStore.meta?.periodB ?? '')}
+            </div>
+            <label class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 select-none">
+              Emphasize changes
+              <input type="range" min="0" max="1" step="0.05" bind:value={bridgeEmphasis} class="accent-indigo-600 dark:accent-indigo-400" />
+            </label>
+          </div>
+        {/snippet}
+        <ProfitBridge steps={deltaBridgeSteps} emphasis={bridgeEmphasis} />
       </Card>
 
       <Card>
