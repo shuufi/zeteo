@@ -2,8 +2,8 @@
   import { SvelteFlow, Background, Controls, MiniMap, Position, type Node, type Edge } from '@xyflow/svelte';
   import '@xyflow/svelte/dist/style.css';
   import { stratify, tree as d3tree } from 'd3-hierarchy';
-  import { glStore } from '../data/gl-store.svelte';
-  import type { VdtNode } from '../data/types';
+  import { vdtStore } from '../data/vdt-store.svelte';
+  import type { HierarchyNode } from '../data/types';
 
   const NODE_WIDTH = 220;
   const NODE_HEIGHT = 60;
@@ -31,8 +31,8 @@
     expandedIds = next;
   }
 
-  function visibleSubtree(tree: Record<string, VdtNode>, root: string, expanded: Set<string>): VdtNode[] {
-    const out: VdtNode[] = [];
+  function visibleSubtree(tree: Record<string, HierarchyNode>, root: string, expanded: Set<string>): HierarchyNode[] {
+    const out: HierarchyNode[] = [];
     const queue = [root];
     while (queue.length) {
       const id = queue.shift()!;
@@ -48,13 +48,13 @@
   let edges = $state<Edge[]>([]);
 
   $effect(() => {
-    if (glStore.status !== 'ready' || !glStore.tree[rootId]) return;
+    if (vdtStore.status !== 'ready' || !vdtStore.tree[rootId]) return;
 
-    const visible = visibleSubtree(glStore.tree, rootId, expandedIds);
-    const root = stratify<VdtNode>()
+    const visible = visibleSubtree(vdtStore.tree, rootId, expandedIds);
+    const root = stratify<HierarchyNode>()
       .id((node) => node.id)
       .parentId((node) => (node.id === rootId ? undefined : (node.parentId ?? undefined)))(visible);
-    const layout = d3tree<VdtNode>().nodeSize([NODE_HEIGHT + SIBLING_GAP, NODE_WIDTH + LEVEL_GAP]);
+    const layout = d3tree<HierarchyNode>().nodeSize([NODE_HEIGHT + SIBLING_GAP, NODE_WIDTH + LEVEL_GAP]);
     const laidOut = layout(root).descendants();
 
     nodes = laidOut.map((item) => {
@@ -91,7 +91,7 @@
   minZoom={0.05}
   maxZoom={2}
   onnodeclick={({ node }) => {
-    const valueDriver = glStore.tree[node.id];
+    const valueDriver = vdtStore.tree[node.id];
     if (valueDriver?.childIds.length) toggle(node.id);
   }}
 >

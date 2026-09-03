@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { link, router } from 'svelte-spa-router';
   import PageHeader from '../lib/components/PageHeader.svelte';
   import PageBody from '../lib/components/PageBody.svelte';
@@ -7,7 +8,7 @@
   import Sparkline from '../lib/components/Sparkline.svelte';
   import ChipRow from '../lib/components/ChipRow.svelte';
   import NotYetModelled from '../lib/components/NotYetModelled.svelte';
-  import { glStore, loadScope } from '../lib/data/gl-store.svelte';
+  import { vdtStore, loadVdtScope } from '../lib/data/vdt-store.svelte';
   import { getNode, getAncestors, rankChildren } from '../lib/data/gl-client';
   import { periodState, DEFAULT_PERIOD_CODE } from '../lib/state/period.svelte';
   import { periodStore, periodLabel } from '../lib/data/period-store.svelte';
@@ -31,30 +32,37 @@
 
   // Syncs the URL's ?period= into the shared periodState + refetches when it
   // differs — e.g. arriving via a Financial P&L cell deep-link
-  // (see docs/adr/0026). Once glStore.tree reflects the requested period, its
+  // (see docs/adr/0026). Once vdtStore.tree reflects the requested period, its
   // nodes' actual/budget/priorYear are already scoped server-side — no
   // client-side re-derivation needed (contrast with the old getMonthlyNodeView).
   $effect(() => {
     if (periodCode && periodCode !== periodState.code) {
       periodState.set(periodCode);
-      loadScope(scopeState.code, periodCode);
+      loadVdtScope(scopeState.code, periodCode);
     }
   });
 
-  const node = $derived(getNode(glStore.tree, params.id));
+  // vdtStore isn't populated by App.svelte's app-wide onMount (that's
+  // glStore/Accounting only) — a deep-link straight into /vdt/:id needs its
+  // own lazy trigger, same pattern VdtTree.svelte already uses.
+  onMount(() => {
+    if (vdtStore.status !== 'ready') loadVdtScope(scopeState.code, periodState.code);
+  });
+
+  const node = $derived(getNode(vdtStore.tree, params.id));
   const ancestors = $derived(
-    node ? getAncestors(glStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}${periodQuery}` })) : []
+    node ? getAncestors(vdtStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}${periodQuery}` })) : []
   );
   // Real GL/FSI nodes carry no curated rank — every child ranks live by
   // contribution magnitude instead (see gl-client.ts rankChildren).
-  const rankedChildren = $derived(node ? rankChildren(glStore.tree, node) : []);
+  const rankedChildren = $derived(node ? rankChildren(vdtStore.tree, node) : []);
 
 </script>
 
-{#if glStore.status === 'loading'}
+{#if vdtStore.status === 'loading'}
   <PageHeader title="Value Driver" />
   <PageBody>Loading…</PageBody>
-{:else if glStore.status === 'not-yet-modelled'}
+{:else if vdtStore.status === 'not-yet-modelled'}
   <PageHeader title="Value Driver" />
   <PageBody>
     <ContextBar />

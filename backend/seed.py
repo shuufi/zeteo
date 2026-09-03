@@ -20,6 +20,7 @@ from sqlmodel import Session, delete
 
 from db import engine, init_db
 from models import (
+    ActivityNode,
     CompanyNode,
     CompanyNodeType,
     Driver,
@@ -32,8 +33,10 @@ from models import (
     NormalBalance,
     Period,
     PeriodType,
+    PostingActivityAccount,
     Scenario,
 )
+from seed_vdt import build_crew_mix_seed, load_activity_hierarchy
 
 REPO_ROOT = Path(__file__).parent.parent
 CSV_PATH = REPO_ROOT / "docs" / "anaplan_is_master_data.csv"
@@ -263,17 +266,28 @@ def main() -> None:
     leaves = [n for n in hierarchy if n.node_type == NodeType.POSTING_GL_ACCOUNT]
     facts = generate_gl_facts(rng, leaves, FOCUS_COMPANY_CODE)
 
+    # VDT (activity-based) hierarchy pilot — see docs/adr/0033. Structure
+    # comes from docs/vdt-hierarchy-crew-cost.csv; `gl_level_by_code` lets
+    # its Activity Nodes compute their own `level` from the parent chain
+    # without a Hierarchy Level CSV column of their own.
+    gl_level_by_code = {n.code: n.level for n in hierarchy}
+    activity_nodes, accounts = load_activity_hierarchy(gl_level_by_code)
+    vdt_drivers, vdt_formulas, vdt_terms, vdt_facts = build_crew_mix_seed(FOCUS_COMPANY_CODE, FISCAL_YEARS)
+
     init_db()
     with Session(engine) as session:
-        # Driver Formula demo (docs/adr/0030) is dropped for now, not just
-        # emptied of facts — an orphaned Formula binding with no DriverFact
-        # data would compute as zero and silently override that leaf's real
-        # fabricated GLFact value (see docs/adr/0032). Revisit once/if the
-        # driver-decomposition demo is re-targeted at FOCUS_COMPANY_CODE.
+        # Driver/DriverFormula data (docs/adr/0030) previously stayed dropped
+        # after ADR-0032 (an orphaned Formula binding with no DriverFact data
+        # would compute as zero and silently override a leaf's real fabricated
+        # GLFact value) — now actually repopulated, targeting the new VDT
+        # hierarchy's Posting Activity Accounts rather than GL leaves, so
+        # that risk doesn't apply here.
         session.exec(delete(DriverFormulaTerm))
         session.exec(delete(DriverFormula))
         session.exec(delete(DriverFact))
         session.exec(delete(Driver))
+        session.exec(delete(PostingActivityAccount))
+        session.exec(delete(ActivityNode))
         session.exec(delete(GLFact))
         session.exec(delete(GLNode))
         session.exec(delete(Period))
@@ -283,15 +297,23 @@ def main() -> None:
         session.add_all(hierarchy)
         session.add_all(periods)
         session.add_all(company_nodes)
+        session.add_all(activity_nodes)
+        session.add_all(accounts)
+        session.add_all(vdt_drivers)
+        session.add_all(vdt_formulas)
+        session.add_all(vdt_terms)
         session.commit()
 
         session.add_all(facts)
+        session.add_all(vdt_facts)
         session.commit()
 
     print(f"Seeded {len(hierarchy)} GL/FSI nodes")
     print(f"Seeded {len(periods)} periods across {len(FISCAL_YEARS)} fiscal years ({', '.join(FISCAL_YEARS)})")
     print(f"Seeded {len(company_nodes)} company nodes ({GROUP_LABEL} + BUs + companies, 1 sampled: {FOCUS_COMPANY_CODE})")
     print(f"Seeded {len(facts)} GL facts for {FOCUS_COMPANY_CODE} across {len(FISCAL_YEARS)} years")
+    print(f"Seeded {len(activity_nodes)} Activity Nodes and {len(accounts)} Posting Activity Accounts (VDT hierarchy pilot — docs/adr/0033)")
+    print(f"Seeded {len(vdt_drivers)} Drivers / {len(vdt_formulas)} Driver Formulas for the first 3 of {len(accounts)} Posting Activity Accounts")
     print(f"Fully-modelled example node: {FULLY_MODELLED_NODE}")
 
 

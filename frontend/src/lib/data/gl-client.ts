@@ -1,15 +1,15 @@
-import type { DisplayRow, RankedNode, VdtNode } from './types';
+import type { DisplayRow, RankedNode, HierarchyNode } from './types';
 
-export function getNode(tree: Record<string, VdtNode>, id: string): VdtNode | undefined {
+export function getNode(tree: Record<string, HierarchyNode>, id: string): HierarchyNode | undefined {
   return tree[id];
 }
 
-export function getChildren(tree: Record<string, VdtNode>, node: VdtNode): VdtNode[] {
-  return node.childIds.map((id) => tree[id]).filter((n): n is VdtNode => n !== undefined);
+export function getChildren(tree: Record<string, HierarchyNode>, node: HierarchyNode): HierarchyNode[] {
+  return node.childIds.map((id) => tree[id]).filter((n): n is HierarchyNode => n !== undefined);
 }
 
-export function getAncestors(tree: Record<string, VdtNode>, id: string): VdtNode[] {
-  const chain: VdtNode[] = [];
+export function getAncestors(tree: Record<string, HierarchyNode>, id: string): HierarchyNode[] {
+  const chain: HierarchyNode[] = [];
   let current = tree[id];
   while (current?.parentId) {
     const parent = tree[current.parentId];
@@ -30,7 +30,7 @@ export function getAncestors(tree: Record<string, VdtNode>, id: string): VdtNode
  * are. Nodes already reflect whatever period was requested from GET
  * /api/gl/tree (see docs/adr/0025) — no client-side re-scoping needed here.
  */
-export function rankChildren(tree: Record<string, VdtNode>, node: VdtNode): RankedNode[] {
+export function rankChildren(tree: Record<string, HierarchyNode>, node: HierarchyNode): RankedNode[] {
   const children = getChildren(tree, node).filter(
     (c) => c.nodeType !== 'Driver Formula' && c.nodeType !== 'Driver',
   );
@@ -67,14 +67,15 @@ function stripRedundantRevenueWord(name: string): string {
 }
 
 /**
- * Flattens the GL/FSI tree into Financial's statement rows,
- * walking all the way down to Posting GL Account leaves (see docs/adr/0029)
- * — each Reporting Node/Root and each leaf is collapsible. Driver Formula /
- * Driver rows (see docs/adr/0030) render nested beneath the leaf (or Driver)
- * they're bound to, and recurse the same way — a Formula-driven Driver
- * expands into its own Formula, arbitrarily deep.
+ * Flattens a hierarchy tree (Accounting via GET /api/gl/tree, or VDT via
+ * GET /api/vdt/tree — see docs/adr/0033) into Financial's statement rows,
+ * walking all the way down to leaves (see docs/adr/0029) — each Reporting
+ * Node/Root, Activity Node, and leaf is collapsible. Driver Formula / Driver
+ * rows (see docs/adr/0030) render nested beneath the leaf (or Driver) they're
+ * bound to, and recurse the same way — a Formula-driven Driver expands into
+ * its own Formula, arbitrarily deep.
  */
-export function buildDisplayRows(tree: Record<string, VdtNode>, rootId = 'NPAT'): DisplayRow[] {
+export function buildDisplayRows(tree: Record<string, HierarchyNode>, rootId = 'NPAT', stripRevenueWord = true): DisplayRow[] {
   const rows: DisplayRow[] = [];
 
   function walk(code: string, indent: number): void {
@@ -87,7 +88,7 @@ export function buildDisplayRows(tree: Record<string, VdtNode>, rootId = 'NPAT')
     if (!isRoot) {
       rows.push({
         nodeId: code,
-        label: node.parentId === REVENUE_NODE_ID ? stripRedundantRevenueWord(node.name) : node.name,
+        label: stripRevenueWord && node.parentId === REVENUE_NODE_ID ? stripRedundantRevenueWord(node.name) : node.name,
         indent,
         isSubtotal: children.length > 0 && !isDriverGraph,
         group: node.parentId ?? undefined,

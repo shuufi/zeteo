@@ -57,6 +57,25 @@ def month_indices_for(
     return collect_month_orders(period_code)
 
 
+def month_codes_of_year(
+    period_by_code: dict[str, Period],
+    children_by_parent: dict[str, list[str]],
+    year_code: str,
+) -> dict[str, int]:
+    """One Year's Month period codes -> their 0-based month-array index.
+
+    Shared by gl_tree.py's load_monthly() and driver_engine.py's DriverEngine —
+    both need to restrict fact-loading to one fiscal year's 12 Month codes to
+    avoid silently summing e.g. FY24-M01 and FY26-M01 into the same slot (see
+    docs/adr/0032).
+    """
+    codes: dict[str, int] = {}
+    for quarter_code in children_by_parent.get(year_code, []):
+        for month_code in children_by_parent.get(quarter_code, []):
+            codes[month_code] = period_by_code[month_code].order - 1
+    return codes
+
+
 def build_period_tree(session: Session) -> dict[str, dict]:
     period_by_code, children_by_parent = load_period_hierarchy(session)
     return {

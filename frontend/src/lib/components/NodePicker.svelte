@@ -1,6 +1,6 @@
 <script lang="ts">
   import { glStore } from '../data/gl-store.svelte';
-  import type { VdtNode } from '../data/types';
+  import type { HierarchyNode } from '../data/types';
 
   let {
     value = $bindable<string | undefined>(undefined),
@@ -22,8 +22,8 @@
   const nodeById = $derived(new Map(candidates.map((n) => [n.id, n])));
   const root = $derived(candidates.find((n) => n.parentId === null));
 
-  function childrenOf(node: VdtNode): VdtNode[] {
-    return node.childIds.map((id) => nodeById.get(id)).filter((n): n is VdtNode => n !== undefined);
+  function childrenOf(node: HierarchyNode): HierarchyNode[] {
+    return node.childIds.map((id) => nodeById.get(id)).filter((n): n is HierarchyNode => n !== undefined);
   }
 
   function ancestorsOf(id: string): string[] {
@@ -51,17 +51,17 @@
   });
   const searching = $derived(trimmedQuery !== '');
 
-  function isVisible(node: VdtNode): boolean {
+  function isVisible(node: HierarchyNode): boolean {
     return !searching || matchIds.has(node.id) || ancestorIds.has(node.id);
   }
 
-  function isExpanded(node: VdtNode): boolean {
+  function isExpanded(node: HierarchyNode): boolean {
     return searching ? ancestorIds.has(node.id) : expanded.has(node.id);
   }
 
   const selectedLabel = $derived(value ? (glStore.tree[value]?.name ?? value) : '');
 
-  function select(node: VdtNode): void {
+  function select(node: HierarchyNode): void {
     value = node.id;
     query = '';
     const children = childrenOf(node);
@@ -93,7 +93,7 @@
   });
 </script>
 
-{#snippet row(node: VdtNode, depth: number)}
+{#snippet row(node: HierarchyNode, depth: number)}
   {#if isVisible(node)}
     {@const children = childrenOf(node)}
     <button

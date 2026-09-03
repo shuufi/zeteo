@@ -1,18 +1,17 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { slide } from 'svelte/transition';
   import PageHeader from '../lib/components/PageHeader.svelte';
   import PageBody from '../lib/components/PageBody.svelte';
   import ContextBar from '../lib/components/ContextBar.svelte';
   import Card from '../lib/components/Card.svelte';
   import ProfitBridge from '../lib/components/ProfitBridge.svelte';
   import NotYetModelled from '../lib/components/NotYetModelled.svelte';
+  import StatementTable, { type StatementColumn } from '../lib/components/StatementTable.svelte';
   import { scopeState } from '../lib/state/scope.svelte';
   import { comparisonStore, loadComparison } from '../lib/data/comparison-store.svelte';
   import { getComparisonNode, getComparisonChildren, buildComparisonRows } from '../lib/data/comparison-client';
-  import { indentClass } from '../lib/data/gl-client';
   import { loadPeriods, periodLabel } from '../lib/data/period-store.svelte';
-  import type { DisplayRow, OperationalUnit, PeriodType, Direction, BridgeStep, ComparisonNode } from '../lib/data/types';
+  import type { DisplayRow, PeriodType, Direction, BridgeStep } from '../lib/data/types';
 
   onMount(loadPeriods);
 
@@ -55,130 +54,35 @@
   );
 
   const comparisonRows = $derived(comparisonNodeId ? buildComparisonRows(comparisonStore.tree, comparisonNodeId) : []);
-  const rowsByNodeId = $derived(new Map(comparisonRows.map((row) => [row.nodeId, row])));
-  const collapsibleIds = $derived(new Set(comparisonRows.map((row) => row.group).filter((g): g is string => g !== undefined)));
-  const operationalGroupIds = $derived(
-    new Set(
-      comparisonRows
-        .filter((row) => row.kind === 'operational')
-        .map((row) => row.group)
-        .filter((g): g is string => g !== undefined),
-    ),
-  );
-  const summaryGroupIds = $derived(new Set([...collapsibleIds].filter((id) => (rowsByNodeId.get(id)?.indent ?? 0) < 1)));
 
-  let expandedGroups = $state<Set<string>>(new Set());
-  let expandedGroupsInitialised = false;
-  $effect(() => {
-    if (expandedGroupsInitialised || comparisonRows.length === 0) return;
-    expandedGroupsInitialised = true;
-    expandedGroups = new Set([...summaryGroupIds].filter((id) => !operationalGroupIds.has(id)));
-  });
-  // Re-run initial-collapse whenever the comparison node itself changes.
-  $effect(() => {
-    comparisonNodeId;
-    expandedGroupsInitialised = false;
-  });
+  const columns = $derived<StatementColumn[]>([
+    { key: 'A', label: periodLabel(comparisonStore.meta?.periodA ?? '') },
+    { key: 'B', label: periodLabel(comparisonStore.meta?.periodB ?? '') },
+    { key: 'delta', label: 'Δ', isDelta: true },
+  ]);
 
-  function toggleGroup(nodeId: string): void {
-    const next = new Set(expandedGroups);
-    if (next.has(nodeId)) next.delete(nodeId);
-    else next.add(nodeId);
-    expandedGroups = next;
+  function cellValue(row: DisplayRow, column: StatementColumn): number {
+    const node = getComparisonNode(comparisonStore.tree, row.nodeId);
+    if (!node) return 0;
+    if (column.key === 'A') return node.valueA;
+    if (column.key === 'B') return node.valueB;
+    return node.delta;
   }
 
-  function isVisible(row: DisplayRow): boolean {
-    let group = row.group;
-    while (group) {
-      if (!expandedGroups.has(group)) return false;
-      group = rowsByNodeId.get(group)?.group;
-    }
-    return true;
+  function cellDirection(row: DisplayRow): Direction {
+    return getComparisonNode(comparisonStore.tree, row.nodeId)?.direction ?? 'neutral';
   }
 
-  const visibleRows = $derived(
-    comparisonRows
-      .filter(isVisible)
-      .map((row) => ({ row, node: getComparisonNode(comparisonStore.tree, row.nodeId) }))
-      .filter((r): r is { row: DisplayRow; node: ComparisonNode } => r.node !== undefined),
-  );
-
-  // Values already carry the right sign server-side (see docs/adr/0023) — a
-  // negative number is a subtraction/loss, shown in parens.
-  function statementValue(value: number): string {
-    const text = Math.abs(value).toFixed(1);
-    return value < 0 && value !== 0 ? `(${text})` : text;
+  function cellDeltaPct(row: DisplayRow): number | null {
+    return getComparisonNode(comparisonStore.tree, row.nodeId)?.deltaPct ?? null;
   }
 
-  function operationalValue(value: number, unit: OperationalUnit | 'RM_M' | undefined): string {
-    switch (unit) {
-      case 'RM_M':
-        return statementValue(value);
-      case 'usd-per-day':
-        return value < 10 ? `$${value.toFixed(3)}k/d` : `$${value.toFixed(0)}k/d`;
-      case 'usd-per-month':
-        return value < 10 ? `$${value.toFixed(3)}k/mo` : `$${value.toFixed(0)}k/mo`;
-      case 'percent':
-        return `${value.toFixed(1)}%`;
-      case 'days':
-        return value.toFixed(1);
-      case 'count':
-        return value.toFixed(0);
-      case 'ratio':
-        return `${value.toFixed(2)}×`;
-      default:
-        return value.toFixed(1);
-    }
+  function rowExists(row: DisplayRow): boolean {
+    return getComparisonNode(comparisonStore.tree, row.nodeId) !== undefined;
   }
-
-  function deltaPctLabel(deltaPct: number | null): string {
-    if (deltaPct === null) return '';
-    const sign = deltaPct > 0 ? '+' : '';
-    return ` (${sign}${deltaPct.toFixed(1)}%)`;
-  }
-
-  // Favourable/adverse only applies to GL rows (see docs/adr/0031) — operational
-  // (Driver/Formula) rows always render their delta neutral, regardless of sign.
-  function deltaClass(row: DisplayRow, direction: Direction): string {
-    if (row.kind === 'operational') return 'text-gray-500 dark:text-gray-400';
-    if (direction === 'favourable') return 'text-emerald-600 dark:text-emerald-400';
-    if (direction === 'adverse') return 'text-red-600 dark:text-red-400';
-    return 'text-gray-500 dark:text-gray-400';
-  }
-
-  const gridTemplateColumns = '1fr repeat(3, minmax(110px,1fr))';
 
   const grains: PeriodType[] = ['Month', 'Quarter', 'Year'];
 </script>
-
-{#snippet operationalCells(row: DisplayRow, node: ComparisonNode, isCollapsible: boolean)}
-  <span class="{indentClass(row.indent)} flex flex-col min-w-0">
-    <span class="flex items-center gap-1.5 min-w-0">
-      {#if isCollapsible}
-        <span
-          class="inline-block w-4 shrink-0 text-base leading-none text-amber-600 dark:text-amber-400 transition-transform duration-150 {expandedGroups.has(row.nodeId) ? 'rotate-90' : ''}"
-        >
-          ▸
-        </span>
-      {/if}
-      <span
-        class="text-[9px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-400/40 rounded px-1 shrink-0"
-        >{row.driverNodeType === 'formula' ? 'Formula' : 'Ops'}</span
-      >
-      <span class="truncate">{row.label}</span>
-    </span>
-    {#if row.driverNodeType === 'formula' && row.expression}
-      <span class="truncate text-[10px] font-normal normal-case tracking-normal text-amber-600/70 dark:text-amber-400/60 {isCollapsible ? 'pl-6' : ''}" title={row.expression}>
-        {row.expression}
-      </span>
-    {/if}
-  </span>
-  <span class="text-right tabular-nums">{operationalValue(node.valueA, row.unit)}</span>
-  <span class="text-right tabular-nums">{operationalValue(node.valueB, row.unit)}</span>
-  <span class="text-right tabular-nums {deltaClass(row, node.direction)}">
-    {operationalValue(node.delta, row.unit)}{deltaPctLabel(node.deltaPct)}
-  </span>
-{/snippet}
 
 <PageHeader title="Financial Comparison" />
 <PageBody>
@@ -216,90 +120,18 @@
             <div class="text-xs text-gray-500 dark:text-gray-400">RM millions</div>
           </div>
         {/snippet}
-        <div class="overflow-x-auto">
-          <div class="flex flex-col min-w-[640px]">
-            <div
-              class="grid items-center py-1 text-xs text-indigo-700 dark:text-indigo-300 border-b border-indigo-200 dark:border-indigo-900"
-              style="grid-template-columns: {gridTemplateColumns}"
-            >
-              <span>Line item</span>
-              <span class="text-right">{periodLabel(comparisonStore.meta?.periodA ?? '')}</span>
-              <span class="text-right">{periodLabel(comparisonStore.meta?.periodB ?? '')}</span>
-              <span class="text-right">Δ</span>
-            </div>
-
-            {#each visibleRows as { row, node } (row.nodeId)}
-              {#if row.kind === 'operational'}
-                {#if collapsibleIds.has(row.nodeId)}
-                  <div
-                    role="button"
-                    tabindex="0"
-                    onclick={() => toggleGroup(row.nodeId)}
-                    onkeydown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        toggleGroup(row.nodeId);
-                      }
-                    }}
-                    transition:slide={{ duration: 150 }}
-                    class="grid items-center py-1.5 text-sm cursor-pointer text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-400/10"
-                    style="grid-template-columns: {gridTemplateColumns}"
-                  >
-                    {@render operationalCells(row, node, true)}
-                  </div>
-                {:else}
-                  <div transition:slide={{ duration: 150 }} class="grid items-center py-1.5 text-sm text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-400/10" style="grid-template-columns: {gridTemplateColumns}">
-                    {@render operationalCells(row, node, false)}
-                  </div>
-                {/if}
-              {:else if collapsibleIds.has(row.nodeId)}
-                <div
-                  role="button"
-                  tabindex="0"
-                  onclick={() => toggleGroup(row.nodeId)}
-                  onkeydown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      toggleGroup(row.nodeId);
-                    }
-                  }}
-                  transition:slide={{ duration: 150 }}
-                  class="grid items-center py-1.5 text-sm cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 {row.isSubtotal ? 'font-bold bg-indigo-50 dark:bg-indigo-900/30 rounded' : ''}"
-                  style="grid-template-columns: {gridTemplateColumns}"
-                >
-                  <span class="flex items-center gap-1.5 min-w-0 {indentClass(row.indent)} {row.indent > 0 ? 'text-gray-500 dark:text-gray-400' : ''}">
-                    <span
-                      class="inline-block w-4 shrink-0 text-base leading-none text-indigo-600 dark:text-indigo-400 transition-transform duration-150 {expandedGroups.has(row.nodeId) ? 'rotate-90' : ''}"
-                    >
-                      ▸
-                    </span>
-                    <span class="truncate">{row.label}</span>
-                  </span>
-                  <span class="text-right tabular-nums">{statementValue(node.valueA)}</span>
-                  <span class="text-right tabular-nums">{statementValue(node.valueB)}</span>
-                  <span class="text-right tabular-nums {deltaClass(row, node.direction)}">
-                    {statementValue(node.delta)}{deltaPctLabel(node.deltaPct)}
-                  </span>
-                </div>
-              {:else}
-                <div
-                  transition:slide={{ duration: 150 }}
-                  class="grid items-center py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 {row.isSubtotal ? 'font-bold bg-indigo-50 dark:bg-indigo-900/30 rounded' : ''} {row.isFinal ? 'bg-indigo-600 dark:bg-indigo-500 text-white rounded pl-1.5' : ''}"
-                  style="grid-template-columns: {gridTemplateColumns}"
-                >
-                  <span class="flex min-w-0 {row.indent > 0 ? `${indentClass(row.indent)} text-gray-500 dark:text-gray-400` : ''}">
-                    <span class="truncate">{row.label}</span>
-                  </span>
-                  <span class="text-right tabular-nums">{statementValue(node.valueA)}</span>
-                  <span class="text-right tabular-nums">{statementValue(node.valueB)}</span>
-                  <span class="text-right tabular-nums {row.isFinal ? '' : deltaClass(row, node.direction)}">
-                    {statementValue(node.delta)}{deltaPctLabel(node.deltaPct)}
-                  </span>
-                </div>
-              {/if}
-            {/each}
-          </div>
-        </div>
+        <StatementTable
+          rows={comparisonRows}
+          {columns}
+          {cellValue}
+          {rowExists}
+          {cellDirection}
+          {cellDeltaPct}
+          showDeltaColoring
+          columnMinWidthPx={110}
+          minTableWidthPx={640}
+          resetKey={comparisonNodeId}
+        />
       </Card>
     </div>
   {/if}

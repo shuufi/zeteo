@@ -108,10 +108,24 @@ export interface RootCauseEntry {
   analystNotes?: string;
 }
 
-export type GlNodeType = 'Reporting Root' | 'Reporting Node' | 'Posting GL Account' | 'Driver Formula' | 'Driver';
+export type GlNodeType =
+  | 'Reporting Root'
+  | 'Reporting Node'
+  | 'Posting GL Account'
+  | 'Driver Formula'
+  | 'Driver'
+  | 'Activity Node'
+  | 'Posting Activity Account';
 
-/** A node in the real GL/FSI hierarchy served by GET /api/gl/tree — see docs/adr/0022. */
-export interface VdtNode {
+/**
+ * A node in either hierarchy — the Accounting hierarchy (GET /api/gl/tree,
+ * see docs/adr/0022) or the VDT hierarchy (GET /api/vdt/tree, see
+ * docs/adr/0033) — both return this exact same shape, so one type covers
+ * both rather than a parallel interface per hierarchy. `faGlCode` is only
+ * set on 'Posting Activity Account' nodes (the VDT hierarchy's leaf,
+ * anchored to — not identical with — a real GL account; see docs/adr/0033).
+ */
+export interface HierarchyNode {
   id: string;
   name: string;
   parentId: string | null;
@@ -127,6 +141,8 @@ export interface VdtNode {
   hasFullData: boolean;
   /** Sum-of-products expression text — only set on 'Driver Formula' nodes (see docs/adr/0030). */
   expression?: string;
+  /** Only set on 'Posting Activity Account' nodes — see docs/adr/0033. */
+  faGlCode?: string;
   trend?: number[];
   drivers?: ContributionDriver[];
   sensitivity?: Sensitivity;
@@ -135,8 +151,8 @@ export interface VdtNode {
   reviewSummary?: string;
 }
 
-/** A VdtNode ranked against its siblings by contribution to variance (see rankChildren in gl-client.ts). */
-export interface RankedNode extends VdtNode {
+/** A HierarchyNode ranked against its siblings by contribution to variance (see rankChildren in gl-client.ts). */
+export interface RankedNode extends HierarchyNode {
   varAbs: number;
   rank: number;
   contributionWidthPct: number;
@@ -144,7 +160,7 @@ export interface RankedNode extends VdtNode {
 
 /**
  * A node in a Comparison subtree served by GET /api/gl/comparison — see
- * docs/adr/0031. Same shape as VdtNode's identity/hierarchy fields, but
+ * docs/adr/0031. Same shape as HierarchyNode's identity/hierarchy fields, but
  * carries two periods' values instead of one; `direction` is period-over-period
  * (Period A vs Period B), not actual-vs-budget, and is always 'neutral' for
  * Driver/Driver Formula nodes since their units aren't RM-comparable.

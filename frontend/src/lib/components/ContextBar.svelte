@@ -11,6 +11,7 @@
   import { periodState } from "../state/period.svelte";
   import { periodDraft } from "../state/period-draft.svelte";
   import { loadScope } from "../data/gl-store.svelte";
+  import { vdtStore, loadVdtScope } from "../data/vdt-store.svelte";
   import { periodStore } from "../data/period-store.svelte";
   import type { PeriodType } from "../data/types";
 
@@ -22,6 +23,14 @@
     scopeState.set(scopeDraft.code, scopeDraft.label);
     periodState.set(periodDraft.code);
     loadScope(scopeDraft.code, periodDraft.code);
+    // Only refresh the VDT tree if this session has already settled a load
+    // for it at least once (visited a /vdt* route) — its default 'loading'
+    // status before that first visit means "never fetched," not "in
+    // flight," so this avoids an unconditional second fetch on every Apply
+    // for users who never touch VDT Explorer.
+    if (vdtStore.status === "ready" || vdtStore.status === "not-yet-modelled" || vdtStore.status === "error") {
+      loadVdtScope(scopeDraft.code, periodDraft.code);
+    }
     scopeDraft.reset();
     periodDraft.reset();
   }
@@ -44,6 +53,8 @@
     grain = $bindable<PeriodType>("Month"),
     periodA = $bindable<string | undefined>(undefined),
     periodB = $bindable<string | undefined>(undefined),
+    showReconciliation = false,
+    reconciliationNode = $bindable<string | undefined>(undefined),
   }: {
     ancestors?: Crumb[];
     currentLabel?: string;
@@ -56,6 +67,8 @@
     grain?: PeriodType;
     periodA?: string;
     periodB?: string;
+    showReconciliation?: boolean;
+    reconciliationNode?: string;
   } = $props();
 
   const grains: PeriodType[] = ["Month", "Quarter", "Year"];
@@ -115,6 +128,11 @@
     <PeriodSelect label="Period A" periods={periodsForGrain[grain]} bind:value={periodA} />
     <span class="text-gray-400 dark:text-gray-500">vs</span>
     <PeriodSelect label="Period B" periods={periodsForGrain[grain]} bind:value={periodB} />
+  {/if}
+  {#if showReconciliation}
+    <div class="w-72">
+      <NodePicker bind:value={reconciliationNode} />
+    </div>
   {/if}
   {#if showYtd}
     <label

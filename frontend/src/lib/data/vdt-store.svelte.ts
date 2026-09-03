@@ -1,6 +1,6 @@
 import type { HierarchyNode } from './types';
 
-export interface GlScopeMeta {
+export interface VdtScopeMeta {
   scope: string;
   scopeKind: 'company' | 'bu';
   partial: boolean;
@@ -12,9 +12,16 @@ type Status = 'loading' | 'ready' | 'error' | 'not-yet-modelled';
 
 let tree = $state<Record<string, HierarchyNode>>({});
 let status = $state<Status>('loading');
-let meta = $state<GlScopeMeta | null>(null);
+let meta = $state<VdtScopeMeta | null>(null);
 
-export const glStore = {
+/**
+ * The VDT hierarchy's own tree — a genuinely separate store from glStore
+ * (Accounting hierarchy), not a `hierarchy` parameter on the same store,
+ * since only VDT Explorer's screens need it and every existing glStore
+ * consumer (Trends, DriverDiagnostic) should stay untouched — see
+ * docs/adr/0033.
+ */
+export const vdtStore = {
   get tree() {
     return tree;
   },
@@ -26,12 +33,12 @@ export const glStore = {
   },
 };
 
-export async function loadScope(scope: string, periodCode?: string): Promise<void> {
+export async function loadVdtScope(scope: string, periodCode?: string): Promise<void> {
   status = 'loading';
   try {
     const params = new URLSearchParams({ scope });
     if (periodCode) params.set('period', periodCode);
-    const res = await fetch(`/api/gl/tree?${params}`);
+    const res = await fetch(`/api/vdt/tree?${params}`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     const data = await res.json();
     if (data.notYetModelled) {
@@ -50,7 +57,7 @@ export async function loadScope(scope: string, periodCode?: string): Promise<voi
     };
     status = 'ready';
   } catch (err) {
-    console.error('Failed to load GL tree', err);
+    console.error('Failed to load VDT tree', err);
     status = 'error';
   }
 }

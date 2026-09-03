@@ -188,3 +188,49 @@ class DriverFormulaTerm(SQLModel, table=True):
     operand_index: int
     driver_code: str = Field(foreign_key="driver.code")
     operator: FormulaOperator = FormulaOperator.MULTIPLY
+
+
+class ActivityNode(SQLModel, table=True):
+    """A position in the VDT (activity-based) hierarchy's mid-tier — see docs/adr/0033.
+
+    Own table rather than a new GLNode.node_type value, for the same reason
+    Driver got its own table in ADR-0030: general_ledger's existing consumers
+    (e.g. seed.py's NORMAL_BALANCE_BY_PREFIX, keyed on SAP code shape) assume
+    a closed, numeric-or-PNL-/NPAT code space that V-prefixed codes would break.
+
+    `parent_code` is deliberately NOT a declared foreign_key: it points at
+    either another ActivityNode.code (interior nesting) or a
+    general_ledger.code (the top-level attachment point, e.g. PNL-0011) — a
+    single column can't FK two tables. Resolved by call-site convention only,
+    the same move ADR-0030 already made for DriverFormula.target_code; safe
+    here too since this SQLite database never enables FK enforcement (db.py).
+    """
+
+    __tablename__ = "activity_node"
+
+    code: str = Field(primary_key=True)
+    description: str
+    parent_code: str
+    level: int
+
+
+class PostingActivityAccount(SQLModel, table=True):
+    """The VDT hierarchy's terminal line — see docs/adr/0033.
+
+    Not the same row as a Posting GL Account: its RM amount is always
+    computed by its own Driver Formula (a DriverFormula.target_code equal to
+    this row's `code` — a third target-code namespace that falls out of
+    DriverFormula's existing untyped, call-site-resolved `target_code` for
+    free), never a stored raw fact. `fa_gl_code` is a display/reconciliation
+    anchor to the real GL account it's conceptually explaining — many-to-one
+    allowed, and deliberately NOT required to reconcile to that account's
+    real GLFact total; the gap between them is what the Reconciliation report
+    surfaces, not an error to close.
+    """
+
+    __tablename__ = "posting_activity_account"
+
+    code: str = Field(primary_key=True)
+    description: str
+    parent_code: str = Field(foreign_key="activity_node.code")
+    fa_gl_code: str = Field(foreign_key="general_ledger.code")

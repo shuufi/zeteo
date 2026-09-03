@@ -23,7 +23,7 @@ from typing import Optional
 from sqlmodel import Session, col, select
 
 from models import Driver, DriverFact, DriverFormula, DriverFormulaTerm, FormulaOperator
-from periods import load_period_hierarchy
+from periods import load_period_hierarchy, month_codes_of_year
 
 
 class DriverCycleError(Exception):
@@ -31,7 +31,15 @@ class DriverCycleError(Exception):
 
 
 class DriverEngine:
-    def __init__(self, session: Session, companies: list[str]):
+    def __init__(self, session: Session, companies: list[str], year_code: Optional[str]):
+        """`year_code` restricts DriverFact loading to one fiscal year's 12
+        Month codes — without it, facts across different fiscal years would
+        silently sum into the same 12-wide month-array slot (the same
+        cross-year hazard docs/adr/0032 already fixed for GLFact/load_monthly;
+        DriverEngine just never had live multi-year Driver data to expose it
+        until now — see docs/adr/0033). `year_code=None` (e.g. no Year periods
+        seeded at all yet) means no facts load, same as `companies=[]` today.
+        """
         self.companies = companies
         self.driver_by_code = {d.code: d for d in session.exec(select(Driver)).all()}
         self.formula_by_code = {f.code: f for f in session.exec(select(DriverFormula)).all()}
@@ -50,15 +58,16 @@ class DriverEngine:
         # facts[code][company][scenario] = [12 floats] — kept per-company so
         # formula products are computed within one company (see module docstring).
         facts: dict[str, dict[str, dict[str, list[float]]]] = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: [0.0] * 12)))
-        if companies:
-            period_by_code, _ = load_period_hierarchy(session)
+        if companies and year_code is not None:
+            period_by_code, period_children = load_period_hierarchy(session)
+            month_codes = month_codes_of_year(period_by_code, period_children, year_code)
             rows = session.exec(
-                select(DriverFact.code, DriverFact.company, DriverFact.scenario, DriverFact.period_code, DriverFact.amount).where(
-                    col(DriverFact.company).in_(companies)
-                )
+                select(DriverFact.code, DriverFact.company, DriverFact.scenario, DriverFact.period_code, DriverFact.amount)
+                .where(col(DriverFact.company).in_(companies))
+                .where(col(DriverFact.period_code).in_(list(month_codes)))
             ).all()
             for code, company, scenario, period_code, amount in rows:
-                month_index = period_by_code[period_code].order - 1
+                month_index = month_codes[period_code]
                 facts[code][company][scenario.value][month_index] += amount
         self.facts = facts
 
