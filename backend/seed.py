@@ -67,12 +67,17 @@ def build_periods() -> list[Period]:
         periods.append(Period(code=fiscal_year, label=fiscal_year, parent_code=None, period_type=PeriodType.YEAR, order=year_order))
         for quarter, months in QUARTER_MONTHS.items():
             quarter_code = f"{fiscal_year}-Q{quarter}"
-            periods.append(Period(code=quarter_code, label=f"Q{quarter}", parent_code=fiscal_year, period_type=PeriodType.QUARTER, order=quarter))
+            # Year-qualified — three fiscal years coexist as sibling roots now
+            # (see docs/adr/0032), so a bare "Jan"/"Q1" would be ambiguous in
+            # any cross-year picker (e.g. Financial Comparison's period pickers).
+            periods.append(
+                Period(code=quarter_code, label=f"Q{quarter} {fiscal_year}", parent_code=fiscal_year, period_type=PeriodType.QUARTER, order=quarter)
+            )
             for month in months:
                 periods.append(
                     Period(
                         code=month_period_code(fiscal_year, month),
-                        label=MONTH_LABELS[month - 1],
+                        label=f"{MONTH_LABELS[month - 1]} {fiscal_year}",
                         parent_code=quarter_code,
                         period_type=PeriodType.MONTH,
                         order=month,

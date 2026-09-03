@@ -1,0 +1,13 @@
+# Fact data narrows to one real company, across three real fiscal years
+
+The dataset previously spread fake facts thinly across 9 sampled companies, one fiscal year, and a `prior_year` scenario column standing in for "last year." That's replaced with fabricated-but-designed data for a single company — **0190, MISC Ship Management Sdn. Bhd.** (under the Eaglestar/ES BU) — across three real fiscal years, **FY24/FY25/FY26**, each a genuine Year row with its own Quarter/Month children (`periods.py`), not a single shared year. Every other company keeps its place in the Business/BU hierarchy (nav, picker, partial-BU-total messaging all still work) but is unsampled, rendering the existing Not-yet-modelled state — including, now, a BU/Group scope whose sampled-company count is zero (`company_tree.resolve_scope` previously only set that flag for a single unsampled Company; with only one sampled company left, almost every BU/Group hits this).
+
+Three consequences ripple from "real years" replacing "one year plus a prior-year column":
+
+1. **`gl_tree.py` had a latent cross-year bug once a second year existed**: `GLFact.period_code`s across different years reuse the same 1-12 month-array index, so summing facts without first filtering to one Year's month codes would have silently combined e.g. FY24-M01 and FY26-M01. `build_tree` now resolves the requested period's Year ancestor first and queries only that year's 12 month codes; `period=None` means "the latest year," not "every fact regardless of year" (there's no single year anymore for it to mean).
+2. **Prior-year comparison is now literally the prior year's actual data** — `monthlyPriorYear`/`priorYear` are computed by re-running the same per-year fact load against the Year one order-position back (zero for FY24, there being nothing before it), not a stored `prior_year` scenario. The `Scenario.PRIOR_YEAR` enum value and `GLFact` rows for it are unused going forward but left in the schema.
+3. **Quarter/Month period labels are year-qualified** ("Jan FY24", not "Jan") — three sibling years otherwise show three identically-labelled Januaries in any cross-year picker (Financial Comparison's period pickers, the Period chip's accordion).
+
+**Dropped, not adapted**: the Driver Formula demo (`Driver`/`DriverFormula`/`DriverFormulaTerm`/`DriverFact`, ADR-0030) is cleared entirely rather than re-targeted at 0190. An orphaned Formula binding with no matching DriverFact data would compute as zero and silently override that leaf's real fabricated GLFact value — worse than just not having the feature. Revisit if/when driver decomposition is wanted for 0190 specifically.
+
+**Status**: accepted
