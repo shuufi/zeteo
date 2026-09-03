@@ -54,7 +54,7 @@ export interface DisplayRow {
 export interface BridgeStep {
   label: string;
   value: number;
-  kind: 'total' | 'increase' | 'decrease';
+  kind: 'total' | 'increase' | 'decrease' | 'neutral';
 }
 
 export interface MonthlySeries {
@@ -140,6 +140,28 @@ export interface RankedNode extends VdtNode {
   varAbs: number;
   rank: number;
   contributionWidthPct: number;
+}
+
+/**
+ * A node in a Comparison subtree served by GET /api/gl/comparison — see
+ * docs/adr/0031. Same shape as VdtNode's identity/hierarchy fields, but
+ * carries two periods' values instead of one; `direction` is period-over-period
+ * (Period A vs Period B), not actual-vs-budget, and is always 'neutral' for
+ * Driver/Driver Formula nodes since their units aren't RM-comparable.
+ */
+export interface ComparisonNode {
+  id: string;
+  name: string;
+  parentId: string | null;
+  childIds: string[];
+  nodeType: GlNodeType;
+  unit: 'RM_M' | OperationalUnit;
+  valueA: number;
+  valueB: number;
+  delta: number;
+  deltaPct: number | null;
+  direction: Direction;
+  expression?: string;
 }
 
 export type PeriodType = 'Year' | 'Quarter' | 'Month';

@@ -16,7 +16,7 @@ from sqlmodel import Session, col, select
 
 from diagnostic_content import DIAGNOSTIC_CONTENT
 from driver_engine import DriverEngine
-from models import GLFact, GLNode, NodeType, NormalBalance
+from models import GLFact, GLNode, NodeType, NormalBalance, Period, PeriodType
 from periods import load_period_hierarchy, month_indices_for
 
 
@@ -120,6 +120,72 @@ def _stitch_driver_nodes(
     return nodes, formula_ids
 
 
+GL_NODE_TYPES = {NodeType.REPORTING_ROOT.value, NodeType.REPORTING_NODE.value, NodeType.POSTING_GL_ACCOUNT.value}
+
+
+def diff_subtree(tree_a: dict[str, dict], tree_b: dict[str, dict], root: str) -> dict[str, dict]:
+    """Diffs two build_tree() outputs (same companies, different periods) down
+    from `root`, returning only that subtree with valueA/valueB/delta per
+    node — see docs/adr/0031. `root`'s parentId is nulled so callers can walk
+    the result exactly like a fresh tree (a root is whichever node has no
+    parent). Driver/Driver Formula nodes get `direction: "neutral"` — their
+    units aren't RM-comparable, so favourable/adverse doesn't apply to them.
+    """
+    result: dict[str, dict] = {}
+
+    def walk(code: str) -> None:
+        if code in result:
+            return
+        a, b = tree_a.get(code), tree_b.get(code)
+        if a is None or b is None:
+            return
+        value_a, value_b = a["actual"], b["actual"]
+        delta = round(value_b - value_a, 3)
+        result[code] = {
+            "id": code,
+            "name": a["name"],
+            "parentId": None if code == root else a["parentId"],
+            "childIds": list(a["childIds"]),
+            "nodeType": a["nodeType"],
+            "unit": a["unit"],
+            "valueA": round(value_a, 3),
+            "valueB": round(value_b, 3),
+            "delta": delta,
+            "deltaPct": round(delta / abs(value_a) * 100, 1) if value_a else None,
+            "direction": _direction(value_b, value_a) if a["nodeType"] in GL_NODE_TYPES else "neutral",
+        }
+        for child_id in a["childIds"]:
+            walk(child_id)
+
+    walk(root)
+    return result
+
+
+def _year_of(period_by_code: dict[str, Period], code: str) -> str:
+    """Walks up to the Year ancestor of `code` (or returns `code` itself if it already is one)."""
+    node = period_by_code[code]
+    while node.period_type != PeriodType.YEAR:
+        node = period_by_code[node.parent_code]
+    return node.code
+
+
+def _prior_year_code(period_by_code: dict[str, Period], year_code: str) -> Optional[str]:
+    order = period_by_code[year_code].order
+    for code, p in period_by_code.items():
+        if p.period_type == PeriodType.YEAR and p.order == order - 1:
+            return code
+    return None
+
+
+def _month_codes_of_year(period_by_code: dict[str, Period], period_children: dict[str, list[str]], year_code: str) -> dict[str, int]:
+    """One Year's Month period codes -> their 0-based month-array index."""
+    codes: dict[str, int] = {}
+    for quarter_code in period_children.get(year_code, []):
+        for month_code in period_children.get(quarter_code, []):
+            codes[month_code] = period_by_code[month_code].order - 1
+    return codes
+
+
 def build_tree(session: Session, companies: list[str], period_code: Optional[str] = None) -> dict[str, dict]:
     nodes = session.exec(select(GLNode)).all()
     node_by_code = {n.code: n for n in nodes}
@@ -129,7 +195,13 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
             children_by_parent[n.parent_code].append(n.code)
 
     period_by_code, period_children = load_period_hierarchy(session)
-    # None means "the whole year" — every one of the 12 monthly slots counts.
+    years = sorted((p for p in period_by_code.values() if p.period_type == PeriodType.YEAR), key=lambda p: p.order)
+    # None means "the current/most recent year, in full" — multiple fiscal
+    # years can coexist (see docs/adr/0032), so unlike a single-year dataset
+    # this can no longer mean "sum every fact regardless of year".
+    year_code = _year_of(period_by_code, period_code) if period_code is not None else (years[-1].code if years else None)
+    prior_year_code = _prior_year_code(period_by_code, year_code) if year_code else None
+    # None (whole year requested) means every one of the 12 monthly slots counts.
     scope_indices = month_indices_for(period_by_code, period_children, period_code)
 
     def scoped_sum(monthly_values: list[float]) -> float:
@@ -137,16 +209,32 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
             return sum(monthly_values)
         return sum(monthly_values[i] for i in scope_indices)
 
-    monthly: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(lambda: [0.0] * 12))
-    if companies:
+    def load_monthly(target_year_code: Optional[str]) -> dict[str, dict[str, list[float]]]:
+        """gl_code -> scenario -> 12-wide monthly array, scoped to one Year and
+        `companies` — see docs/adr/0032 (facts across different fiscal years
+        share month-array indices 0-11, so mixing years here would silently
+        sum e.g. FY24-M01 and FY26-M01 into the same slot).
+        """
+        result: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(lambda: [0.0] * 12))
+        if not companies or target_year_code is None:
+            return result
+        month_codes = _month_codes_of_year(period_by_code, period_children, target_year_code)
         # Selecting only the needed columns (rather than full GLFact rows)
         # skips ORM row hydration, the dominant cost for ~40k facts per scope.
         facts = session.exec(
-            select(GLFact.code, GLFact.scenario, GLFact.period_code, GLFact.amount).where(col(GLFact.company).in_(companies))
+            select(GLFact.code, GLFact.scenario, GLFact.period_code, GLFact.amount)
+            .where(col(GLFact.company).in_(companies))
+            .where(col(GLFact.period_code).in_(list(month_codes)))
         ).all()
         for code, scenario, fact_period_code, amount in facts:
-            month_index = period_by_code[fact_period_code].order - 1
-            monthly[code][scenario.value][month_index] += amount
+            result[code][scenario.value][month_codes[fact_period_code]] += amount
+        return result
+
+    monthly = load_monthly(year_code)
+    # A real prior-year comparison is just that year's own actuals, not a
+    # separate stored scenario (see docs/adr/0032) — absent for the earliest
+    # seeded year, where prior_monthly stays all-zero.
+    prior_monthly = load_monthly(prior_year_code)
 
     period_len = len(scope_indices) if scope_indices is not None else 12
     engine = DriverEngine(session, companies)
@@ -164,15 +252,17 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
                 # gl_fact rows entirely — see docs/adr/0030.
                 actual_monthly = engine.target_value(code, "actual")
                 budget_monthly = engine.target_value(code, "budget")
-                prior_monthly = engine.target_value(code, "prior_year")
             else:
                 scenarios = monthly.get(code, {})
                 actual_monthly = scenarios.get("actual", [0.0] * 12)
                 budget_monthly = scenarios.get("budget", [0.0] * 12)
-                prior_monthly = scenarios.get("prior_year", [0.0] * 12)
+            # Real prior-year comparison is just that year's own actuals, not
+            # a separate stored scenario (see docs/adr/0032) — zero for the
+            # earliest seeded year, where there's no year before it.
+            prior_actual_monthly = prior_monthly.get(code, {}).get("actual", [0.0] * 12)
             sign = 1 if node.normal_balance == NormalBalance.CREDIT else -1
             monthly_actual = [v * sign for v in actual_monthly]
-            monthly_prior = [v * sign for v in prior_monthly]
+            monthly_prior = [v * sign for v in prior_actual_monthly]
             entry = {
                 "monthlyActual": monthly_actual,
                 "monthlyPriorYear": monthly_prior,

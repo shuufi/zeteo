@@ -16,7 +16,8 @@
     buildDisplayRows,
     indentClass,
   } from "../lib/data/gl-client";
-  import { periodStore, loadPeriods } from "../lib/data/period-store.svelte";
+  import { periodStore, loadPeriods, periodYearOf } from "../lib/data/period-store.svelte";
+  import { periodState } from "../lib/state/period.svelte";
   import { months, formatRmAuto, cumulative } from "../lib/data/format";
   import type { DisplayRow, OperationalUnit } from "../lib/data/types";
 
@@ -24,11 +25,15 @@
 
   onMount(loadPeriods);
 
-  // Month order (1-12) is global on Period.order (see docs/adr/0025), so a
-  // plain numeric sort aligns 1:1 with `months` regardless of quarter.
+  // Three fiscal years coexist as sibling Year roots now (see docs/adr/0032)
+  // — glStore.tree was fetched scoped to whichever year periodState.code
+  // belongs to (Financial ignores the chip's own month/quarter granularity,
+  // per docs/adr/0026, but not which year the rest of the app is looking
+  // at), so that's the one year's 12 months to show here.
+  const currentYearId = $derived(periodYearOf(periodState.code));
   const monthPeriodCodes = $derived(
     Object.values(periodStore.tree)
-      .filter((p) => p.periodType === "Month")
+      .filter((p) => p.periodType === "Month" && p.id.startsWith(`${currentYearId}-M`))
       .sort((a, b) => a.order - b.order)
       .map((p) => p.id),
   );
@@ -347,15 +352,16 @@
   <ContextBar showYtd showPeriod={false} bind:ytd={ytdView} />
 
   {#if glStore.status === "loading"}
-    <div class="pt-4">Loading…</div>
+    <div class="pt-4 flex-1 min-w-0 flex items-center justify-center">Loading…</div>
   {:else if glStore.status === "not-yet-modelled"}
-    <div class="pt-4">
+    <div class="pt-4 flex-1 min-w-0 flex">
       <NotYetModelled
         label="No GL data modelled for the selected company/BU yet."
+        class="flex-1 flex flex-col items-center justify-center"
       />
     </div>
   {:else}
-    <div class="flex flex-col gap-4 pt-4">
+    <div class="flex flex-col gap-4 pt-4 min-w-0">
       <div class="grid grid-cols-4 max-[900px]:grid-cols-2 gap-2.5">
         {#each financialKpis as kpi (kpi.id)}
           <KpiCard {kpi} />
