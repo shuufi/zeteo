@@ -37,5 +37,9 @@
   });
 </script>
 
-<NavBar />
-<Router {routes} />
+<div class="flex min-h-screen flex-col">
+  <NavBar />
+  <div class="flex flex-1 flex-col min-h-0 min-w-0">
+    <Router {routes} />
+  </div>
+</div>

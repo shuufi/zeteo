@@ -193,7 +193,7 @@
       <NotYetModelled label="No GL data modelled for the selected company/BU yet." />
     </div>
   {:else if comparisonRoot}
-    <div class="flex flex-col gap-4 pt-2">
+    <div class="flex flex-col gap-4 pt-2 min-w-0">
       <Card>
         {#snippet header()}
           <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
