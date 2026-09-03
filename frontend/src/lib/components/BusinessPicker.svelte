@@ -151,7 +151,7 @@
 {/snippet}
 
 <div class="flex items-center gap-1.5" bind:this={rootEl}>
-  <span class="text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">Business:</span>
+  <span class="text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">Company:</span>
 
   <div class="relative w-48">
     <input

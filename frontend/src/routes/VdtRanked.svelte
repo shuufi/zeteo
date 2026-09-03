@@ -5,7 +5,6 @@
   import PageBody from '../lib/components/PageBody.svelte';
   import ContextBar from '../lib/components/ContextBar.svelte';
   import ValueDriverFlow from '../lib/components/ValueDriverFlow.svelte';
-  import Sparkline from '../lib/components/Sparkline.svelte';
   import ChipRow from '../lib/components/ChipRow.svelte';
   import NotYetModelled from '../lib/components/NotYetModelled.svelte';
   import { vdtStore, loadVdtScope } from '../lib/data/vdt-store.svelte';
@@ -13,7 +12,7 @@
   import { periodState, DEFAULT_PERIOD_CODE } from '../lib/state/period.svelte';
   import { periodStore, periodLabel } from '../lib/data/period-store.svelte';
   import { scopeState } from '../lib/state/scope.svelte';
-  import { formatRm, formatVar, pct } from '../lib/data/format';
+  import { formatVar, pct } from '../lib/data/format';
 
   let { params }: { params: { id: string } } = $props();
 
@@ -80,23 +79,7 @@
         <a class="no-underline hover:underline" href="/vdt/{node.id}?period={DEFAULT_PERIOD_CODE}" use:link>view full year →</a>
       </div>
     {/if}
-    <div class="flex gap-4">
-      <div class="w-60 flex-none border-2 border-gray-900 dark:border-gray-50 rounded-lg p-4 bg-white dark:bg-gray-800">
-        <div class="text-xs text-gray-500 dark:text-gray-400">{node.name}</div>
-        <div class="font-black text-2xl text-gray-900 dark:text-gray-50">{formatRm(Math.abs(node.actual))}</div>
-        <div class="text-xs text-red-600 dark:text-red-400">vs Budget {formatRm(Math.abs(node.budget))} · {formatVar(pct(node.actual, node.budget))}</div>
-        {#if node.priorYear !== undefined}
-          <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Prior year: {formatRm(Math.abs(node.priorYear))}</div>
-        {/if}
-        {#if node.monthlyActual.length}
-          <div class="mt-2.5 border-b-[1.5px] border-gray-200 dark:border-gray-700">
-            <Sparkline points={node.monthlyActual} width={180} height={30} />
-          </div>
-          <div class="text-[10px] text-gray-500 dark:text-gray-400">trend, {node.monthlyActual.length} periods</div>
-        {/if}
-      </div>
-
-      <div class="flex-1 border-[1.5px] border-gray-200 dark:border-gray-700 rounded-lg py-2.5 px-4 bg-white dark:bg-gray-800">
+    <div class="border-[1.5px] border-gray-200 dark:border-gray-700 rounded-lg py-2.5 px-4 bg-white dark:bg-gray-800">
         {#if rankedChildren.length}
           <div class="hidden">Driver</div>
           <div class="flex flex-col">
@@ -138,7 +121,6 @@
             linkLabel="Open Driver Diagnostic"
           />
         {/if}
-      </div>
     </div>
 
     {#if node.childIds.length}

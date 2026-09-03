@@ -4,8 +4,6 @@
   import PageBody from "../lib/components/PageBody.svelte";
   import ContextBar from "../lib/components/ContextBar.svelte";
   import Card from "../lib/components/Card.svelte";
-  import KpiCard from "../lib/components/KpiCard.svelte";
-  import MonthlyTrendChart from "../lib/components/MonthlyTrendChart.svelte";
   import ProfitBridge from "../lib/components/ProfitBridge.svelte";
   import NotYetModelled from "../lib/components/NotYetModelled.svelte";
   import StatementTable, {
@@ -16,7 +14,7 @@
   import { periodStore, loadPeriods, periodYearOf } from "../lib/data/period-store.svelte";
   import { periodState } from "../lib/state/period.svelte";
   import { scopeState } from "../lib/state/scope.svelte";
-  import { months, formatRmAuto, cumulative } from "../lib/data/format";
+  import { months, cumulative } from "../lib/data/format";
   import type { DisplayRow } from "../lib/data/types";
 
   let ytdView = $state(false);
@@ -101,84 +99,6 @@
   const taxation = $derived(getNode(vdtStore.tree, "PNL-0087"));
   const npat = $derived(getNode(vdtStore.tree, "NPAT"));
 
-  function scoped(monthlyActual: number[]): number[] {
-    return visibleMonthIndices.map((i) => monthlyActual[i] ?? 0);
-  }
-
-  function trailing24(
-    node: { monthlyActual: number[]; monthlyPriorYear: number[] },
-    abs = false,
-  ): { trend: number[]; tooltips: string[] } {
-    const transform = abs ? Math.abs : (v: number) => v;
-    const monthLabels = visibleMonthIndices.map((i) => months[i]);
-    const trend = [
-      ...scoped(node.monthlyPriorYear).map(transform),
-      ...scoped(node.monthlyActual).map(transform),
-    ];
-    const tooltips = trend.map((v, i) => {
-      const year = i < monthLabels.length ? "Prior Year" : "This Year";
-      const month = monthLabels[i % monthLabels.length];
-      return `${month} (${year}): ${formatRmAuto(v)}`;
-    });
-    return { trend, tooltips };
-  }
-
-  const revenueTrend = $derived(revenue && trailing24(revenue));
-  const costOfRevenueTrend = $derived(costOfRevenue && trailing24(costOfRevenue, true));
-  const grossProfitTrend = $derived(grossProfit && trailing24(grossProfit));
-  const npatTrend = $derived(npat && trailing24(npat));
-
-  const vdtKpis = $derived(
-    revenue && costOfRevenue && grossProfit && npat && revenueTrend && costOfRevenueTrend && grossProfitTrend && npatTrend
-      ? [
-          {
-            id: "vdt-revenue-ytd",
-            label: "Revenue",
-            value: formatRmAuto(revenue.actual),
-            trend: revenueTrend.trend,
-            trendTooltips: revenueTrend.tooltips,
-            trendFillClass: "fill-gray-900 dark:fill-gray-50",
-          },
-          {
-            id: "vdt-cost-of-revenue-ytd",
-            label: "Cost of Revenue",
-            value: formatRmAuto(Math.abs(costOfRevenue.actual)),
-            trend: costOfRevenueTrend.trend,
-            trendTooltips: costOfRevenueTrend.tooltips,
-            trendFillClass: "fill-red-600 dark:fill-red-400",
-          },
-          {
-            id: "vdt-gross-profit-ytd",
-            label: "Gross Profit",
-            value: formatRmAuto(grossProfit.actual),
-            trend: grossProfitTrend.trend,
-            trendTooltips: grossProfitTrend.tooltips,
-            trendFillClass: "fill-emerald-600 dark:fill-emerald-400",
-          },
-          {
-            id: "vdt-npat-ytd",
-            label: "NPAT",
-            value: formatRmAuto(npat.actual),
-            trend: npatTrend.trend,
-            trendTooltips: npatTrend.tooltips,
-            trendFillClass: "fill-blue-600 dark:fill-blue-400",
-          },
-        ]
-      : [],
-  );
-
-  const monthlyPerformanceChart = $derived(
-    revenue && costOfRevenue && grossProfit && npat
-      ? [
-          { label: "Revenue", values: scoped(revenue.monthlyActual) },
-          { label: "COR", values: scoped(costOfRevenue.monthlyActual).map(Math.abs) },
-          { label: "GP", values: scoped(grossProfit.monthlyActual) },
-          { label: "NPAT", values: scoped(npat.monthlyActual) },
-        ]
-      : [],
-  );
-  const visibleMonthLabels = $derived(visibleMonthIndices.map((i) => months[i]));
-
   const profitBridgeSteps = $derived(
     revenue &&
       costOfRevenue &&
@@ -217,21 +137,9 @@
     </div>
   {:else}
     <div class="flex flex-col gap-4 pt-4 min-w-0">
-      <div class="grid grid-cols-4 max-[900px]:grid-cols-2 gap-2.5">
-        {#each vdtKpis as kpi (kpi.id)}
-          <KpiCard {kpi} />
-        {/each}
-      </div>
-
-      <div class="flex max-[900px]:flex-col gap-4">
-        <Card class="flex-1 min-w-0" title="Income Statement Key Items">
-          <MonthlyTrendChart series={monthlyPerformanceChart} months={visibleMonthLabels} />
-        </Card>
-
-        <Card class="flex-1 min-w-0" title="Profit Bridge: Revenue to NPAT">
-          <ProfitBridge steps={profitBridgeSteps} height={300} />
-        </Card>
-      </div>
+      <Card title="Profit Bridge: Revenue to NPAT">
+        <ProfitBridge steps={profitBridgeSteps} height={300} />
+      </Card>
 
       <Card>
         {#snippet header()}

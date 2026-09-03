@@ -134,6 +134,11 @@
       <NodePicker bind:value={reconciliationNode} />
     </div>
   {/if}
+  <ChipSelect
+    id="comparison-select"
+    options={comparisonOptions}
+    selected={context.comparison}
+  />
   {#if showYtd}
     <label
       class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer select-none"
@@ -146,11 +151,6 @@
       YTD
     </label>
   {/if}
-  <ChipSelect
-    id="comparison-select"
-    options={comparisonOptions}
-    selected={context.comparison}
-  />
   <button
     type="button"
     onclick={applyPending}
