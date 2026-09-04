@@ -7,15 +7,36 @@
   import ProfitBridge from "../lib/components/ProfitBridge.svelte";
   import NotYetModelled from "../lib/components/NotYetModelled.svelte";
   import MovementNarration from "../lib/components/MovementNarration.svelte";
+  import LottieLoader from "../lib/components/LottieLoader.svelte";
   import StatementTable, {
     type StatementColumn,
   } from "../lib/components/StatementTable.svelte";
   import { vdtStore, loadVdtScope } from "../lib/data/vdt-store.svelte";
-  import { vdtComparisonStore, loadVdtComparison } from "../lib/data/vdt-comparison-store.svelte";
-  import { narrationStore, generateNarration } from "../lib/data/narration-store.svelte";
-  import { getNode, getChildren, buildDisplayRows } from "../lib/data/gl-client";
-  import { getComparisonNode, getComparisonChildren, buildComparisonRows } from "../lib/data/comparison-client";
-  import { periodStore, loadPeriods, periodYearOf, periodLabel, priorYearSibling } from "../lib/data/period-store.svelte";
+  import {
+    vdtComparisonStore,
+    loadVdtComparison,
+  } from "../lib/data/vdt-comparison-store.svelte";
+  import {
+    narrationStore,
+    generateNarration,
+  } from "../lib/data/narration-store.svelte";
+  import {
+    getNode,
+    getChildren,
+    buildDisplayRows,
+  } from "../lib/data/gl-client";
+  import {
+    getComparisonNode,
+    getComparisonChildren,
+    buildComparisonRows,
+  } from "../lib/data/comparison-client";
+  import {
+    periodStore,
+    loadPeriods,
+    periodYearOf,
+    periodLabel,
+    priorYearSibling,
+  } from "../lib/data/period-store.svelte";
   import { periodState } from "../lib/state/period.svelte";
   import { scopeState } from "../lib/state/scope.svelte";
   import {
@@ -42,7 +63,8 @@
   // glStore/Accounting only) — this is the VDT hierarchy's own landing page,
   // so it lazily triggers its own fetch, same pattern VdtTree/VdtRanked use.
   onMount(() => {
-    if (vdtStore.status !== "ready") loadVdtScope(scopeState.code, periodState.code);
+    if (vdtStore.status !== "ready")
+      loadVdtScope(scopeState.code, periodState.code);
   });
 
   // Same "always show the whole fiscal year, ignore the Period chip's own
@@ -52,7 +74,10 @@
   const currentYearId = $derived(periodYearOf(periodState.code));
   const monthPeriodCodes = $derived(
     Object.values(periodStore.tree)
-      .filter((p) => p.periodType === "Month" && p.id.startsWith(`${currentYearId}-M`))
+      .filter(
+        (p) =>
+          p.periodType === "Month" && p.id.startsWith(`${currentYearId}-M`),
+      )
       .sort((a, b) => a.order - b.order)
       .map((p) => p.id),
   );
@@ -67,15 +92,24 @@
   let bridgeEmphasis = $state(0.9);
   let vdtPeriodA = $state<string | undefined>(undefined);
   let vdtPeriodB = $state<string | undefined>(undefined);
-  const isComparisonMode = $derived(vdtComparisonMode === "vs This Year" || vdtComparisonMode === "vs Last Year");
+  const isComparisonMode = $derived(
+    vdtComparisonMode === "vs This Year" ||
+      vdtComparisonMode === "vs Last Year",
+  );
   let moneyScale = $state<MoneyScaleChoice>("auto");
 
   // "vs Last Year" only exposes one picker (the "this year" side) — its pair
   // is derived automatically, same month one fiscal year back.
   const resolvedPeriodA = $derived(
-    vdtComparisonMode === "vs Last Year" ? (vdtPeriodA ? priorYearSibling(vdtPeriodA) : undefined) : vdtPeriodA,
+    vdtComparisonMode === "vs Last Year"
+      ? vdtPeriodA
+        ? priorYearSibling(vdtPeriodA)
+        : undefined
+      : vdtPeriodA,
   );
-  const resolvedPeriodB = $derived(vdtComparisonMode === "vs Last Year" ? vdtPeriodA : vdtPeriodB);
+  const resolvedPeriodB = $derived(
+    vdtComparisonMode === "vs Last Year" ? vdtPeriodA : vdtPeriodB,
+  );
 
   // Default both pickers to the current real-world month once the current
   // year's Month periods have loaded — "vs This Year" defaults to the two
@@ -89,33 +123,56 @@
 
   $effect(() => {
     if (!isComparisonMode || !resolvedPeriodA || !resolvedPeriodB) return;
-    loadVdtComparison(scopeState.code, SOC_CREW_COST, resolvedPeriodA, resolvedPeriodB, ytdView);
+    loadVdtComparison(
+      scopeState.code,
+      SOC_CREW_COST,
+      resolvedPeriodA,
+      resolvedPeriodB,
+      ytdView,
+    );
     narrationStore.reset();
   });
 
   function handleExplainMovement(): void {
     if (!resolvedPeriodA || !resolvedPeriodB) return;
-    generateNarration(scopeState.code, SOC_CREW_COST, resolvedPeriodA, resolvedPeriodB, ytdView);
+    generateNarration(
+      scopeState.code,
+      SOC_CREW_COST,
+      resolvedPeriodA,
+      resolvedPeriodB,
+      ytdView,
+    );
   }
 
-  const comparisonRoot = $derived(getComparisonNode(vdtComparisonStore.tree, SOC_CREW_COST));
+  const comparisonRoot = $derived(
+    getComparisonNode(vdtComparisonStore.tree, SOC_CREW_COST),
+  );
   const moneyValues = $derived(
     isComparisonMode
       ? comparisonMoneyValues(vdtComparisonStore.tree, SOC_CREW_COST)
       : hierarchyMoneyValues(vdtStore.tree, SOC_CREW_COST),
   );
-  const resolvedMoneyScale = $derived(resolveMoneyScale(moneyScale, moneyValues));
-  const currency = $derived(vdtComparisonStore.meta?.currency ?? vdtStore.meta?.currency ?? "");
+  const resolvedMoneyScale = $derived(
+    resolveMoneyScale(moneyScale, moneyValues),
+  );
+  const currency = $derived(
+    vdtComparisonStore.meta?.currency ?? vdtStore.meta?.currency ?? "",
+  );
 
   let lastComparisonScaleKey = "";
   $effect(() => {
     const key = `${vdtComparisonMode}:${resolvedPeriodA ?? ""}:${resolvedPeriodB ?? ""}:${ytdView}`;
-    if (lastComparisonScaleKey && key !== lastComparisonScaleKey) moneyScale = "auto";
+    if (lastComparisonScaleKey && key !== lastComparisonScaleKey)
+      moneyScale = "auto";
     lastComparisonScaleKey = key;
   });
 
   function bridgeKind(direction: Direction): BridgeStep["kind"] {
-    return direction === "favourable" ? "increase" : direction === "adverse" ? "decrease" : "neutral";
+    return direction === "favourable"
+      ? "increase"
+      : direction === "adverse"
+        ? "decrease"
+        : "neutral";
   }
 
   // SOC Crew Cost is a cost — actual/valueA/valueB are negative by sign
@@ -125,21 +182,39 @@
   // chart displays magnitude (sign-flipped when the root is a cost), while
   // color still tracks favourable/adverse off the real signed direction
   // (see docs/adr/0034), not the flipped display value.
-  const bridgeFlip = $derived(comparisonRoot && comparisonRoot.valueA < 0 ? -1 : 1);
+  const bridgeFlip = $derived(
+    comparisonRoot && comparisonRoot.valueA < 0 ? -1 : 1,
+  );
 
   const comparisonBridgeSteps = $derived<BridgeStep[]>(
     comparisonRoot
       ? [
-          { label: periodLabel(resolvedPeriodA ?? ""), value: comparisonRoot.valueA * bridgeFlip, kind: "total" },
+          {
+            label: periodLabel(resolvedPeriodA ?? ""),
+            value: comparisonRoot.valueA * bridgeFlip,
+            kind: "total",
+          },
           ...getComparisonChildren(vdtComparisonStore.tree, comparisonRoot)
-            .filter((c) => c.nodeType !== "Driver Formula" && c.nodeType !== "Driver")
-            .map((c) => ({ label: c.name, value: c.delta * bridgeFlip, kind: bridgeKind(c.direction) })),
-          { label: periodLabel(resolvedPeriodB ?? ""), value: comparisonRoot.valueB * bridgeFlip, kind: "total" as const },
+            .filter(
+              (c) => c.nodeType !== "Driver Formula" && c.nodeType !== "Driver",
+            )
+            .map((c) => ({
+              label: c.name,
+              value: c.delta * bridgeFlip,
+              kind: bridgeKind(c.direction),
+            })),
+          {
+            label: periodLabel(resolvedPeriodB ?? ""),
+            value: comparisonRoot.valueB * bridgeFlip,
+            kind: "total" as const,
+          },
         ]
       : [],
   );
 
-  const comparisonRows = $derived(buildComparisonRows(vdtComparisonStore.tree, SOC_CREW_COST));
+  const comparisonRows = $derived(
+    buildComparisonRows(vdtComparisonStore.tree, SOC_CREW_COST),
+  );
 
   const comparisonColumns = $derived<StatementColumn[]>([
     { key: "A", label: periodLabel(resolvedPeriodA ?? "") },
@@ -147,7 +222,10 @@
     { key: "delta", label: "Δ", isDelta: true },
   ]);
 
-  function comparisonCellValue(row: DisplayRow, column: StatementColumn): number {
+  function comparisonCellValue(
+    row: DisplayRow,
+    column: StatementColumn,
+  ): number {
     const node = getComparisonNode(vdtComparisonStore.tree, row.nodeId);
     if (!node) return 0;
     if (column.key === "A") return node.valueA;
@@ -156,11 +234,16 @@
   }
 
   function comparisonCellDirection(row: DisplayRow): Direction {
-    return getComparisonNode(vdtComparisonStore.tree, row.nodeId)?.direction ?? "neutral";
+    return (
+      getComparisonNode(vdtComparisonStore.tree, row.nodeId)?.direction ??
+      "neutral"
+    );
   }
 
   function comparisonCellDeltaPct(row: DisplayRow): number | null {
-    return getComparisonNode(vdtComparisonStore.tree, row.nodeId)?.deltaPct ?? null;
+    return (
+      getComparisonNode(vdtComparisonStore.tree, row.nodeId)?.deltaPct ?? null
+    );
   }
 
   function comparisonRowExists(row: DisplayRow): boolean {
@@ -186,7 +269,11 @@
     return visibleMonthIndices.map((i) => monthlyActual[i] ?? 0);
   }
 
-  function cellValue(row: DisplayRow, _column: StatementColumn, index: number): number {
+  function cellValue(
+    row: DisplayRow,
+    _column: StatementColumn,
+    index: number,
+  ): number {
     const monthly = monthlyValuesFor(row.nodeId);
     if (ytdView && row.kind !== "operational") {
       return cumulative(monthly)[index] ?? 0;
@@ -195,7 +282,10 @@
   }
 
   function rowExists(row: DisplayRow): boolean {
-    return row.kind === "operational" || getNode(vdtStore.tree, row.nodeId) !== undefined;
+    return (
+      row.kind === "operational" ||
+      getNode(vdtStore.tree, row.nodeId) !== undefined
+    );
   }
 
   function cellHref(
@@ -216,11 +306,15 @@
   // see docs/vdt-hierarchy-crew-cost.csv), decomposed into its direct
   // Activity Node children.
   const socCrewCost = $derived(getNode(vdtStore.tree, "V201000000"));
-  const socCrewCostChildren = $derived(socCrewCost ? getChildren(vdtStore.tree, socCrewCost) : []);
+  const socCrewCostChildren = $derived(
+    socCrewCost ? getChildren(vdtStore.tree, socCrewCost) : [],
+  );
 
   // Same magnitude flip as comparisonBridgeSteps — SOC Crew Cost's actual is
   // negative (a cost), and a literal signed bridge would grow downward.
-  const singlePeriodFlip = $derived(socCrewCost && socCrewCost.actual < 0 ? -1 : 1);
+  const singlePeriodFlip = $derived(
+    socCrewCost && socCrewCost.actual < 0 ? -1 : 1,
+  );
 
   const profitBridgeSteps = $derived(
     socCrewCost && socCrewCostChildren.length
@@ -230,7 +324,11 @@
             value: child.actual * singlePeriodFlip,
             kind: "decrease" as const,
           })),
-          { label: socCrewCost.name, value: socCrewCost.actual * singlePeriodFlip, kind: "total" as const },
+          {
+            label: socCrewCost.name,
+            value: socCrewCost.actual * singlePeriodFlip,
+            kind: "total" as const,
+          },
         ]
       : [],
   );
@@ -254,9 +352,14 @@
 
   {#if isComparisonMode}
     {#if !resolvedPeriodA || !resolvedPeriodB}
-      <div class="pt-4 text-sm text-gray-500 dark:text-gray-400">Pick a period to compare.</div>
+      <div class="pt-4 text-sm text-gray-500 dark:text-gray-400">
+        Pick a period to compare.
+      </div>
     {:else if vdtComparisonStore.status === "loading"}
-      <div class="pt-4 flex-1 min-w-0 flex items-center justify-center">Loading…</div>
+      <div class="pt-4 flex-1 min-w-0 flex flex-col items-center justify-center gap-2">
+        <LottieLoader size={480} />
+        <div class="text-lg text-gray-500 dark:text-gray-400">Loading…</div>
+      </div>
     {:else if vdtComparisonStore.status === "not-yet-modelled"}
       <div class="pt-4 flex-1 min-w-0 flex">
         <NotYetModelled
@@ -269,24 +372,47 @@
         <div class="flex flex-col gap-4 min-w-0 flex-1">
           <Card>
             {#snippet header()}
-              <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+              <div
+                class="flex flex-wrap items-center justify-between gap-3 mb-2"
+              >
                 <div class="font-bold text-sm text-gray-900 dark:text-gray-50">
-                  SOC Crew Cost: {periodLabel(resolvedPeriodA ?? "")} → {periodLabel(resolvedPeriodB ?? "")}
+                  SOC Crew Cost: {periodLabel(resolvedPeriodA ?? "")} → {periodLabel(
+                    resolvedPeriodB ?? "",
+                  )}
                 </div>
-                <label class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 select-none">
+                <label
+                  class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 select-none"
+                >
                   Emphasize changes
-                  <input type="range" min="0" max="1" step="0.05" bind:value={bridgeEmphasis} class="accent-indigo-600 dark:accent-indigo-400" />
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    bind:value={bridgeEmphasis}
+                    class="accent-indigo-600 dark:accent-indigo-400"
+                  />
                 </label>
               </div>
             {/snippet}
-            <ProfitBridge steps={comparisonBridgeSteps} height={300} emphasis={bridgeEmphasis} {currency} moneyScale={resolvedMoneyScale} />
+            <ProfitBridge
+              steps={comparisonBridgeSteps}
+              height={300}
+              emphasis={bridgeEmphasis}
+              {currency}
+              moneyScale={resolvedMoneyScale}
+            />
           </Card>
 
           <Card>
             {#snippet header()}
               <div class="flex justify-between items-baseline mb-2">
-                <div class="font-bold text-sm text-gray-900 dark:text-gray-50">SOC Crew Cost (VDT)</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">{moneyCaption(currency, resolvedMoneyScale)}</div>
+                <div class="font-bold text-sm text-gray-900 dark:text-gray-50">
+                  SOC Crew Cost (VDT)
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {moneyCaption(currency, resolvedMoneyScale)}
+                </div>
               </div>
             {/snippet}
             <StatementTable
@@ -321,7 +447,10 @@
       </div>
     {/if}
   {:else if vdtStore.status === "loading"}
-    <div class="pt-4 flex-1 min-w-0 flex items-center justify-center">Loading…</div>
+    <div class="pt-4 flex-1 min-w-0 flex flex-col items-center justify-center gap-2">
+      <LottieLoader size={160} />
+      <div class="text-sm text-gray-500 dark:text-gray-400">Loading…</div>
+    </div>
   {:else if vdtStore.status === "not-yet-modelled"}
     <div class="pt-4 flex-1 min-w-0 flex">
       <NotYetModelled
@@ -332,7 +461,12 @@
   {:else}
     <div class="flex flex-col gap-4 pt-4 min-w-0">
       <Card title="Cost Bridge: SOC Crew Cost">
-        <ProfitBridge steps={profitBridgeSteps} height={300} {currency} moneyScale={resolvedMoneyScale} />
+        <ProfitBridge
+          steps={profitBridgeSteps}
+          height={300}
+          {currency}
+          moneyScale={resolvedMoneyScale}
+        />
       </Card>
 
       <Card>
@@ -345,10 +479,16 @@
               <label
                 class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none"
               >
-                <input type="checkbox" bind:checked={showGlCode} class="h-3 w-3" />
+                <input
+                  type="checkbox"
+                  bind:checked={showGlCode}
+                  class="h-3 w-3"
+                />
                 Show code
               </label>
-              <div class="text-xs text-gray-500 dark:text-gray-400">{moneyCaption(currency, resolvedMoneyScale)}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">
+                {moneyCaption(currency, resolvedMoneyScale)}
+              </div>
             </div>
           </div>
         {/snippet}
