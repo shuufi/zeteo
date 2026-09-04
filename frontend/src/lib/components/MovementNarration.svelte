@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatMoney, type MoneyScale } from '../data/format';
+  import { formatMoney, formatVar, type MoneyScale } from '../data/format';
   import type { MovementNarrationData } from '../data/narration-store.svelte';
   import LottieLoader from './LottieLoader.svelte';
   import thinkingSrc from '../assets/thinking.lottie?url';
@@ -61,9 +61,14 @@
         {#each narration.bullets as bullet (bullet.nodeId)}
           <li>
             <span class="font-semibold tabular-nums text-gray-900 dark:text-gray-100">
-              {formatMoney(Math.abs(bullet.amount), currency, moneyScale)} — {bullet.nodeName}:
+              {formatMoney(Math.abs(bullet.amount), currency, moneyScale)}
+              {#if bullet.deltaPct !== null}({formatVar(bullet.deltaPct)}){/if}
+              — {bullet.nodeName}:
             </span>
             {bullet.text}
+            {#if bullet.contributionPct !== null}
+              <span class="text-gray-500 dark:text-gray-400">({formatVar(bullet.contributionPct)} of movement)</span>
+            {/if}
           </li>
         {/each}
       </ul>

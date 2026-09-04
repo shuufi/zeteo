@@ -17,6 +17,22 @@ class NarrationUnavailable(Exception):
     pass
 
 
+def _movement_label(value_a: float, value_b: float) -> str:
+    """Whether a node's real-world magnitude grew or shrank between A and B.
+
+    Ledger sign follows normal_balance (see docs/adr/0023): a cost account's
+    value is stored negative, so a *more negative* delta means the cost went
+    UP, not down. Comparing magnitudes (abs) sidesteps that entirely — it's
+    the only direction signal safe to hand the LLM without it misreading the
+    raw delta's sign as plain-English "increase"/"decrease".
+    """
+    if abs(value_b) > abs(value_a):
+        return "increased"
+    if abs(value_b) < abs(value_a):
+        return "decreased"
+    return "unchanged"
+
+
 def _render_node(nodes: dict[str, dict], code: str, depth: int, lines: list[str]) -> None:
     node = nodes.get(code)
     if node is None:
@@ -27,6 +43,7 @@ def _render_node(nodes: dict[str, dict], code: str, depth: int, lines: list[str]
         f"{indent}- [{code}] {node['name']} ({node['nodeType']}, {unit}): "
         f"A={node['valueA']}, B={node['valueB']}, delta={node['delta']:+}"
         + (f" ({node['deltaPct']:+}%)" if node.get("deltaPct") is not None else "")
+        + f", magnitude {_movement_label(node['valueA'], node['valueB'])}"
     )
     expression = node.get("expression")
     if expression:
@@ -58,9 +75,22 @@ def build_prompt(root: str, nodes: dict[str, dict], period_a: str, period_b: str
         '"[V201000000] SOC Crew Cost ...", where the id is V201000000. Every bullet\'s '
         "nodeId must exactly copy one of those ids, WITHOUT the surrounding square "
         "brackets and without the name that follows it. "
-        "Do not put currency symbols, monetary amounts, percentages, or other numeric "
-        "figures in headline or bullet text: the application renders the raw values "
-        "separately so its display scale can change without regenerating this narration.\n\n"
+        "Do not put currency symbols or monetary amounts in headline or bullet text: "
+        "the application renders those raw values separately so its display scale can "
+        "change without regenerating this narration. Percentages (deltaPct) ARE scale-"
+        "independent, so you may and should reference them — but always state deltaPct "
+        "as an unsigned number paired with the magnitude word (e.g. 'increased 12%'), "
+        "never with its raw +/- sign, since that sign follows accounting convention "
+        "rather than plain-English direction. Only "
+        "use an intensifier like 'primarily', 'mainly', 'largest', or 'significantly' "
+        "when the percentage or ranking that justifies it appears in the same sentence — "
+        "never assert emphasis without the figure behind it. "
+        "IMPORTANT: each line ends with a 'magnitude' label (increased/decreased/"
+        "unchanged) — always use THAT word for direction, never infer direction from "
+        "the sign of delta or deltaPct yourself. Accounting sign conventions mean a "
+        "cost/expense account can show a NEGATIVE delta while its magnitude increased "
+        "(cost went up); the magnitude label already accounts for this and is always "
+        "correct as given.\n\n"
         f"Hierarchy (A = {period_a}, B = {period_b}):\n{tree_text}"
     )
 
@@ -78,6 +108,11 @@ def _parse_narration(text: str, root: str, nodes: dict[str, dict]) -> dict[str, 
     bullets = generated.get("bullets") if isinstance(generated, dict) else None
     if not isinstance(headline, str) or not headline.strip() or not isinstance(bullets, list):
         raise NarrationUnavailable("OpenAI returned an invalid narration structure")
+
+    root_node = nodes.get(root)
+    if root_node is None:
+        raise NarrationUnavailable("Narration root is missing from the comparison")
+    root_delta = root_node["delta"]
 
     structured_bullets: list[dict[str, Any]] = []
     seen: set[str] = set()
@@ -107,18 +142,19 @@ def _parse_narration(text: str, root: str, nodes: dict[str, dict]) -> dict[str, 
                 "nodeName": node["name"],
                 "text": bullet_text.strip(),
                 "amount": node["delta"],
+                "deltaPct": node.get("deltaPct"),
+                # Share of the overall root movement this contributor accounts
+                # for — computed here (not by the LLM) so it's always exact.
+                "contributionPct": round(node["delta"] / root_delta * 100, 1) if root_delta else None,
             }
         )
 
     if not structured_bullets:
         raise NarrationUnavailable("OpenAI did not reference a valid monetary contributor")
 
-    root_node = nodes.get(root)
-    if root_node is None:
-        raise NarrationUnavailable("Narration root is missing from the comparison")
     return {
         "headline": headline.strip(),
-        "netAmount": root_node["delta"],
+        "netAmount": root_delta,
         "bullets": structured_bullets,
     }
 

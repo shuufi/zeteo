@@ -6,6 +6,8 @@ export interface NarrationBullet {
   nodeName: string;
   text: string;
   amount: number;
+  deltaPct: number | null;
+  contributionPct: number | null;
 }
 
 export interface MovementNarrationData {
