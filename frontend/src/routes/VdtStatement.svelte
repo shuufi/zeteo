@@ -84,7 +84,7 @@
   const visibleMonthIndices = $derived(monthPeriodCodes.map((_, i) => i));
 
   // --- vs This Year / vs Last Year comparison (see docs/adr/0034) ---
-  let vdtComparisonMode = $state("vs This Year");
+  let vdtComparisonMode = $state("vs Last Year");
   // Higher default than FinancialComparison's 0.7 — SOC Crew Cost's
   // month-over-month swings run much smaller relative to its total
   // (~1%, vs P&L-level comparisons) so the delta bars need more of the
@@ -111,14 +111,16 @@
     vdtComparisonMode === "vs Last Year" ? vdtPeriodA : vdtPeriodB,
   );
 
-  // Default both pickers to the current real-world month once the current
-  // year's Month periods have loaded — "vs This Year" defaults to the two
-  // most recent months, "vs Last Year" to the current month (see docs/adr/0034).
+  // Default to December (full fiscal year in view) once the current year's
+  // Month periods have loaded — "vs Last Year" (the page's own default
+  // mode) reads only vdtPeriodA, so Dec FYXX vs Dec FY(XX-1) is the default
+  // full-year comparison; "vs This Year" falls back to Nov vs Dec if the
+  // user switches modes without repicking (see docs/adr/0034).
   $effect(() => {
     if (vdtPeriodA !== undefined || monthPeriodCodes.length < 12) return;
-    const currentMonthIndex = new Date().getMonth();
-    vdtPeriodA = monthPeriodCodes[Math.max(0, currentMonthIndex - 1)];
-    vdtPeriodB = monthPeriodCodes[currentMonthIndex];
+    const decemberIndex = monthPeriodCodes.length - 1;
+    vdtPeriodA = monthPeriodCodes[decemberIndex];
+    vdtPeriodB = monthPeriodCodes[decemberIndex - 1];
   });
 
   $effect(() => {
