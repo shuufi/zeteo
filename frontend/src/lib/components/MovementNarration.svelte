@@ -1,6 +1,8 @@
 <script lang="ts">
   import { formatMoney, type MoneyScale } from '../data/format';
   import type { MovementNarrationData } from '../data/narration-store.svelte';
+  import LottieLoader from './LottieLoader.svelte';
+  import thinkingSrc from '../assets/thinking.lottie?url';
 
   type Status = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -39,7 +41,12 @@
       Ask the analyst to explain what drove this movement.
     </div>
   {:else if status === 'loading'}
-    <div class="text-xs text-gray-500 dark:text-gray-400">Generating narration…</div>
+    <div class="flex flex-col items-center justify-center gap-2 py-2">
+      <div class="w-1/2">
+        <LottieLoader src={thinkingSrc} size={400} aspectRatio={1} responsive />
+      </div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">Thinking...</div>
+    </div>
   {:else if status === 'error'}
     <div class="text-xs text-red-600 dark:text-red-400">Unable to generate narration right now ({error}).</div>
   {:else if status === 'ready' && narration}

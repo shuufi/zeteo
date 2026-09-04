@@ -3,13 +3,17 @@
   import { DotLottie } from '@lottiefiles/dotlottie-web';
   import loadingSrc from '../assets/loading.lottie?url';
 
-  // Source animation composition is 800x200 (4:1) — sizing the canvas to
-  // match keeps the artwork filling it, instead of a square canvas leaving
-  // big transparent bands above/below.
-  const ASPECT_RATIO = 200 / 800;
-
-  let { size = 96 }: { size?: number } = $props();
-  const height = $derived(Math.round(size * ASPECT_RATIO));
+  let {
+    src = loadingSrc,
+    size = 96,
+    // Default matches loading.lottie's 800x200 (4:1) composition — pass a
+    // different ratio (e.g. 1 for a square animation) for other sources.
+    aspectRatio = 200 / 800,
+    // When true, canvas visually fills its parent's width (CSS) instead of
+    // rendering at `size` px — use with a sized wrapper (e.g. class="w-1/2").
+    responsive = false,
+  }: { src?: string; size?: number; aspectRatio?: number; responsive?: boolean } = $props();
+  const height = $derived(Math.round(size * aspectRatio));
 
   let canvas: HTMLCanvasElement;
   let dotLottie: DotLottie | undefined;
@@ -17,7 +21,7 @@
   function mount(node: HTMLCanvasElement) {
     dotLottie = new DotLottie({
       canvas: node,
-      src: loadingSrc,
+      src,
       loop: true,
       autoplay: true,
     });
@@ -31,4 +35,10 @@
   onDestroy(() => dotLottie?.destroy());
 </script>
 
-<canvas bind:this={canvas} use:mount width={size} {height} class="block"></canvas>
+<canvas
+  bind:this={canvas}
+  use:mount
+  width={size}
+  {height}
+  class="block {responsive ? 'w-full h-auto' : ''}"
+></canvas>

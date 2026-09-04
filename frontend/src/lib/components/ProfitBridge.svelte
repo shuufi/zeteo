@@ -113,8 +113,8 @@
       }}
     >
       <RuleY data={[0]} y={(d) => d} stroke="var(--axis)" />
-      <BarY data={bars} sort={false} x="label" y1="y1" y2="y2" fill="kind" />
-      <Text data={bars} x="label" y={(d) => Math.max(d.y1, d.y2)} text="valueLabel" dy={-6} textAnchor="middle" fontSize={9} />
+      <BarY data={bars} sort={false} x="label" y1="y1" y2="y2" fill="kind" borderRadius={4} />
+      <Text data={bars} x="label" y={(d) => Math.max(d.y1, d.y2)} text="valueLabel" dy={-12} textAnchor="middle" fontSize={11} />
     </Plot>
   </div>
 {/if}
