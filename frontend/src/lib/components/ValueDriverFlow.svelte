@@ -4,13 +4,21 @@
   import { stratify, tree as d3tree } from 'd3-hierarchy';
   import { vdtStore } from '../data/vdt-store.svelte';
   import type { HierarchyNode } from '../data/types';
+  import { formatMoney, type MoneyScale } from '../data/format';
 
   const NODE_WIDTH = 220;
   const NODE_HEIGHT = 60;
   const LEVEL_GAP = 100;
   const SIBLING_GAP = 20;
 
-  let { rootId }: { rootId: string } = $props();
+  let { rootId, currency = '', moneyScale = 'units' }: { rootId: string; currency?: string; moneyScale?: MoneyScale } = $props();
+
+  function valueLabel(node: HierarchyNode): string {
+    if (node.unit === 'money') return formatMoney(node.actual, currency, moneyScale);
+    if (node.unit === 'currency-per-day') return `${formatMoney(node.actual, currency, moneyScale)}/d`;
+    if (node.unit === 'currency-per-month') return `${formatMoney(node.actual, currency, moneyScale)}/mo`;
+    return `${node.actual.toFixed(1)} ${node.unit}`;
+  }
 
   // The root starts expanded. Deeper branches open only when their parent is
   // clicked, keeping large GL hierarchies readable without hiding siblings.
@@ -69,7 +77,7 @@
         position: { x: item.y, y: item.x },
         sourcePosition: Position.Right,
         targetPosition: Position.Left,
-        data: { label: `${marker ? marker + '  ' : ''}${node.name}\n${node.actual.toFixed(1)} ${node.unit}` },
+        data: { label: `${marker ? marker + '  ' : ''}${node.name}\n${valueLabel(node)}` },
         style: `width:${NODE_WIDTH}px; white-space: pre-line; font-size: 11px; ${hasChildren ? 'cursor:pointer;' : ''}`,
       };
     });

@@ -18,6 +18,7 @@ own delete+add_all+commit sequence.
 
 import csv
 import random
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 from models import (
@@ -84,25 +85,25 @@ def load_activity_hierarchy(gl_level_by_code: dict[str, int]) -> tuple[list[Acti
 # API -> frontend render); the rest are a follow-up content-only change once
 # this shape is validated (see docs/adr/0033's Open Items). Each entry:
 # target VA code, (headcount driver code/description/base count/YoY growth),
-# (rate driver code/description/base RM_M-per-month/YoY growth) — the
-# product lands directly in RM_M, no further scaling (a formula author is
+# (rate driver code/description/base local-currency-per-month/YoY growth) —
+# the product lands directly in absolute local currency, no further scaling (a formula author is
 # trusted to combine drivers whose product already lands in the target's
 # unit — see docs/adr/0030).
 _CREW_MIX_FORMULAS = [
     (
         "VA00000001",
         ("DRV-CREWMIX-SR-HC", "Senior Officer Headcount", 8, 0.03),
-        ("DRV-CREWMIX-SR-RATE", "Average Salary Rate - Senior Officer", 0.018, 0.04),
+        ("DRV-CREWMIX-SR-RATE", "Average Salary Rate - Senior Officer", 18_000.00, 0.04),
     ),
     (
         "VA00000002",
         ("DRV-CREWMIX-JR-HC", "Junior Officer Headcount", 15, 0.03),
-        ("DRV-CREWMIX-JR-RATE", "Average Salary Rate - Junior Officer", 0.010, 0.04),
+        ("DRV-CREWMIX-JR-RATE", "Average Salary Rate - Junior Officer", 10_000.00, 0.04),
     ),
     (
         "VA00000003",
         ("DRV-CREWMIX-RT-HC", "Ratings/Crew Headcount", 40, 0.02),
-        ("DRV-CREWMIX-RT-RATE", "Average Salary Rate - Ratings/Crew", 0.006, 0.04),
+        ("DRV-CREWMIX-RT-RATE", "Average Salary Rate - Ratings/Crew", 6_000.00, 0.04),
     ),
 ]
 
@@ -117,6 +118,10 @@ _CREW_MIX_FORMULAS = [
 # so a single-month step reads clearly instead of getting lost in noise.
 _MONTHLY_HC_GROWTH = 0.02
 _MONTHLY_RATE_GROWTH = 0.015
+
+
+def _decimal(value: float, places: str) -> Decimal:
+    return Decimal(str(value)).quantize(Decimal(places), rounding=ROUND_HALF_UP)
 
 
 def build_crew_mix_seed(
@@ -134,7 +139,7 @@ def build_crew_mix_seed(
 
     for target_code, (hc_code, hc_desc, hc_base, hc_growth), (rate_code, rate_desc, rate_base, rate_growth) in _CREW_MIX_FORMULAS:
         drivers.append(Driver(code=hc_code, description=hc_desc, unit=OperationalUnit.COUNT))
-        drivers.append(Driver(code=rate_code, description=rate_desc, unit=OperationalUnit.USD_PER_MONTH))
+        drivers.append(Driver(code=rate_code, description=rate_desc, unit=OperationalUnit.CURRENCY_PER_MONTH))
 
         formula_code = f"FORMULA-{target_code}"
         formulas.append(DriverFormula(code=formula_code, description=f"{hc_desc} x {rate_desc}", target_code=target_code, sign=1))
@@ -154,12 +159,20 @@ def build_crew_mix_seed(
                 rate_month = rate_annual * ((1 + _MONTHLY_RATE_GROWTH) ** (month - 6.5))
                 facts.append(
                     DriverFact(
-                        code=hc_code, company=focus_company, period_code=period_code, scenario=Scenario.ACTUAL, amount=round(hc_month * rng.uniform(0.995, 1.005), 3)
+                        code=hc_code,
+                        company=focus_company,
+                        period_code=period_code,
+                        scenario=Scenario.ACTUAL,
+                        amount=_decimal(hc_month * rng.uniform(0.995, 1.005), "0.001"),
                     )
                 )
                 facts.append(
                     DriverFact(
-                        code=hc_code, company=focus_company, period_code=period_code, scenario=Scenario.BUDGET, amount=round(hc_month * rng.uniform(0.995, 1.005), 3)
+                        code=hc_code,
+                        company=focus_company,
+                        period_code=period_code,
+                        scenario=Scenario.BUDGET,
+                        amount=_decimal(hc_month * rng.uniform(0.995, 1.005), "0.001"),
                     )
                 )
                 facts.append(
@@ -168,7 +181,7 @@ def build_crew_mix_seed(
                         company=focus_company,
                         period_code=period_code,
                         scenario=Scenario.ACTUAL,
-                        amount=round(rate_month * rng.uniform(0.997, 1.003), 6),
+                        amount=_decimal(rate_month * rng.uniform(0.997, 1.003), "0.01"),
                     )
                 )
                 facts.append(
@@ -177,7 +190,7 @@ def build_crew_mix_seed(
                         company=focus_company,
                         period_code=period_code,
                         scenario=Scenario.BUDGET,
-                        amount=round(rate_month * rng.uniform(0.997, 1.003), 6),
+                        amount=_decimal(rate_month * rng.uniform(0.997, 1.003), "0.01"),
                     )
                 )
 

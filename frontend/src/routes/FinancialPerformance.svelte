@@ -15,10 +15,22 @@
   import { getNode, buildDisplayRows } from "../lib/data/gl-client";
   import { periodStore, loadPeriods, periodYearOf } from "../lib/data/period-store.svelte";
   import { periodState } from "../lib/state/period.svelte";
-  import { months, formatRmAuto, cumulative } from "../lib/data/format";
+  import {
+    cumulative,
+    formatMoney,
+    hierarchyMoneyValues,
+    moneyCaption,
+    months,
+    resolveMoneyScale,
+    type MoneyScaleChoice,
+  } from "../lib/data/format";
   import type { DisplayRow } from "../lib/data/types";
 
   let ytdView = $state(false);
+  let moneyScale = $state<MoneyScaleChoice>("auto");
+  const moneyValues = $derived(hierarchyMoneyValues(glStore.tree, "NPAT"));
+  const resolvedMoneyScale = $derived(resolveMoneyScale(moneyScale, moneyValues));
+  const currency = $derived(glStore.meta?.currency ?? "");
 
   onMount(loadPeriods);
 
@@ -126,7 +138,7 @@
     const tooltips = trend.map((v, i) => {
       const year = i < monthLabels.length ? "Prior Year" : "This Year";
       const month = monthLabels[i % monthLabels.length];
-      return `${month} (${year}): ${formatRmAuto(v)}`;
+      return `${month} (${year}): ${formatMoney(v, currency, resolvedMoneyScale)}`;
     });
     return { trend, tooltips };
   }
@@ -142,7 +154,7 @@
           {
             id: "revenue-ytd",
             label: "Revenue",
-            value: formatRmAuto(revenue.actual),
+            value: formatMoney(revenue.actual, currency, resolvedMoneyScale),
             trend: revenueTrend.trend,
             trendTooltips: revenueTrend.tooltips,
             trendFillClass: "fill-gray-900 dark:fill-gray-50",
@@ -150,7 +162,7 @@
           {
             id: "cost-of-revenue-ytd",
             label: "Cost of Revenue",
-            value: formatRmAuto(Math.abs(costOfRevenue.actual)),
+            value: formatMoney(Math.abs(costOfRevenue.actual), currency, resolvedMoneyScale),
             trend: costOfRevenueTrend.trend,
             trendTooltips: costOfRevenueTrend.tooltips,
             trendFillClass: "fill-red-600 dark:fill-red-400",
@@ -158,7 +170,7 @@
           {
             id: "gross-profit-ytd",
             label: "Gross Profit",
-            value: formatRmAuto(grossProfit.actual),
+            value: formatMoney(grossProfit.actual, currency, resolvedMoneyScale),
             trend: grossProfitTrend.trend,
             trendTooltips: grossProfitTrend.tooltips,
             trendFillClass: "fill-emerald-600 dark:fill-emerald-400",
@@ -166,7 +178,7 @@
           {
             id: "npat-ytd",
             label: "NPAT",
-            value: formatRmAuto(npat.actual),
+            value: formatMoney(npat.actual, currency, resolvedMoneyScale),
             trend: npatTrend.trend,
             trendTooltips: npatTrend.tooltips,
             trendFillClass: "fill-blue-600 dark:fill-blue-400",
@@ -243,14 +255,14 @@
 
 <PageHeader title="Financial Trends" />
 <PageBody>
-  <ContextBar showYtd showPeriod={false} bind:ytd={ytdView} />
+  <ContextBar showYtd showPeriod={false} bind:ytd={ytdView} showMoneyScale {currency} {moneyValues} bind:moneyScale />
 
   {#if glStore.status === "loading"}
     <div class="pt-4 flex-1 min-w-0 flex items-center justify-center">Loading…</div>
   {:else if glStore.status === "not-yet-modelled"}
     <div class="pt-4 flex-1 min-w-0 flex">
       <NotYetModelled
-        label="No GL data modelled for the selected company/BU yet."
+        label="No GL data modelled for the selected company yet."
         class="flex-1 flex flex-col items-center justify-center"
       />
     </div>
@@ -267,11 +279,13 @@
           <MonthlyTrendChart
             series={monthlyPerformanceChart}
             months={visibleMonthLabels}
+            {currency}
+            moneyScale={resolvedMoneyScale}
           />
         </Card>
 
         <Card class="flex-1 min-w-0" title="Profit Bridge: Revenue to NPAT">
-          <ProfitBridge steps={profitBridgeSteps} height={300} />
+          <ProfitBridge steps={profitBridgeSteps} height={300} {currency} moneyScale={resolvedMoneyScale} />
         </Card>
       </div>
 
@@ -293,7 +307,7 @@
                 Show GL code
               </label>
               <div class="text-xs text-gray-500 dark:text-gray-400">
-                RM millions
+                {moneyCaption(currency, resolvedMoneyScale)}
               </div>
             </div>
           </div>
@@ -312,6 +326,8 @@
           lineItemMaxWidth={640}
           columnMinWidthPx={64}
           minTableWidthPx={1080}
+          {currency}
+          moneyScale={resolvedMoneyScale}
         />
       </Card>
     </div>

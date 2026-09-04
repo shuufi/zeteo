@@ -67,30 +67,29 @@
   $effect(() => {
     if (defaulted || companyStore.status !== 'ready' || !group) return;
     defaulted = true;
-    // scopeState's default can be any node in the hierarchy (a Company, not
-    // just a top-level BU — see docs/adr/0032) — only fall back to the first
-    // BU if that default doesn't actually exist in the loaded tree.
-    const fallback = companyStore.tree[scopeState.code] ?? childrenOf(group)[0];
-    if (fallback && fallback.id !== scopeState.code) {
+    const fallback =
+      companyStore.tree[scopeState.code] ??
+      Object.values(companyStore.tree).find((node) => node.companyType === 'Company');
+    if (fallback && (fallback.id !== scopeState.code || fallback.label !== scopeState.label)) {
+      const scopeChanged = fallback.id !== scopeState.code;
       scopeState.set(fallback.id, fallback.label);
-      loadScope(fallback.id, periodState.code);
+      if (scopeChanged) loadScope(fallback.id, periodState.code);
     }
   });
 
   // Stages the pick as a draft only — ContextBar's Apply button is what
   // actually commits it to scopeState and refetches (see docs/adr/0027).
   function select(node: CompanyNode): void {
-    scopeDraft.set(node.id, node.label);
-    query = '';
-    if (node.childIds.length === 0) {
-      open = false;
+    if (node.companyType !== 'Company') {
+      const next = new Set(expanded);
+      if (next.has(node.id)) next.delete(node.id);
+      else next.add(node.id);
+      expanded = next;
       return;
     }
-    const next = new Set(expanded);
-    for (const a of ancestorsOf(node.id)) next.add(a);
-    if (next.has(node.id)) next.delete(node.id);
-    else next.add(node.id);
-    expanded = next;
+    scopeDraft.set(node.id, node.label);
+    query = '';
+    open = false;
   }
 
   $effect(() => {
@@ -116,9 +115,11 @@
     <button
       type="button"
       onclick={() => select(node)}
+      aria-expanded={children.length ? isExpanded(node) : undefined}
+      title={node.companyType !== 'Company' ? 'Expand grouping — currency conversion is not available' : undefined}
       style="padding-left: {depth * 14 + 12}px"
       class="flex w-full items-center gap-1.5 py-1.5 pr-3 text-left text-sm select-none {node.companyType !== 'Company' ? 'font-semibold' : ''} {node.id ===
-      scopeDraft.code
+      scopeDraft.code && node.companyType === 'Company'
         ? 'bg-indigo-600 text-white'
         : 'text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}"
     >

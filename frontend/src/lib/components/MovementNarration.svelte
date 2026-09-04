@@ -1,29 +1,24 @@
 <script lang="ts">
+  import { formatMoney, type MoneyScale } from '../data/format';
+  import type { MovementNarrationData } from '../data/narration-store.svelte';
+
   type Status = 'idle' | 'loading' | 'ready' | 'error';
 
   let {
     status,
-    text = '',
+    narration = null,
     error = '',
     onGenerate,
+    currency,
+    moneyScale,
   }: {
     status: Status;
-    text?: string;
+    narration?: MovementNarrationData | null;
     error?: string;
     onGenerate: () => void;
+    currency: string;
+    moneyScale: MoneyScale;
   } = $props();
-
-  // Backend returns a headline sentence then "- " bullet lines (see
-  // docs/adr/0034) — split for display rather than dumping raw text.
-  const headline = $derived(text.split('\n').find((line) => line.trim().length > 0) ?? '');
-  const bullets = $derived(
-    text
-      .split('\n')
-      .slice(1)
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0)
-      .map((line) => line.replace(/^[-•]\s*/, '')),
-  );
 </script>
 
 <div class="flex flex-col gap-2 text-sm">
@@ -47,12 +42,22 @@
     <div class="text-xs text-gray-500 dark:text-gray-400">Generating narration…</div>
   {:else if status === 'error'}
     <div class="text-xs text-red-600 dark:text-red-400">Unable to generate narration right now ({error}).</div>
-  {:else if status === 'ready'}
-    <p class="text-gray-900 dark:text-gray-50">{headline}</p>
-    {#if bullets.length}
+  {:else if status === 'ready' && narration}
+    <div class="flex items-start gap-2">
+      <span class="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+        {formatMoney(narration.netAmount, currency, moneyScale)}
+      </span>
+      <p class="text-gray-900 dark:text-gray-50">{narration.headline}</p>
+    </div>
+    {#if narration.bullets.length}
       <ul class="list-disc pl-4 flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-        {#each bullets as bullet, i (i)}
-          <li>{bullet}</li>
+        {#each narration.bullets as bullet (bullet.nodeId)}
+          <li>
+            <span class="font-semibold tabular-nums text-gray-900 dark:text-gray-100">
+              {formatMoney(bullet.amount, currency, moneyScale)} — {bullet.nodeName}:
+            </span>
+            {bullet.text}
+          </li>
         {/each}
       </ul>
     {/if}

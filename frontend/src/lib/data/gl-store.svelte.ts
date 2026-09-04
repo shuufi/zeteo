@@ -2,7 +2,8 @@ import type { HierarchyNode } from './types';
 
 export interface GlScopeMeta {
   scope: string;
-  scopeKind: 'company' | 'bu';
+  scopeKind: 'company';
+  currency: string;
   partial: boolean;
   sampledCompanyCount: number;
   totalCompanyCount: number;
@@ -44,6 +45,7 @@ export async function loadScope(scope: string, periodCode?: string): Promise<voi
     meta = {
       scope: data.scope,
       scopeKind: data.scopeKind,
+      currency: data.currency,
       partial: data.partial,
       sampledCompanyCount: data.sampledCompanyCount,
       totalCompanyCount: data.totalCompanyCount,

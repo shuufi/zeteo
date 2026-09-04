@@ -19,6 +19,7 @@ decision log).
 
 import logging
 from collections import defaultdict
+from decimal import Decimal
 from typing import Optional
 
 from sqlmodel import Session, select
@@ -27,6 +28,7 @@ from diagnostic_content import DIAGNOSTIC_CONTENT
 from driver_engine import DriverEngine
 from gl_tree import (
     _direction,
+    _money_json,
     _prior_year_code,
     _stitch_driver_nodes,
     _year_of,
@@ -34,6 +36,7 @@ from gl_tree import (
     load_monthly,
     scoped_sum,
     sum_children_entry,
+    ZERO,
 )
 from models import ActivityNode, GLNode, NodeType, NormalBalance, PeriodType, PostingActivityAccount
 from periods import load_period_hierarchy, month_indices_for, ytd_month_indices_for
@@ -66,17 +69,17 @@ def _compute_posting_activity_account(
         budget_monthly = engine.target_value(code, "budget")
     else:
         logger.warning("Posting Activity Account %s has no Driver Formula bound to it — seed data gap", code)
-        actual_monthly = [0.0] * 12
-        budget_monthly = [0.0] * 12
+        actual_monthly = [ZERO] * 12
+        budget_monthly = [ZERO] * 12
 
     monthly_actual = [v * sign for v in actual_monthly]
     monthly_budget = [v * sign for v in budget_monthly]
     return {
         "monthlyActual": monthly_actual,
-        "monthlyPriorYear": [0.0] * 12,
+        "monthlyPriorYear": [ZERO] * 12,
         "actual": scoped_sum(monthly_actual, scope_indices),
         "budget": scoped_sum(monthly_budget, scope_indices),
-        "priorYear": 0.0,
+        "priorYear": ZERO,
     }
 
 
@@ -125,7 +128,7 @@ def build_vdt_tree(
         else month_indices_for(period_by_code, period_children, period_code)
     )
 
-    def scoped_sum_local(monthly_values: list[float]) -> float:
+    def scoped_sum_local(monthly_values: list[Decimal]) -> Decimal:
         return scoped_sum(monthly_values, scope_indices)
 
     monthly = load_monthly(session, companies, period_by_code, period_children, year_code)
@@ -171,12 +174,12 @@ def build_vdt_tree(
                 "parentId": node.parent_code,
                 "childIds": list(children_by_parent.get(code, [])),
                 "nodeType": node.node_type.value,
-                "unit": "RM_M",
-                "actual": round(entry["actual"], 3),
-                "budget": round(entry["budget"], 3),
-                "priorYear": round(entry["priorYear"], 3),
-                "monthlyActual": [round(v, 3) for v in entry["monthlyActual"]],
-                "monthlyPriorYear": [round(v, 3) for v in entry["monthlyPriorYear"]],
+                "unit": "money",
+                "actual": _money_json(entry["actual"]),
+                "budget": _money_json(entry["budget"]),
+                "priorYear": _money_json(entry["priorYear"]),
+                "monthlyActual": [_money_json(v) for v in entry["monthlyActual"]],
+                "monthlyPriorYear": [_money_json(v) for v in entry["monthlyPriorYear"]],
                 "direction": _direction(entry["actual"], entry["budget"]),
                 "hasFullData": full_data is not None,
                 **(full_data or {}),
@@ -194,12 +197,12 @@ def build_vdt_tree(
                 "parentId": node.parent_code,
                 "childIds": list(children_by_parent.get(code, [])),
                 "nodeType": ACTIVITY_NODE_TYPE,
-                "unit": "RM_M",
-                "actual": round(entry["actual"], 3),
-                "budget": round(entry["budget"], 3),
-                "priorYear": round(entry["priorYear"], 3),
-                "monthlyActual": [round(v, 3) for v in entry["monthlyActual"]],
-                "monthlyPriorYear": [round(v, 3) for v in entry["monthlyPriorYear"]],
+                "unit": "money",
+                "actual": _money_json(entry["actual"]),
+                "budget": _money_json(entry["budget"]),
+                "priorYear": _money_json(entry["priorYear"]),
+                "monthlyActual": [_money_json(v) for v in entry["monthlyActual"]],
+                "monthlyPriorYear": [_money_json(v) for v in entry["monthlyPriorYear"]],
                 "direction": _direction(entry["actual"], entry["budget"]),
                 "hasFullData": False,
             }
@@ -212,13 +215,13 @@ def build_vdt_tree(
                 "parentId": node.parent_code,
                 "childIds": list(children_by_parent.get(code, [])),
                 "nodeType": POSTING_ACTIVITY_ACCOUNT_TYPE,
-                "unit": "RM_M",
+                "unit": "money",
                 "faGlCode": node.fa_gl_code,
-                "actual": round(entry["actual"], 3),
-                "budget": round(entry["budget"], 3),
-                "priorYear": round(entry["priorYear"], 3),
-                "monthlyActual": [round(v, 3) for v in entry["monthlyActual"]],
-                "monthlyPriorYear": [round(v, 3) for v in entry["monthlyPriorYear"]],
+                "actual": _money_json(entry["actual"]),
+                "budget": _money_json(entry["budget"]),
+                "priorYear": _money_json(entry["priorYear"]),
+                "monthlyActual": [_money_json(v) for v in entry["monthlyActual"]],
+                "monthlyPriorYear": [_money_json(v) for v in entry["monthlyPriorYear"]],
                 "direction": _direction(entry["actual"], entry["budget"]),
                 "hasFullData": False,
             }

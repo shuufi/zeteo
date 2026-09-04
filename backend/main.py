@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 load_dotenv()
 
-from company_tree import UnknownScope, build_company_tree, resolve_scope
+from company_tree import InvalidMonetaryScope, MissingCompanyCurrency, UnknownScope, build_company_tree, resolve_scope
 from db import get_session
 from gl_tree import build_tree, diff_subtree, subtree
 from models import GLNode
@@ -17,6 +17,27 @@ from vdt_tree import build_vdt_tree
 VDT_COMPARISON_ROOT_TYPES = ("Reporting Root", "Reporting Node", "Activity Node")
 
 app = FastAPI(title="Zeteo API")
+
+
+def _resolve_monetary_scope(session: Session, scope: str) -> dict:
+    try:
+        return resolve_scope(session, scope)
+    except UnknownScope:
+        raise HTTPException(404, f"Unknown scope: {scope}")
+    except InvalidMonetaryScope:
+        raise HTTPException(422, f"Company scope required: {scope}")
+    except MissingCompanyCurrency:
+        raise HTTPException(500, f"Company has no currency: {scope}")
+
+
+def _scope_meta(resolved: dict) -> dict:
+    return {
+        "scopeKind": "company",
+        "currency": resolved["currency"],
+        "partial": False,
+        "sampledCompanyCount": len(resolved["companies"]),
+        "totalCompanyCount": 1,
+    }
 
 
 @app.get("/api/companies")
@@ -34,13 +55,10 @@ def get_gl_tree(scope: str, period: Optional[str] = None, session: Session = Dep
     if not session.exec(select(GLNode).limit(1)).first():
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
-    try:
-        resolved = resolve_scope(session, scope)
-    except UnknownScope:
-        raise HTTPException(404, f"Unknown scope: {scope}")
+    resolved = _resolve_monetary_scope(session, scope)
 
     if resolved.get("notYetModelled"):
-        return {"scope": scope, "notYetModelled": True, "nodes": {}}
+        return {"scope": scope, **_scope_meta(resolved), "notYetModelled": True, "nodes": {}}
 
     try:
         nodes = build_tree(session, resolved["companies"], period)
@@ -48,10 +66,7 @@ def get_gl_tree(scope: str, period: Optional[str] = None, session: Session = Dep
         raise HTTPException(404, f"Unknown period: {period}")
     return {
         "scope": scope,
-        "scopeKind": resolved["kind"],
-        "partial": resolved.get("partial", False),
-        "sampledCompanyCount": resolved.get("sampledCompanyCount", len(resolved["companies"])),
-        "totalCompanyCount": resolved.get("totalCompanyCount", 1),
+        **_scope_meta(resolved),
         "notYetModelled": False,
         "period": period,
         "nodes": nodes,
@@ -69,13 +84,10 @@ def get_gl_comparison(
     if not session.exec(select(GLNode).limit(1)).first():
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
-    try:
-        resolved = resolve_scope(session, scope)
-    except UnknownScope:
-        raise HTTPException(404, f"Unknown scope: {scope}")
+    resolved = _resolve_monetary_scope(session, scope)
 
     if resolved.get("notYetModelled"):
-        return {"scope": scope, "notYetModelled": True, "nodes": {}}
+        return {"scope": scope, **_scope_meta(resolved), "notYetModelled": True, "nodes": {}}
 
     period_by_code, _ = load_period_hierarchy(session)
     period_a_row = period_by_code.get(period_a)
@@ -98,10 +110,7 @@ def get_gl_comparison(
 
     return {
         "scope": scope,
-        "scopeKind": resolved["kind"],
-        "partial": resolved.get("partial", False),
-        "sampledCompanyCount": resolved.get("sampledCompanyCount", len(resolved["companies"])),
-        "totalCompanyCount": resolved.get("totalCompanyCount", 1),
+        **_scope_meta(resolved),
         "notYetModelled": False,
         "node": node,
         "periodA": period_a,
@@ -115,13 +124,10 @@ def get_vdt_tree(scope: str, period: Optional[str] = None, session: Session = De
     if not session.exec(select(GLNode).limit(1)).first():
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
-    try:
-        resolved = resolve_scope(session, scope)
-    except UnknownScope:
-        raise HTTPException(404, f"Unknown scope: {scope}")
+    resolved = _resolve_monetary_scope(session, scope)
 
     if resolved.get("notYetModelled"):
-        return {"scope": scope, "notYetModelled": True, "nodes": {}}
+        return {"scope": scope, **_scope_meta(resolved), "notYetModelled": True, "nodes": {}}
 
     try:
         nodes = build_vdt_tree(session, resolved["companies"], period)
@@ -129,10 +135,7 @@ def get_vdt_tree(scope: str, period: Optional[str] = None, session: Session = De
         raise HTTPException(404, f"Unknown period: {period}")
     return {
         "scope": scope,
-        "scopeKind": resolved["kind"],
-        "partial": resolved.get("partial", False),
-        "sampledCompanyCount": resolved.get("sampledCompanyCount", len(resolved["companies"])),
-        "totalCompanyCount": resolved.get("totalCompanyCount", 1),
+        **_scope_meta(resolved),
         "notYetModelled": False,
         "period": period,
         "nodes": nodes,
@@ -153,13 +156,10 @@ def _vdt_comparison_payload(
     if not session.exec(select(GLNode).limit(1)).first():
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
-    try:
-        resolved = resolve_scope(session, scope)
-    except UnknownScope:
-        raise HTTPException(404, f"Unknown scope: {scope}")
+    resolved = _resolve_monetary_scope(session, scope)
 
     if resolved.get("notYetModelled"):
-        return {"scope": scope, "notYetModelled": True, "nodes": {}}
+        return {"scope": scope, **_scope_meta(resolved), "notYetModelled": True, "nodes": {}}
 
     period_by_code, _ = load_period_hierarchy(session)
     period_a_row = period_by_code.get(period_a)
@@ -182,10 +182,7 @@ def _vdt_comparison_payload(
 
     return {
         "scope": scope,
-        "scopeKind": resolved["kind"],
-        "partial": resolved.get("partial", False),
-        "sampledCompanyCount": resolved.get("sampledCompanyCount", len(resolved["companies"])),
-        "totalCompanyCount": resolved.get("totalCompanyCount", 1),
+        **_scope_meta(resolved),
         "notYetModelled": False,
         "node": node,
         "periodA": period_a,
@@ -218,14 +215,14 @@ def post_vdt_narration(
 ):
     payload = _vdt_comparison_payload(session, scope, node, period_a, period_b, ytd)
     if payload.get("notYetModelled"):
-        raise HTTPException(404, "No VDT data modelled for the selected company/BU yet")
+        raise HTTPException(404, "No VDT data modelled for the selected company yet")
 
     cache_key = (scope, node, period_a, period_b, ytd)
     try:
-        text = generate_narration(cache_key, node, payload["nodes"], period_a, period_b)
+        narration = generate_narration(cache_key, node, payload["nodes"], period_a, period_b)
     except NarrationUnavailable as exc:
         raise HTTPException(503, str(exc))
-    return {"narration": text}
+    return {"narration": narration}
 
 
 @app.get("/api/vdt/reconciliation")
@@ -239,13 +236,17 @@ def get_vdt_reconciliation(scope: str, node: str, period: Optional[str] = None, 
     if not session.exec(select(GLNode).limit(1)).first():
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
-    try:
-        resolved = resolve_scope(session, scope)
-    except UnknownScope:
-        raise HTTPException(404, f"Unknown scope: {scope}")
+    resolved = _resolve_monetary_scope(session, scope)
 
     if resolved.get("notYetModelled"):
-        return {"scope": scope, "notYetModelled": True, "node": node, "accounting": {"nodes": {}}, "vdt": {"nodes": {}}}
+        return {
+            "scope": scope,
+            **_scope_meta(resolved),
+            "notYetModelled": True,
+            "node": node,
+            "accounting": {"nodes": {}},
+            "vdt": {"nodes": {}},
+        }
 
     try:
         accounting_tree = build_tree(session, resolved["companies"], period)
@@ -263,10 +264,7 @@ def get_vdt_reconciliation(scope: str, node: str, period: Optional[str] = None, 
 
     return {
         "scope": scope,
-        "scopeKind": resolved["kind"],
-        "partial": resolved.get("partial", False),
-        "sampledCompanyCount": resolved.get("sampledCompanyCount", len(resolved["companies"])),
-        "totalCompanyCount": resolved.get("totalCompanyCount", 1),
+        **_scope_meta(resolved),
         "notYetModelled": False,
         "node": node,
         "period": period,

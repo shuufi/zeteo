@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatRmAuto } from '../data/format';
+  import { formatMoney, type MoneyScale } from '../data/format';
 
   interface BarChartCategory {
     label: string;
@@ -10,7 +10,9 @@
   let {
     categories = [],
     width = 100,
-  }: { categories?: BarChartCategory[]; width?: number } = $props();
+    currency = '',
+    moneyScale = 'units',
+  }: { categories?: BarChartCategory[]; width?: number; currency?: string; moneyScale?: MoneyScale } = $props();
 
   const rowHeight = 26;
   const labelWidth = 84;
@@ -32,11 +34,11 @@
       <text x="0" y="10" font-size="9" class="fill-gray-500 dark:fill-gray-400">{cat.label}</text>
       <rect x={labelWidth} y="2" width={barWidth(cat.actual)} height="10" class="fill-gray-900 dark:fill-gray-50" />
       <text x={labelWidth + barWidth(cat.actual) + 4} y="10" font-size="9" class="fill-gray-900 dark:fill-gray-50">
-        {formatRmAuto(cat.actual)}
+        {formatMoney(cat.actual, currency, moneyScale)}
       </text>
       <rect x={labelWidth} y="14" width={barWidth(cat.priorYear)} height="10" class="fill-gray-200 dark:fill-gray-700" />
       <text x={labelWidth + barWidth(cat.priorYear) + 4} y="22" font-size="9" class="fill-gray-500 dark:fill-gray-400">
-        {formatRmAuto(cat.priorYear)}
+        {formatMoney(cat.priorYear, currency, moneyScale)}
       </text>
     </g>
   {/each}

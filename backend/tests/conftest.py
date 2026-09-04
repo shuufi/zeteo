@@ -96,6 +96,8 @@ def fixture_graph(session: Session) -> dict[str, str]:
         "formula_rate": "FORMULA-RATE",
         "year": YEAR,
         "company": COMPANY,
+        "business_unit": "BU1",
+        "group": "GROUP1",
     }
 
     gl_nodes = [
@@ -145,8 +147,8 @@ def fixture_graph(session: Session) -> dict[str, str]:
 
     drivers = [
         Driver(code=codes["driver_headcount"], description="Headcount", unit=OperationalUnit.COUNT),
-        Driver(code=codes["driver_base_rate"], description="Base Rate", unit=OperationalUnit.USD_PER_MONTH),
-        Driver(code=codes["driver_rate"], description="Rate", unit=OperationalUnit.USD_PER_MONTH),
+        Driver(code=codes["driver_base_rate"], description="Base Rate", unit=OperationalUnit.CURRENCY_PER_MONTH),
+        Driver(code=codes["driver_rate"], description="Rate", unit=OperationalUnit.CURRENCY_PER_MONTH),
     ]
 
     formulas = [
@@ -166,7 +168,25 @@ def fixture_graph(session: Session) -> dict[str, str]:
     ]
 
     periods = _build_periods()
-    company_nodes = [CompanyNode(code=COMPANY, label="Company One", parent_code=None, node_type=CompanyNodeType.COMPANY, order=1, is_sampled=True)]
+    company_nodes = [
+        CompanyNode(code=codes["group"], label="Group One", parent_code=None, node_type=CompanyNodeType.GROUP, order=1),
+        CompanyNode(
+            code=codes["business_unit"],
+            label="Business Unit One",
+            parent_code=codes["group"],
+            node_type=CompanyNodeType.BUSINESS_UNIT,
+            order=1,
+        ),
+        CompanyNode(
+            code=COMPANY,
+            label="Company One",
+            parent_code=codes["business_unit"],
+            node_type=CompanyNodeType.COMPANY,
+            order=1,
+            is_sampled=True,
+            currency="MYR",
+        ),
+    ]
 
     gl_facts = []
     driver_facts = []

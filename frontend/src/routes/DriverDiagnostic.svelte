@@ -10,7 +10,13 @@
   import { glStore } from '../lib/data/gl-store.svelte';
   import { getNode, getAncestors } from '../lib/data/gl-client';
   import { periodState } from '../lib/state/period.svelte';
-  import { formatRm, formatVar, pct } from '../lib/data/format';
+  import {
+    formatMoney,
+    formatVar,
+    pct,
+    resolveMoneyScale,
+    type MoneyScaleChoice,
+  } from '../lib/data/format';
 
   let { params }: { params: { id: string; tab?: string } } = $props();
 
@@ -19,6 +25,30 @@
   const ancestors = $derived(
     node ? getAncestors(glStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}?period=${periodState.code}` })) : []
   );
+  let moneyScale = $state<MoneyScaleChoice>('auto');
+  const currency = $derived(glStore.meta?.currency ?? '');
+  const moneyValues = $derived(
+    node
+      ? [
+          node.actual,
+          node.budget,
+          node.priorYear,
+          ...node.monthlyActual,
+          ...node.monthlyPriorYear,
+          ...(node.drivers?.map((driver) => driver.varAbs) ?? []),
+          ...(node.benchmark?.bars.map((bar) => bar.valuePerVod) ?? []),
+          ...(node.benchmark?.rows.map((row) => row.valuePerVod) ?? []),
+          ...(node.rootCause?.map((entry) => entry.amount) ?? []),
+        ]
+      : [],
+  );
+  const resolvedMoneyScale = $derived(resolveMoneyScale(moneyScale, moneyValues));
+
+  let lastScaleNode = '';
+  $effect(() => {
+    if (lastScaleNode && params.id !== lastScaleNode) moneyScale = 'auto';
+    lastScaleNode = params.id;
+  });
 
   // Locally-overridable statuses for Validate/Reject, keyed "nodeId:entryId".
   let statusOverrides = $state<Record<string, string>>({});
@@ -37,12 +67,12 @@
   <PageHeader title="Driver Diagnostic" />
   <PageBody>
     <ContextBar />
-    <NotYetModelled label="No GL data modelled for the selected company/BU yet." />
+    <NotYetModelled label="No GL data modelled for the selected company yet." />
   </PageBody>
 {:else if node}
   <PageHeader title={node.name} />
   <PageBody>
-    <ContextBar {ancestors} />
+    <ContextBar {ancestors} showMoneyScale {currency} {moneyValues} bind:moneyScale />
 
     <div class="pt-4">
     <div class="flex gap-4 border-b-2 border-gray-900 dark:border-gray-50">
@@ -63,8 +93,8 @@
     <div class="pt-4 flex flex-col gap-4">
       {#if tab === 'diagnose'}
         <div class="flex gap-6 items-center">
-          <div><span class="text-xs text-gray-500 dark:text-gray-400">Actual</span><div class="font-bold text-lg">{formatRm(Math.abs(node.actual))}</div></div>
-          <div><span class="text-xs text-gray-500 dark:text-gray-400">Budget</span><div class="font-bold text-lg">{formatRm(Math.abs(node.budget))}</div></div>
+          <div><span class="text-xs text-gray-500 dark:text-gray-400">Actual</span><div class="font-bold text-lg">{formatMoney(Math.abs(node.actual), currency, resolvedMoneyScale)}</div></div>
+          <div><span class="text-xs text-gray-500 dark:text-gray-400">Budget</span><div class="font-bold text-lg">{formatMoney(Math.abs(node.budget), currency, resolvedMoneyScale)}</div></div>
           <div>
             <span class="text-xs text-gray-500 dark:text-gray-400">Var%</span>
             <div class="font-bold text-lg {node.direction === 'adverse' ? 'text-red-600 dark:text-red-400' : node.direction === 'favourable' ? 'text-green-600 dark:text-green-400' : ''}">
@@ -72,7 +102,7 @@
             </div>
           </div>
           {#if node.priorYear !== undefined}
-            <div><span class="text-xs text-gray-500 dark:text-gray-400">Prior Year</span><div class="font-bold text-lg">{formatRm(Math.abs(node.priorYear))}</div></div>
+            <div><span class="text-xs text-gray-500 dark:text-gray-400">Prior Year</span><div class="font-bold text-lg">{formatMoney(Math.abs(node.priorYear), currency, resolvedMoneyScale)}</div></div>
           {/if}
           <div class="ml-auto">
             <ChipRow chips={['YTD', 'MTD', 'QTD']} selected="YTD" />
@@ -91,7 +121,7 @@
               {#each node.drivers as d (d.id)}
                 <div class="grid grid-cols-[1.3fr_0.6fr_0.6fr_0.5fr] text-sm py-1">
                   <span>{d.label}</span>
-                  <span>{d.varAbs.toFixed(1)}m</span>
+                  <span>{formatMoney(d.varAbs, currency, resolvedMoneyScale)}</span>
                   <span>{d.varPct}%</span>
                   <span class="text-red-600 dark:text-red-400">▲</span>
                 </div>
@@ -139,7 +169,7 @@
             <div class="grid grid-cols-[1.2fr_0.6fr_0.6fr] text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 py-1"><span>Basis</span><span>Value/VOD</span><span>Gap</span></div>
             {#each node.benchmark.rows as r (r.basis)}
               <div class="grid grid-cols-[1.2fr_0.6fr_0.6fr] text-sm py-1">
-                <span>{r.basis}</span><span>{r.valuePerVod}</span><span>{r.gap}</span>
+                <span>{r.basis}</span><span>{formatMoney(r.valuePerVod, currency, resolvedMoneyScale)}/VOD</span><span>{r.gap}</span>
               </div>
             {/each}
           </div>
@@ -158,7 +188,7 @@
           {#each node.rootCause as entry (entry.id)}
             <div class="rounded-lg py-2.5 px-4 {entry.type === 'AI_HYPOTHESIS' ? 'border-[1.5px] border-dashed border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-950' : 'border-[1.5px] border-gray-900 dark:border-gray-50 bg-white dark:bg-gray-800'}">
               <div class="flex justify-between items-baseline gap-2.5">
-                <b class={entry.type === 'AI_HYPOTHESIS' ? 'text-blue-600 dark:text-blue-400' : ''}>{entry.driverLabel} ({entry.amountLabel})</b>
+                <b class={entry.type === 'AI_HYPOTHESIS' ? 'text-blue-600 dark:text-blue-400' : ''}>{entry.driverLabel} ({formatMoney(entry.amount, currency, resolvedMoneyScale)}, {entry.sharePct}%)</b>
                 <Badge variant={entry.type === 'FACT' ? 'fact' : 'ai'} text={entry.type === 'FACT' ? 'FACT' : 'AI HYPOTHESIS'} />
               </div>
               <div class="text-sm text-gray-700 dark:text-gray-300 mt-1">{entry.evidenceOrRationale}</div>

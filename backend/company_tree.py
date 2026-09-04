@@ -16,6 +16,14 @@ class UnknownScope(Exception):
     pass
 
 
+class InvalidMonetaryScope(Exception):
+    pass
+
+
+class MissingCompanyCurrency(Exception):
+    pass
+
+
 def load_company_hierarchy(session: Session) -> tuple[dict[str, CompanyNode], dict[str, list[str]]]:
     nodes = session.exec(select(CompanyNode)).all()
     node_by_code = {n.code: n for n in nodes}
@@ -33,6 +41,7 @@ def build_company_tree(session: Session) -> dict[str, dict]:
             "id": code,
             "label": node.label,
             "companyType": node.node_type.value,
+            "currency": node.currency,
             "parentId": node.parent_code,
             "childIds": sorted(children_by_parent.get(code, []), key=lambda c: node_by_code[c].order),
         }
@@ -41,39 +50,18 @@ def build_company_tree(session: Session) -> dict[str, dict]:
 
 
 def resolve_scope(session: Session, scope: str) -> dict:
-    """Returns which sampled companies a scope (Group/BU/Company code) covers, and whether that's partial."""
-    node_by_code, children_by_parent = load_company_hierarchy(session)
+    """Resolve one Company monetary scope; Group/BU rollups require FX and are rejected."""
+    node_by_code, _ = load_company_hierarchy(session)
     node = node_by_code.get(scope)
     if node is None:
         raise UnknownScope(scope)
-
-    def collect_companies(code: str) -> list[CompanyNode]:
-        n = node_by_code[code]
-        if n.node_type == CompanyNodeType.COMPANY:
-            return [n]
-        result: list[CompanyNode] = []
-        for child in children_by_parent.get(code, []):
-            result.extend(collect_companies(child))
-        return result
-
-    if node.node_type == CompanyNodeType.COMPANY:
-        if not node.is_sampled:
-            return {"kind": "company", "companies": [], "notYetModelled": True}
-        return {"kind": "company", "companies": [node.code], "notYetModelled": False, "partial": False}
-
-    descendants = collect_companies(scope)
-    sampled = [c.code for c in descendants if c.is_sampled]
-    kind = "group" if node.node_type == CompanyNodeType.GROUP else "bu"
-    if not sampled:
-        # No sampled company anywhere under this BU/Group — an all-zero tree
-        # would misleadingly look like a real, empty company rather than
-        # unmodelled scope (see docs/adr/0032, focus narrowed to one company).
-        return {"kind": kind, "companies": [], "notYetModelled": True}
+    if node.node_type != CompanyNodeType.COMPANY:
+        raise InvalidMonetaryScope(scope)
+    if not node.currency:
+        raise MissingCompanyCurrency(scope)
     return {
-        "kind": kind,
-        "companies": sampled,
-        "notYetModelled": False,
-        "partial": len(sampled) < len(descendants),
-        "sampledCompanyCount": len(sampled),
-        "totalCompanyCount": len(descendants),
+        "kind": "company",
+        "companies": [node.code] if node.is_sampled else [],
+        "currency": node.currency,
+        "notYetModelled": not node.is_sampled,
     }

@@ -25,7 +25,7 @@ export function getAncestors(tree: Record<string, HierarchyNode>, id: string): H
  * curated per-node rank, so every node's children rank live off this one
  * generic walk instead of the old mock's hand-picked ref lists. Driver graph
  * children (Driver Formula / Driver, see docs/adr/0030) are excluded: their
- * units (rate/%/days, or a formula's own RM_M that would double-count its
+ * units (rate/%/days, or a formula's own money value that would double-count its
  * leaf) aren't comparable to a financial variance the way sibling GL nodes
  * are. Nodes already reflect whatever period was requested from GET
  * /api/gl/tree (see docs/adr/0025) — no client-side re-scoping needed here.
@@ -38,7 +38,7 @@ export function rankChildren(tree: Record<string, HierarchyNode>, node: Hierarch
   const maxAbs = Math.max(...ranked.map((n) => Math.abs(n.actual - n.budget)), 1);
   return ranked.map((n, i) => ({
     ...n,
-    varAbs: Number(Math.abs(n.actual - n.budget).toFixed(1)),
+    varAbs: Math.abs(n.actual - n.budget),
     rank: i + 1,
     contributionWidthPct: Math.round((Math.abs(n.actual - n.budget) / maxAbs) * 100),
   }));

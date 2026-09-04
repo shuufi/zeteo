@@ -11,9 +11,9 @@ DIAGNOSTIC_CONTENT = {
     FULLY_MODELLED_NODE: {
         "trend": [40, 35, 38, 20, 25, 10, 5, 8],
         "drivers": [
-            {"id": "dry-dock", "label": "Unplanned dry-dock, Vessel A", "varAbs": 2.8, "varPct": 52, "direction": "adverse", "rank": 1},
-            {"id": "spares-inflation", "label": "Spare parts price inflation", "varAbs": 1.4, "varPct": 26, "direction": "adverse", "rank": 2},
-            {"id": "preventive-deferred", "label": "Preventive maint. deferred", "varAbs": 0.7, "varPct": 13, "direction": "adverse", "rank": 3},
+            {"id": "dry-dock", "label": "Unplanned dry-dock, Vessel A", "varAbs": 2_800_000.00, "varPct": 52, "direction": "adverse", "rank": 1},
+            {"id": "spares-inflation", "label": "Spare parts price inflation", "varAbs": 1_400_000.00, "varPct": 26, "direction": "adverse", "rank": 2},
+            {"id": "preventive-deferred", "label": "Preventive maint. deferred", "varAbs": 700_000.00, "varPct": 13, "direction": "adverse", "rank": 3},
         ],
         "sensitivity": {
             "mostSensitive": ["Dry-dock incidence", "Spares unit price"],
@@ -29,10 +29,10 @@ DIAGNOSTIC_CONTENT = {
                 {"id": "external", "label": "External Bench.", "valuePerVod": 2750, "kind": "external"},
             ],
             "rows": [
-                {"basis": "MISC Vessel A", "valuePerVod": "RM4,120", "gap": "+38%"},
-                {"basis": "Fleet median", "valuePerVod": "RM2,980", "gap": "—"},
-                {"basis": "Similar vessel class", "valuePerVod": "RM3,110", "gap": "baseline"},
-                {"basis": "External benchmark (industry, LNGC)", "valuePerVod": "RM2,750", "gap": "data available FY25 only"},
+                {"basis": "MISC Vessel A", "valuePerVod": 4120.00, "gap": "+38%"},
+                {"basis": "Fleet median", "valuePerVod": 2980.00, "gap": "—"},
+                {"basis": "Similar vessel class", "valuePerVod": 3110.00, "gap": "baseline"},
+                {"basis": "External benchmark (industry, LNGC)", "valuePerVod": 2750.00, "gap": "data available FY25 only"},
             ],
         },
         "reviewSummary": "Cross-functional review: Finance × Petroleum Ops · 3 validated, 2 under review",
@@ -40,7 +40,8 @@ DIAGNOSTIC_CONTENT = {
             {
                 "id": "dry-dock",
                 "driverLabel": "Unplanned dry-dock, Vessel A",
-                "amountLabel": "RM2.8m, 52%",
+                "amount": 2_800_000.00,
+                "sharePct": 52,
                 "type": "FACT",
                 "evidenceOrRationale": "Evidence: work order #WO-4471, class survey report, invoice batch Q3",
                 "mitigation": "Mitigation: schedule remaining dry-docks in off-peak charter windows",
@@ -50,7 +51,8 @@ DIAGNOSTIC_CONTENT = {
             {
                 "id": "spares-inflation",
                 "driverLabel": "Spare parts price inflation",
-                "amountLabel": "RM1.4m, 26%",
+                "amount": 1_400_000.00,
+                "sharePct": 26,
                 "type": "AI_HYPOTHESIS",
                 "confidence": "Medium",
                 "evidenceOrRationale": "AI confidence: Medium — rationale: vendor invoice trend +14% QoQ, matched against 2 prior incident reports",
@@ -60,7 +62,8 @@ DIAGNOSTIC_CONTENT = {
             {
                 "id": "preventive-deferred",
                 "driverLabel": "Preventive maintenance deferred",
-                "amountLabel": "RM0.7m, 13%",
+                "amount": 700_000.00,
+                "sharePct": 13,
                 "type": "AI_HYPOTHESIS",
                 "confidence": "Low",
                 "evidenceOrRationale": "AI confidence: Low — rationale: work-order pattern shift, no confirming SOP match found",

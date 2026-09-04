@@ -11,6 +11,13 @@
   import { reconciliationStore, loadReconciliation } from "../lib/data/reconciliation-store.svelte";
   import { getNode, buildDisplayRows } from "../lib/data/gl-client";
   import { loadPeriods } from "../lib/data/period-store.svelte";
+  import {
+    formatMoney,
+    hierarchyMoneyValues,
+    moneyCaption,
+    resolveMoneyScale,
+    type MoneyScaleChoice,
+  } from "../lib/data/format";
   import type { DisplayRow } from "../lib/data/types";
 
   onMount(loadPeriods);
@@ -19,6 +26,7 @@
   // Comparison's NodePicker already imposes) — only those are guaranteed to
   // exist under the same code in both hierarchies, see docs/adr/0033.
   let reconciliationNodeId = $state<string | undefined>("PNL-0011");
+  let moneyScale = $state<MoneyScaleChoice>("auto");
 
   $effect(() => {
     const node = reconciliationNodeId;
@@ -35,7 +43,20 @@
     reconciliationNodeId ? buildDisplayRows(reconciliationStore.vdtTree, reconciliationNodeId) : [],
   );
 
-  const singleColumn: StatementColumn[] = [{ key: "value", label: "RM_M" }];
+  const moneyValues = $derived([
+    ...hierarchyMoneyValues(reconciliationStore.accountingTree, reconciliationNodeId),
+    ...hierarchyMoneyValues(reconciliationStore.vdtTree, reconciliationNodeId),
+  ]);
+  const resolvedMoneyScale = $derived(resolveMoneyScale(moneyScale, moneyValues));
+  const currency = $derived(reconciliationStore.meta?.currency ?? "");
+  const singleColumn = $derived<StatementColumn[]>([{ key: "value", label: moneyCaption(currency, resolvedMoneyScale) }]);
+
+  let lastScaleNode = "";
+  $effect(() => {
+    const node = reconciliationNodeId ?? "";
+    if (lastScaleNode && node !== lastScaleNode) moneyScale = "auto";
+    lastScaleNode = node;
+  });
 
   function accountingCellValue(row: DisplayRow): number {
     return getNode(reconciliationStore.accountingTree, row.nodeId)?.actual ?? 0;
@@ -63,7 +84,14 @@
 
 <PageHeader title="VDT Reconciliation" />
 <PageBody>
-  <ContextBar showReconciliation bind:reconciliationNode={reconciliationNodeId} />
+  <ContextBar
+    showReconciliation
+    bind:reconciliationNode={reconciliationNodeId}
+    showMoneyScale
+    {currency}
+    {moneyValues}
+    bind:moneyScale
+  />
 
   {#if !reconciliationNodeId}
     <div class="pt-4 text-sm text-gray-500 dark:text-gray-400">Pick a node to reconcile.</div>
@@ -71,16 +99,16 @@
     <div class="pt-4">Loading…</div>
   {:else if reconciliationStore.status === "not-yet-modelled"}
     <div class="pt-4">
-      <NotYetModelled label="No data modelled for the selected company/BU yet." />
+      <NotYetModelled label="No data modelled for the selected company yet." />
     </div>
   {:else if reconciliationStore.status === "ready"}
     <div class="flex flex-col gap-4 pt-2 min-w-0">
       {#if accountingTotal !== undefined && vdtTotal !== undefined && gap !== undefined}
         <div class="text-xs text-gray-500 dark:text-gray-400">
-          Accounting: <span class="font-semibold text-gray-700 dark:text-gray-300">{accountingTotal.toFixed(1)} RM_M</span>
-          · VDT: <span class="font-semibold text-gray-700 dark:text-gray-300">{vdtTotal.toFixed(1)} RM_M</span>
+          Accounting: <span class="font-semibold text-gray-700 dark:text-gray-300">{formatMoney(accountingTotal, currency, resolvedMoneyScale)}</span>
+          · VDT: <span class="font-semibold text-gray-700 dark:text-gray-300">{formatMoney(vdtTotal, currency, resolvedMoneyScale)}</span>
           · Gap:
-          <span class="font-semibold {gap === 0 ? '' : 'text-amber-600 dark:text-amber-400'}">{gap.toFixed(1)} RM_M</span>
+          <span class="font-semibold {gap === 0 ? '' : 'text-amber-600 dark:text-amber-400'}">{formatMoney(gap, currency, resolvedMoneyScale)}</span>
           — VDT is an independent, activity-based estimate here, not required to reconcile to the ledger.
         </div>
       {/if}
@@ -94,6 +122,8 @@
             columnMinWidthPx={110}
             minTableWidthPx={360}
             resetKey={reconciliationNodeId}
+            {currency}
+            moneyScale={resolvedMoneyScale}
           />
         </Card>
         <Card class="flex-1 min-w-0" title="VDT">
@@ -105,6 +135,8 @@
             columnMinWidthPx={110}
             minTableWidthPx={360}
             resetKey={reconciliationNodeId}
+            {currency}
+            moneyScale={resolvedMoneyScale}
           />
         </Card>
       </div>

@@ -1,6 +1,8 @@
 from enum import Enum
+from decimal import Decimal
 from typing import Optional
 
+from sqlalchemy import Column, Numeric
 from sqlmodel import Field, SQLModel
 
 
@@ -34,8 +36,8 @@ class CompanyNodeType(str, Enum):
 
 
 class OperationalUnit(str, Enum):
-    USD_PER_DAY = "usd-per-day"
-    USD_PER_MONTH = "usd-per-month"
+    CURRENCY_PER_DAY = "currency-per-day"
+    CURRENCY_PER_MONTH = "currency-per-month"
     PERCENT = "percent"
     DAYS = "days"
     COUNT = "count"
@@ -101,6 +103,8 @@ class CompanyNode(SQLModel, table=True):
     node_type: CompanyNodeType
     order: int
     is_sampled: bool = False
+    # Required for Company leaves; null for the Group/BU grouping rows.
+    currency: Optional[str] = None
 
 
 class GLFact(SQLModel, table=True):
@@ -113,7 +117,7 @@ class GLFact(SQLModel, table=True):
     company: str = Field(foreign_key="company.code", index=True)
     period_code: str = Field(foreign_key="period.code", index=True)
     scenario: Scenario
-    amount: float
+    amount: Decimal = Field(sa_column=Column(Numeric(24, 2), nullable=False))
 
 
 class Driver(SQLModel, table=True):
@@ -150,7 +154,9 @@ class DriverFact(SQLModel, table=True):
     company: str = Field(foreign_key="company.code", index=True)
     period_code: str = Field(foreign_key="period.code", index=True)
     scenario: Scenario
-    amount: float
+    # One column serves both exact two-decimal monetary rates and native-unit
+    # operational measures that may need more precision.
+    amount: Decimal = Field(sa_column=Column(Numeric(24, 6), nullable=False))
 
 
 class DriverFormula(SQLModel, table=True):
@@ -217,7 +223,7 @@ class ActivityNode(SQLModel, table=True):
 class PostingActivityAccount(SQLModel, table=True):
     """The VDT hierarchy's terminal line — see docs/adr/0033.
 
-    Not the same row as a Posting GL Account: its RM amount is always
+    Not the same row as a Posting GL Account: its company-local-currency amount is always
     computed by its own Driver Formula (a DriverFormula.target_code equal to
     this row's `code` — a third target-code namespace that falls out of
     DriverFormula's existing untyped, call-site-resolved `target_code` for

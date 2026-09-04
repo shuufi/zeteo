@@ -4,13 +4,15 @@
   import { cubicOut } from 'svelte/easing';
   import { Plot, BarY, RuleY, Text } from 'svelteplot';
   import type { BridgeStep } from '../data/types';
-  import { formatRmAuto } from '../data/format';
+  import { formatMoney, type MoneyScale } from '../data/format';
 
   let {
     steps = [],
     height = 280,
     emphasis = 0,
-  }: { steps?: BridgeStep[]; height?: number; emphasis?: number } = $props();
+    currency = '',
+    moneyScale = 'units',
+  }: { steps?: BridgeStep[]; height?: number; emphasis?: number; currency?: string; moneyScale?: MoneyScale } = $props();
 
   const axisLabel: Record<string, string> = {
     'Cost of Revenue': 'Cost of Rev.',
@@ -42,7 +44,7 @@
         from,
         to,
         kind: step.kind,
-        valueLabel: formatRmAuto(Math.abs(step.value)),
+        valueLabel: formatMoney(Math.abs(step.value), currency, moneyScale),
       };
     });
   });

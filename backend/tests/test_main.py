@@ -29,9 +29,12 @@ def test_vdt_tree_endpoint_shape(session):
     assert resp.status_code == 200
     body = resp.json()
     assert body["scope"] == codes["company"]
+    assert body["scopeKind"] == "company"
+    assert body["currency"] == "MYR"
     assert body["notYetModelled"] is False
     assert codes["cor"] in body["nodes"]
     assert body["nodes"][codes["cor"]]["childIds"] == [codes["act_top"]]
+    assert body["nodes"][codes["cor"]]["unit"] == "money"
 
 
 def test_vdt_reconciliation_endpoint_shape(session):
@@ -72,3 +75,13 @@ def test_vdt_tree_rejects_unknown_scope(session):
 
     resp = client.get("/api/vdt/tree", params={"scope": "NOT-REAL"})
     assert resp.status_code == 404
+
+
+def test_monetary_endpoints_reject_group_and_business_unit_scopes(session):
+    codes = fixture_graph(session)
+    client = _client(session)
+
+    for scope in (codes["group"], codes["business_unit"]):
+        resp = client.get("/api/gl/tree", params={"scope": scope, "period": codes["year"]})
+        assert resp.status_code == 422
+        assert resp.json()["detail"] == f"Company scope required: {scope}"

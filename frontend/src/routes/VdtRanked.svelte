@@ -12,7 +12,15 @@
   import { periodState, DEFAULT_PERIOD_CODE } from '../lib/state/period.svelte';
   import { periodStore, periodLabel } from '../lib/data/period-store.svelte';
   import { scopeState } from '../lib/state/scope.svelte';
-  import { formatVar, pct } from '../lib/data/format';
+  import {
+    formatStatementMoney,
+    formatVar,
+    hierarchyMoneyValues,
+    moneyCaption,
+    pct,
+    resolveMoneyScale,
+    type MoneyScaleChoice,
+  } from '../lib/data/format';
 
   let { params }: { params: { id: string } } = $props();
 
@@ -55,6 +63,17 @@
   // Real GL/FSI nodes carry no curated rank — every child ranks live by
   // contribution magnitude instead (see gl-client.ts rankChildren).
   const rankedChildren = $derived(node ? rankChildren(vdtStore.tree, node) : []);
+  let moneyScale = $state<MoneyScaleChoice>('auto');
+  const moneyValues = $derived(node ? hierarchyMoneyValues(vdtStore.tree, node.id) : []);
+  const resolvedMoneyScale = $derived(resolveMoneyScale(moneyScale, moneyValues));
+  const currency = $derived(vdtStore.meta?.currency ?? '');
+
+  let lastScaleNode = '';
+  $effect(() => {
+    const key = `${params.id}:${periodCode ?? ''}`;
+    if (lastScaleNode && key !== lastScaleNode) moneyScale = 'auto';
+    lastScaleNode = key;
+  });
 
 </script>
 
@@ -65,12 +84,12 @@
   <PageHeader title="Value Driver" />
   <PageBody>
     <ContextBar />
-    <NotYetModelled label="No GL data modelled for the selected company/BU yet." />
+    <NotYetModelled label="No GL data modelled for the selected company yet." />
   </PageBody>
 {:else if node}
   <PageHeader title={isScoped ? `${node.name} — ${scopedLabel}` : node.name} />
   <PageBody>
-    <ContextBar {ancestors} />
+    <ContextBar {ancestors} showMoneyScale {currency} {moneyValues} bind:moneyScale />
 
     <div class="flex flex-col gap-4 pt-4">
     {#if isScoped}
@@ -86,6 +105,7 @@
             <div class="grid grid-cols-[1.4fr_0.6fr_0.6fr_0.5fr_0.8fr_0.5fr] items-center text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 pb-1">
               <span>Driver</span><span>Actual</span><span>Budget</span><span>Var%</span><span>Contribution</span><span>Rank</span>
             </div>
+            <div class="py-1 text-right text-[10px] text-gray-500 dark:text-gray-400">{moneyCaption(currency, resolvedMoneyScale)}</div>
             {#each rankedChildren as child (child.id)}
               <a
                 class="grid grid-cols-[1.4fr_0.6fr_0.6fr_0.5fr_0.8fr_0.5fr] items-center text-sm py-1 no-underline text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900"
@@ -93,8 +113,8 @@
                 use:link
               >
                 <span>▶ {child.name}</span>
-                <span>{child.actual.toFixed(1)}</span>
-                <span>{child.budget.toFixed(1)}</span>
+                <span>{formatStatementMoney(child.actual, resolvedMoneyScale)}</span>
+                <span>{formatStatementMoney(child.budget, resolvedMoneyScale)}</span>
                 <span
                   class={child.direction === 'adverse'
                     ? 'text-red-600 dark:text-red-400'
@@ -132,7 +152,7 @@
           </div>
         </div>
         <div class="h-[34rem]">
-          <ValueDriverFlow rootId={node.id} />
+          <ValueDriverFlow rootId={node.id} {currency} moneyScale={resolvedMoneyScale} />
         </div>
       </div>
     {/if}

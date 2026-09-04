@@ -18,7 +18,15 @@
   import { periodStore, loadPeriods, periodYearOf, periodLabel, priorYearSibling } from "../lib/data/period-store.svelte";
   import { periodState } from "../lib/state/period.svelte";
   import { scopeState } from "../lib/state/scope.svelte";
-  import { months, cumulative } from "../lib/data/format";
+  import {
+    comparisonMoneyValues,
+    cumulative,
+    hierarchyMoneyValues,
+    moneyCaption,
+    months,
+    resolveMoneyScale,
+    type MoneyScaleChoice,
+  } from "../lib/data/format";
   import type { DisplayRow, Direction, BridgeStep } from "../lib/data/types";
 
   const SOC_CREW_COST = "V201000000";
@@ -60,6 +68,7 @@
   let vdtPeriodA = $state<string | undefined>(undefined);
   let vdtPeriodB = $state<string | undefined>(undefined);
   const isComparisonMode = $derived(vdtComparisonMode === "vs This Year" || vdtComparisonMode === "vs Last Year");
+  let moneyScale = $state<MoneyScaleChoice>("auto");
 
   // "vs Last Year" only exposes one picker (the "this year" side) — its pair
   // is derived automatically, same month one fiscal year back.
@@ -90,6 +99,20 @@
   }
 
   const comparisonRoot = $derived(getComparisonNode(vdtComparisonStore.tree, SOC_CREW_COST));
+  const moneyValues = $derived(
+    isComparisonMode
+      ? comparisonMoneyValues(vdtComparisonStore.tree, SOC_CREW_COST)
+      : hierarchyMoneyValues(vdtStore.tree, SOC_CREW_COST),
+  );
+  const resolvedMoneyScale = $derived(resolveMoneyScale(moneyScale, moneyValues));
+  const currency = $derived(vdtComparisonStore.meta?.currency ?? vdtStore.meta?.currency ?? "");
+
+  let lastComparisonScaleKey = "";
+  $effect(() => {
+    const key = `${vdtComparisonMode}:${resolvedPeriodA ?? ""}:${resolvedPeriodB ?? ""}:${ytdView}`;
+    if (lastComparisonScaleKey && key !== lastComparisonScaleKey) moneyScale = "auto";
+    lastComparisonScaleKey = key;
+  });
 
   function bridgeKind(direction: Direction): BridgeStep["kind"] {
     return direction === "favourable" ? "increase" : direction === "adverse" ? "decrease" : "neutral";
@@ -223,6 +246,10 @@
     bind:vdtComparisonMode
     bind:vdtPeriodA
     bind:vdtPeriodB
+    showMoneyScale
+    {currency}
+    {moneyValues}
+    bind:moneyScale
   />
 
   {#if isComparisonMode}
@@ -233,7 +260,7 @@
     {:else if vdtComparisonStore.status === "not-yet-modelled"}
       <div class="pt-4 flex-1 min-w-0 flex">
         <NotYetModelled
-          label="No VDT data modelled for the selected company/BU yet."
+          label="No VDT data modelled for the selected company yet."
           class="flex-1 flex flex-col items-center justify-center"
         />
       </div>
@@ -252,14 +279,14 @@
                 </label>
               </div>
             {/snippet}
-            <ProfitBridge steps={comparisonBridgeSteps} height={300} emphasis={bridgeEmphasis} />
+            <ProfitBridge steps={comparisonBridgeSteps} height={300} emphasis={bridgeEmphasis} {currency} moneyScale={resolvedMoneyScale} />
           </Card>
 
           <Card>
             {#snippet header()}
               <div class="flex justify-between items-baseline mb-2">
                 <div class="font-bold text-sm text-gray-900 dark:text-gray-50">SOC Crew Cost (VDT)</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">RM millions</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{moneyCaption(currency, resolvedMoneyScale)}</div>
               </div>
             {/snippet}
             <StatementTable
@@ -273,6 +300,8 @@
               columnMinWidthPx={110}
               minTableWidthPx={640}
               resetKey={SOC_CREW_COST}
+              {currency}
+              moneyScale={resolvedMoneyScale}
             />
           </Card>
         </div>
@@ -281,9 +310,11 @@
           <Card>
             <MovementNarration
               status={narrationStore.status}
-              text={narrationStore.text}
+              narration={narrationStore.narration}
               error={narrationStore.error}
               onGenerate={handleExplainMovement}
+              {currency}
+              moneyScale={resolvedMoneyScale}
             />
           </Card>
         </div>
@@ -294,14 +325,14 @@
   {:else if vdtStore.status === "not-yet-modelled"}
     <div class="pt-4 flex-1 min-w-0 flex">
       <NotYetModelled
-        label="No VDT data modelled for the selected company/BU yet."
+        label="No VDT data modelled for the selected company yet."
         class="flex-1 flex flex-col items-center justify-center"
       />
     </div>
   {:else}
     <div class="flex flex-col gap-4 pt-4 min-w-0">
       <Card title="Cost Bridge: SOC Crew Cost">
-        <ProfitBridge steps={profitBridgeSteps} height={300} />
+        <ProfitBridge steps={profitBridgeSteps} height={300} {currency} moneyScale={resolvedMoneyScale} />
       </Card>
 
       <Card>
@@ -317,7 +348,7 @@
                 <input type="checkbox" bind:checked={showGlCode} class="h-3 w-3" />
                 Show code
               </label>
-              <div class="text-xs text-gray-500 dark:text-gray-400">RM millions</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">{moneyCaption(currency, resolvedMoneyScale)}</div>
             </div>
           </div>
         {/snippet}
@@ -335,6 +366,8 @@
           lineItemMaxWidth={640}
           columnMinWidthPx={64}
           minTableWidthPx={1080}
+          {currency}
+          moneyScale={resolvedMoneyScale}
         />
       </Card>
     </div>

@@ -2,7 +2,8 @@ import type { HierarchyNode } from './types';
 
 export interface ReconciliationMeta {
   scope: string;
-  scopeKind: 'company' | 'bu';
+  scopeKind: 'company';
+  currency: string;
   partial: boolean;
   sampledCompanyCount: number;
   totalCompanyCount: number;
@@ -58,6 +59,7 @@ export async function loadReconciliation(scope: string, node: string, periodCode
     meta = {
       scope: data.scope,
       scopeKind: data.scopeKind,
+      currency: data.currency,
       partial: data.partial,
       sampledCompanyCount: data.sampledCompanyCount,
       totalCompanyCount: data.totalCompanyCount,

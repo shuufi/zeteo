@@ -14,6 +14,12 @@
   import { vdtStore, loadVdtScope } from "../data/vdt-store.svelte";
   import { periodStore, periodYearOf } from "../data/period-store.svelte";
   import type { PeriodType } from "../data/types";
+  import {
+    moneyScaleControlLabel,
+    moneyScaleOptions,
+    resolveMoneyScale,
+    type MoneyScaleChoice,
+  } from "../data/format";
 
   const comparisonOptions = ["vs Budget", "vs Last Year", "vs This Year"];
 
@@ -33,6 +39,7 @@
     }
     scopeDraft.reset();
     periodDraft.reset();
+    moneyScale = "auto";
   }
 
   interface Crumb {
@@ -59,6 +66,10 @@
     vdtComparisonMode = $bindable("vs This Year"),
     vdtPeriodA = $bindable<string | undefined>(undefined),
     vdtPeriodB = $bindable<string | undefined>(undefined),
+    showMoneyScale = false,
+    currency = "",
+    moneyValues = [],
+    moneyScale = $bindable<MoneyScaleChoice>("auto"),
   }: {
     ancestors?: Crumb[];
     currentLabel?: string;
@@ -79,7 +90,17 @@
     vdtComparisonMode?: string;
     vdtPeriodA?: string;
     vdtPeriodB?: string;
+    showMoneyScale?: boolean;
+    currency?: string;
+    moneyValues?: number[];
+    moneyScale?: MoneyScaleChoice;
   } = $props();
+
+  const automaticMoneyScale = $derived(resolveMoneyScale("auto", moneyValues));
+  const moneyScaleValues = moneyScaleOptions.map((o) => o.value);
+  const moneyScaleLabels = $derived(
+    moneyScaleOptions.map((o) => (o.value === "auto" ? moneyScaleControlLabel("auto", automaticMoneyScale) : o.label)),
+  );
 
   // VDT Statement comparison's Period pickers are always Month-grain,
   // restricted to the current fiscal year (see docs/adr/0034) — "vs This
@@ -169,6 +190,15 @@
       id="comparison-select"
       options={comparisonOptions}
       selected={context.comparison}
+    />
+  {/if}
+  {#if showMoneyScale && currency}
+    <ChipSelect
+      id="money-scale-select"
+      prefix="Scale:"
+      options={moneyScaleValues}
+      labels={moneyScaleLabels}
+      bind:selected={moneyScale}
     />
   {/if}
   {#if showYtd}

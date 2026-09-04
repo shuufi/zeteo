@@ -1,7 +1,20 @@
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 
 let status = $state<Status>('idle');
-let text = $state('');
+export interface NarrationBullet {
+  nodeId: string;
+  nodeName: string;
+  text: string;
+  amount: number;
+}
+
+export interface MovementNarrationData {
+  headline: string;
+  netAmount: number;
+  bullets: NarrationBullet[];
+}
+
+let narration = $state<MovementNarrationData | null>(null);
 let error = $state('');
 
 /**
@@ -14,15 +27,15 @@ export const narrationStore = {
   get status() {
     return status;
   },
-  get text() {
-    return text;
+  get narration() {
+    return narration;
   },
   get error() {
     return error;
   },
   reset(): void {
     status = 'idle';
-    text = '';
+    narration = null;
     error = '';
   },
 };
@@ -38,7 +51,7 @@ export async function generateNarration(scope: string, node: string, periodA: st
       throw new Error(body.detail ?? `Request failed: ${res.status}`);
     }
     const data = await res.json();
-    text = data.narration;
+    narration = data.narration;
     status = 'ready';
   } catch (err) {
     console.error('Failed to generate VDT movement narration', err);

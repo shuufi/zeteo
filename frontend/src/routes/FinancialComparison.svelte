@@ -11,6 +11,7 @@
   import { comparisonStore, loadComparison } from '../lib/data/comparison-store.svelte';
   import { getComparisonNode, getComparisonChildren, buildComparisonRows } from '../lib/data/comparison-client';
   import { loadPeriods, periodLabel } from '../lib/data/period-store.svelte';
+  import { comparisonMoneyValues, moneyCaption, resolveMoneyScale, type MoneyScaleChoice } from '../lib/data/format';
   import type { DisplayRow, PeriodType, Direction, BridgeStep } from '../lib/data/types';
 
   onMount(loadPeriods);
@@ -20,6 +21,7 @@
   let bridgeEmphasis = $state(0.7);
   let periodA = $state<string | undefined>(undefined);
   let periodB = $state<string | undefined>(undefined);
+  let moneyScale = $state<MoneyScaleChoice>('auto');
 
   $effect(() => {
     const node = comparisonNodeId;
@@ -31,13 +33,23 @@
   });
 
   const comparisonRoot = $derived(comparisonNodeId ? getComparisonNode(comparisonStore.tree, comparisonNodeId) : undefined);
+  const moneyValues = $derived(comparisonNodeId ? comparisonMoneyValues(comparisonStore.tree, comparisonNodeId) : []);
+  const resolvedMoneyScale = $derived(resolveMoneyScale(moneyScale, moneyValues));
+  const currency = $derived(comparisonStore.meta?.currency ?? '');
+
+  let lastScaleDataKey = '';
+  $effect(() => {
+    const key = `${comparisonNodeId ?? ''}:${periodA ?? ''}:${periodB ?? ''}`;
+    if (lastScaleDataKey && key !== lastScaleDataKey) moneyScale = 'auto';
+    lastScaleDataKey = key;
+  });
 
   function bridgeKind(direction: Direction): BridgeStep['kind'] {
     return direction === 'favourable' ? 'increase' : direction === 'adverse' ? 'decrease' : 'neutral';
   }
 
   // Bridge bars are the comparison node's direct GL children only — Driver/
-  // Driver Formula children (non-RM units) belong in the table, not a bridge
+  // Driver Formula children (non-money units) belong in the table, not a bridge
   // (see docs/adr/0031). In practice a Reporting Root/Node's direct children
   // are always GL-typed anyway (Q13's picker restriction), this filter is
   // just defensive.
@@ -86,7 +98,19 @@
 
 <PageHeader title="Financial Comparison" />
 <PageBody>
-  <ContextBar showYtd={false} showPeriod={false} showComparison bind:comparisonNode={comparisonNodeId} bind:grain bind:periodA bind:periodB />
+  <ContextBar
+    showYtd={false}
+    showPeriod={false}
+    showComparison
+    bind:comparisonNode={comparisonNodeId}
+    bind:grain
+    bind:periodA
+    bind:periodB
+    showMoneyScale
+    {currency}
+    {moneyValues}
+    bind:moneyScale
+  />
 
   {#if !comparisonNodeId || !periodA || !periodB}
     <div class="pt-4 text-sm text-gray-500 dark:text-gray-400">Pick a comparison node and two periods to compare.</div>
@@ -94,7 +118,7 @@
     <div class="pt-4">Loading…</div>
   {:else if comparisonStore.status === 'not-yet-modelled'}
     <div class="pt-4">
-      <NotYetModelled label="No GL data modelled for the selected company/BU yet." />
+      <NotYetModelled label="No GL data modelled for the selected company yet." />
     </div>
   {:else if comparisonRoot}
     <div class="flex flex-col gap-4 pt-2 min-w-0">
@@ -110,14 +134,14 @@
             </label>
           </div>
         {/snippet}
-        <ProfitBridge steps={deltaBridgeSteps} emphasis={bridgeEmphasis} />
+        <ProfitBridge steps={deltaBridgeSteps} emphasis={bridgeEmphasis} {currency} moneyScale={resolvedMoneyScale} />
       </Card>
 
       <Card>
         {#snippet header()}
           <div class="flex justify-between items-baseline mb-2">
             <div class="font-bold text-sm text-gray-900 dark:text-gray-50">{comparisonRoot.name}</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">RM millions</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">{moneyCaption(currency, resolvedMoneyScale)}</div>
           </div>
         {/snippet}
         <StatementTable
@@ -131,6 +155,8 @@
           columnMinWidthPx={110}
           minTableWidthPx={640}
           resetKey={comparisonNodeId}
+          {currency}
+          moneyScale={resolvedMoneyScale}
         />
       </Card>
     </div>

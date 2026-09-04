@@ -4,6 +4,7 @@
   import { link } from 'svelte-spa-router';
   import { indentClass } from '../data/gl-client';
   import type { DisplayRow, Direction, OperationalUnit } from '../data/types';
+  import { formatMoney, formatStatementMoney, type MoneyScale } from '../data/format';
 
   /**
    * One value column of the statement (a month, a comparison period, a
@@ -49,6 +50,8 @@
     columnMinWidthPx = 64,
     minTableWidthPx = 640,
     resetKey = undefined,
+    currency = '',
+    moneyScale = 'units',
   }: {
     rows: DisplayRow[];
     columns: StatementColumn[];
@@ -67,6 +70,8 @@
     columnMinWidthPx?: number;
     minTableWidthPx?: number;
     resetKey?: unknown;
+    currency?: string;
+    moneyScale?: MoneyScale;
   } = $props();
 
   // User-resizable via the drag handle next to the header — width persists
@@ -156,22 +161,19 @@
   // Values already carry the right sign server-side (see docs/adr/0023) — a
   // negative number is a subtraction/loss, shown in parens.
   function statementValue(value: number): string {
-    const text = Math.abs(value).toFixed(1);
-    return value < 0 && value !== 0 ? `(${text})` : text;
+    return formatStatementMoney(value, moneyScale);
   }
 
-  function operationalValue(value: number, unit: OperationalUnit | 'RM_M' | undefined): string {
+  function operationalValue(value: number, unit: OperationalUnit | 'money' | undefined): string {
     switch (unit) {
-      case 'RM_M':
+      case 'money':
         // A Driver Formula bound to a GL leaf produces money — same signed,
         // parens-for-negative treatment as any other statement row.
         return statementValue(value);
-      case 'usd-per-day':
-        // Small values (e.g. an RM_M-scaled Driver Formula term — see
-        // docs/adr/0030) need more than 0 decimals or they'd all show "$0k/d".
-        return value < 10 ? `$${value.toFixed(3)}k/d` : `$${value.toFixed(0)}k/d`;
-      case 'usd-per-month':
-        return value < 10 ? `$${value.toFixed(3)}k/mo` : `$${value.toFixed(0)}k/mo`;
+      case 'currency-per-day':
+        return `${formatMoney(value, currency, moneyScale)}/d`;
+      case 'currency-per-month':
+        return `${formatMoney(value, currency, moneyScale)}/mo`;
       case 'percent':
         return `${value.toFixed(1)}%`;
       case 'days':

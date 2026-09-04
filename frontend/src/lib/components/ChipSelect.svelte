@@ -1,17 +1,25 @@
-<script lang="ts">
+<script lang="ts" generics="T extends string">
   let {
     id,
     prefix = '',
     options,
+    labels,
     selected = $bindable(options[0]),
-  }: { id: string; prefix?: string; options: string[]; selected?: string } = $props();
+  }: { id: string; prefix?: string; options: T[]; labels?: string[]; selected?: T } = $props();
 
   // Selecting an option always fires a native bubbling change event on the
   // host (@tailwindplus/elements) — bind:selected only actually stays live
   // where a caller listens for it; callers that just pass a static value
   // (see docs/adr/0005) see no different behaviour than before.
   function handleChange(e: Event): void {
-    selected = (e.currentTarget as HTMLElement & { value: string }).value;
+    selected = (e.currentTarget as HTMLElement & { value: string }).value as T;
+  }
+
+  // Optional display label parallel to `options`, for when the bound value
+  // (e.g. a lowercase enum code) shouldn't be shown to the user verbatim.
+  function labelFor(option: T): string {
+    const index = options.indexOf(option);
+    return labels && index >= 0 ? labels[index] : option;
   }
 </script>
 
@@ -23,7 +31,7 @@
       type="button"
       class="grid min-w-36 cursor-default grid-cols-1 rounded-md bg-white py-1.5 pr-2 pl-3 text-left text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus-visible:outline-indigo-500"
     >
-      <el-selectedcontent class="col-start-1 row-start-1 truncate pr-6">{selected}</el-selectedcontent>
+      <el-selectedcontent class="col-start-1 row-start-1 truncate pr-6">{labelFor(selected)}</el-selectedcontent>
       <svg
         viewBox="0 0 16 16"
         fill="currentColor"
@@ -49,7 +57,7 @@
           value={option}
           class="group/option relative block cursor-default py-2 pr-4 pl-8 text-gray-900 select-none focus:bg-indigo-600 focus:text-white focus:outline-hidden dark:text-white dark:focus:bg-indigo-500"
         >
-          <span class="block truncate font-normal group-aria-selected/option:font-semibold">{option}</span>
+          <span class="block truncate font-normal group-aria-selected/option:font-semibold">{labelFor(option)}</span>
           <span
             class="absolute inset-y-0 left-0 flex items-center pl-1.5 text-indigo-600 group-not-aria-selected/option:hidden group-focus/option:text-white in-[el-selectedcontent]:hidden dark:text-indigo-400"
           >
