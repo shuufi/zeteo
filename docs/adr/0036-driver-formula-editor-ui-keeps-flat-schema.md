@@ -1,0 +1,13 @@
+# Driver Formula editor for non-coder maintainers builds on the existing flat schema; nested-expression redesign deferred
+
+A future non-coder maintainer needs a screen to add/edit/delete Drivers (the "noun") and to build/edit the Formulas bound to Posting Activity Accounts — prompting the question of whether ADR-0030's flat sum-of-products schema (`DriverFormula` + `DriverFormulaTerm`, chained `×`/`÷` within a `term_index`, terms summed) should be replaced with a free-text or fully nested/parenthesized expression (e.g. `((a + b) * 2) / c`) to be more "natural" to write and reason about.
+
+**Decision**: keep ADR-0030's schema. Build a guided term-builder UI instead — pick a Driver from a dropdown per operand, toggle `×`/`÷` between operands, "+ add term" for another summed group, sign flip on the formula — rather than a raw text/expression box. Any expression built purely from `+`, `×`, `÷`, and constants can be expanded into this flat sum-of-products form via the distributive law (e.g. `((a+b)*2)/c` = `2a/c + 2b/c`, two terms); a term-builder UI produces already-distributed terms by construction, so a non-coder is never asked to do the algebra themselves and can never type invalid syntax. Constants stay modelled as flat-valued Drivers (0% growth), per ADR-0030, so the same Driver CRUD screen covers them — no second "literal" concept needed.
+
+The one case this schema cannot represent, even after distribution, is dividing by a sum of two or more Drivers (e.g. `a / (b + c)`) — `1/(b+c)` has no sum-of-products expansion. None of the 21 Posting Activity Accounts (3 seeded, 18 pending) have needed this as of this writing.
+
+**Rejected**: a full nested/parenthesized expression tree (ADR-0030 already rejected this once) or a free-text formula string. Either would require: a new self-referential `formula_node`-style table (parent/child, not flat rows) or a text column plus parser; a new recursive tree-walk evaluator replacing the current ~18-line flat loop (`backend/driver_engine.py:111-128`); app-level well-formedness validation (DB FKs can't guarantee a valid tree shape) on top of the existing Driver-as-target cycle guard; and a materially bigger editor UI (nested grouping, paren balancing, drag-reorder) plus a redesign of the ADR-0029 one-level expand-in-place drill-down (`_stitch_driver_nodes`, `backend/gl_tree.py:43`) into arbitrary-depth recursion. That is a new subsystem replacing working, simpler machinery, to cover a case (divide-by-sum) not yet encountered.
+
+**Revisit trigger**: if a real Posting Activity Account formula genuinely requires dividing by a sum of ≥2 Drivers, the nested-expression redesign becomes justified — revisit this ADR then, with a concrete formula in hand to design against.
+
+**Status**: accepted
