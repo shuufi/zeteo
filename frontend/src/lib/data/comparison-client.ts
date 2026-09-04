@@ -12,7 +12,7 @@ export function getComparisonChildren(tree: Record<string, ComparisonNode>, node
  * Flattens a Comparison subtree (see GET /api/gl/comparison, docs/adr/0031)
  * into statement rows — same walk shape as gl-client.ts's buildDisplayRows,
  * reused here since a ComparisonNode carries the same identity/hierarchy
- * fields as a VdtNode, just two periods' values instead of one.
+ * fields as a HierarchyNode, just two periods' values instead of one.
  */
 export function buildComparisonRows(tree: Record<string, ComparisonNode>, rootId: string): DisplayRow[] {
   const rows: DisplayRow[] = [];

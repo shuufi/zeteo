@@ -22,7 +22,19 @@
         { href: '/financial/compare', label: 'Comparison', activePath: '/financial/compare' },
       ],
     },
-    { href: '/vdt/NPAT', label: 'Value Driver', activePath: /^\/(vdt|diagnostic)(\/.*)?$/ },
+    {
+      href: '/vdt',
+      label: 'Value Driver',
+      activePath: /^\/vdt(-tree)?(\/.*)?$|^\/diagnostic(\/.*)?$/,
+      children: [
+        {
+          href: '/vdt',
+          label: 'Explorer',
+          activePath: /^\/vdt$|^\/vdt\/(?!reconciliation)|^\/vdt-tree(\/.*)?$|^\/diagnostic(\/.*)?$/,
+        },
+        { href: '/vdt/reconciliation', label: 'Reconciliation', activePath: '/vdt/reconciliation' },
+      ],
+    },
     { href: '/ask', label: 'Ask Zeteo', activePath: '/ask' },
     { href: '/initiatives', label: 'Initiatives', activePath: '/initiatives' },
   ];

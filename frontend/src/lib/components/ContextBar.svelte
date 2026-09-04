@@ -11,10 +11,17 @@
   import { periodState } from "../state/period.svelte";
   import { periodDraft } from "../state/period-draft.svelte";
   import { loadScope } from "../data/gl-store.svelte";
-  import { periodStore } from "../data/period-store.svelte";
+  import { vdtStore, loadVdtScope } from "../data/vdt-store.svelte";
+  import { periodStore, periodYearOf } from "../data/period-store.svelte";
   import type { PeriodType } from "../data/types";
+  import {
+    moneyScaleControlLabel,
+    moneyScaleOptions,
+    resolveMoneyScale,
+    type MoneyScaleChoice,
+  } from "../data/format";
 
-  const comparisonOptions = ["vs Budget", "vs Prior Year", "vs Forecast"];
+  const comparisonOptions = ["vs Budget", "vs Last Year", "vs This Year"];
 
   // Business/Period only stage a draft when picked (see docs/adr/0027) —
   // this is what actually commits scopeState/periodState and refetches.
@@ -22,8 +29,17 @@
     scopeState.set(scopeDraft.code, scopeDraft.label);
     periodState.set(periodDraft.code);
     loadScope(scopeDraft.code, periodDraft.code);
+    // Only refresh the VDT tree if this session has already settled a load
+    // for it at least once (visited a /vdt* route) — its default 'loading'
+    // status before that first visit means "never fetched," not "in
+    // flight," so this avoids an unconditional second fetch on every Apply
+    // for users who never touch VDT Explorer.
+    if (vdtStore.status === "ready" || vdtStore.status === "not-yet-modelled" || vdtStore.status === "error") {
+      loadVdtScope(scopeDraft.code, periodDraft.code);
+    }
     scopeDraft.reset();
     periodDraft.reset();
+    moneyScale = "auto";
   }
 
   interface Crumb {
@@ -44,6 +60,16 @@
     grain = $bindable<PeriodType>("Month"),
     periodA = $bindable<string | undefined>(undefined),
     periodB = $bindable<string | undefined>(undefined),
+    showReconciliation = false,
+    reconciliationNode = $bindable<string | undefined>(undefined),
+    vdtComparison = false,
+    vdtComparisonMode = $bindable("vs This Year"),
+    vdtPeriodA = $bindable<string | undefined>(undefined),
+    vdtPeriodB = $bindable<string | undefined>(undefined),
+    showMoneyScale = false,
+    currency = "",
+    moneyValues = [],
+    moneyScale = $bindable<MoneyScaleChoice>("auto"),
   }: {
     ancestors?: Crumb[];
     currentLabel?: string;
@@ -56,7 +82,36 @@
     grain?: PeriodType;
     periodA?: string;
     periodB?: string;
+    showReconciliation?: boolean;
+    reconciliationNode?: string;
+    /** Activates vs Last Year/vs This Year live on this ContextBar instance —
+     * everywhere else the chip stays decorative (ADR-0005). See docs/adr/0034. */
+    vdtComparison?: boolean;
+    vdtComparisonMode?: string;
+    vdtPeriodA?: string;
+    vdtPeriodB?: string;
+    showMoneyScale?: boolean;
+    currency?: string;
+    moneyValues?: number[];
+    moneyScale?: MoneyScaleChoice;
   } = $props();
+
+  const automaticMoneyScale = $derived(resolveMoneyScale("auto", moneyValues));
+  const moneyScaleValues = moneyScaleOptions.map((o) => o.value);
+  const moneyScaleLabels = $derived(
+    moneyScaleOptions.map((o) => (o.value === "auto" ? moneyScaleControlLabel("auto", automaticMoneyScale) : o.label)),
+  );
+
+  // VDT Statement comparison's Period pickers are always Month-grain,
+  // restricted to the current fiscal year (see docs/adr/0034) — "vs This
+  // Year" would be a contradiction in terms otherwise, and "vs Last Year"
+  // only needs one picker since its pair is derived automatically.
+  const vdtCurrentYearId = $derived(periodYearOf(periodState.code));
+  const vdtYearMonths = $derived(
+    Object.values(periodStore.tree)
+      .filter((p) => p.periodType === "Month" && p.id.startsWith(`${vdtCurrentYearId}-M`))
+      .sort((a, b) => a.order - b.order),
+  );
 
   const grains: PeriodType[] = ["Month", "Quarter", "Year"];
 
@@ -116,6 +171,36 @@
     <span class="text-gray-400 dark:text-gray-500">vs</span>
     <PeriodSelect label="Period B" periods={periodsForGrain[grain]} bind:value={periodB} />
   {/if}
+  {#if showReconciliation}
+    <div class="w-72">
+      <NodePicker bind:value={reconciliationNode} />
+    </div>
+  {/if}
+  {#if vdtComparison}
+    <ChipSelect id="comparison-select" options={comparisonOptions} bind:selected={vdtComparisonMode} />
+    {#if vdtComparisonMode === "vs This Year"}
+      <PeriodSelect label="Period A" periods={vdtYearMonths} bind:value={vdtPeriodA} />
+      <span class="text-gray-400 dark:text-gray-500">vs</span>
+      <PeriodSelect label="Period B" periods={vdtYearMonths} bind:value={vdtPeriodB} />
+    {:else if vdtComparisonMode === "vs Last Year"}
+      <PeriodSelect label="Period" periods={vdtYearMonths} bind:value={vdtPeriodA} />
+    {/if}
+  {:else}
+    <ChipSelect
+      id="comparison-select"
+      options={comparisonOptions}
+      selected={context.comparison}
+    />
+  {/if}
+  {#if showMoneyScale && currency}
+    <ChipSelect
+      id="money-scale-select"
+      prefix="Scale:"
+      options={moneyScaleValues}
+      labels={moneyScaleLabels}
+      bind:selected={moneyScale}
+    />
+  {/if}
   {#if showYtd}
     <label
       class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer select-none"
@@ -128,11 +213,6 @@
       YTD
     </label>
   {/if}
-  <ChipSelect
-    id="comparison-select"
-    options={comparisonOptions}
-    selected={context.comparison}
-  />
   <button
     type="button"
     onclick={applyPending}

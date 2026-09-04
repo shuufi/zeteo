@@ -1,7 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { link } from "svelte-spa-router";
-  import { slide } from "svelte/transition";
   import PageHeader from "../lib/components/PageHeader.svelte";
   import PageBody from "../lib/components/PageBody.svelte";
   import ContextBar from "../lib/components/ContextBar.svelte";
@@ -10,18 +8,29 @@
   import MonthlyTrendChart from "../lib/components/MonthlyTrendChart.svelte";
   import ProfitBridge from "../lib/components/ProfitBridge.svelte";
   import NotYetModelled from "../lib/components/NotYetModelled.svelte";
+  import StatementTable, {
+    type StatementColumn,
+  } from "../lib/components/StatementTable.svelte";
   import { glStore } from "../lib/data/gl-store.svelte";
-  import {
-    getNode,
-    buildDisplayRows,
-    indentClass,
-  } from "../lib/data/gl-client";
+  import { getNode, buildDisplayRows } from "../lib/data/gl-client";
   import { periodStore, loadPeriods, periodYearOf } from "../lib/data/period-store.svelte";
   import { periodState } from "../lib/state/period.svelte";
-  import { months, formatRmAuto, cumulative } from "../lib/data/format";
-  import type { DisplayRow, OperationalUnit } from "../lib/data/types";
+  import {
+    cumulative,
+    formatMoney,
+    hierarchyMoneyValues,
+    moneyCaption,
+    months,
+    resolveMoneyScale,
+    type MoneyScaleChoice,
+  } from "../lib/data/format";
+  import type { DisplayRow } from "../lib/data/types";
 
   let ytdView = $state(false);
+  let moneyScale = $state<MoneyScaleChoice>("auto");
+  const moneyValues = $derived(hierarchyMoneyValues(glStore.tree, "NPAT"));
+  const resolvedMoneyScale = $derived(resolveMoneyScale(moneyScale, moneyValues));
+  const currency = $derived(glStore.meta?.currency ?? "");
 
   onMount(loadPeriods);
 
@@ -46,30 +55,6 @@
   // (picking still affects the other two screens) but this page ignores it.
   const visibleMonthIndices = $derived(monthPeriodCodes.map((_, i) => i));
 
-  // User-resizable via the drag handle next to the header — width persists
-  // for the session but isn't saved beyond it (no ask for that).
-  let lineItemWidth = $state(280);
-  const LINE_ITEM_MIN_WIDTH = 160;
-  const LINE_ITEM_MAX_WIDTH = 640;
-
-  function startResize(event: PointerEvent): void {
-    event.preventDefault();
-    const startX = event.clientX;
-    const startWidth = lineItemWidth;
-    function onMove(e: PointerEvent): void {
-      lineItemWidth = Math.min(
-        LINE_ITEM_MAX_WIDTH,
-        Math.max(LINE_ITEM_MIN_WIDTH, startWidth + (e.clientX - startX)),
-      );
-    }
-    function onUp(): void {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-    }
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-  }
-
   // Off by default — the GL code is noise until you need to cross-reference
   // SAP, so it's opt-in via the checkbox next to the table title.
   let showGlCode = $state(false);
@@ -77,95 +62,51 @@
     return showGlCode ? `${row.nodeId} ${row.label}` : row.label;
   }
 
-  const gridTemplateColumns = $derived(
-    `${lineItemWidth}px repeat(${visibleMonthIndices.length}, minmax(64px,1fr))`,
-  );
-
   const pnlRows = $derived(buildDisplayRows(glStore.tree));
-  const rowsByNodeId = $derived(
-    new Map(pnlRows.map((row) => [row.nodeId, row])),
-  );
-  const collapsibleIds = $derived(
-    new Set(
-      pnlRows
-        .map((row) => row.group)
-        .filter((g): g is string => g !== undefined),
-    ),
-  );
-  // Groups whose children are purely operational drivers start collapsed — they're
-  // supplementary detail, so the GL statement stays readable by default.
-  const operationalGroupIds = $derived(
-    new Set(
-      pnlRows
-        .filter((row) => row.kind === "operational")
-        .map((row) => row.group)
-        .filter((g): g is string => g !== undefined),
-    ),
-  );
-  // Groups above hierarchy level 1 auto-expand; level 1 and deeper (Posting
-  // GL Account leaves and whatever's nested under them) start collapsed — see
-  // docs/adr/0029. A group's own row.indent tracks its real GL hierarchy
-  // depth (walk() increments indent 1:1 with GLNode.level).
-  const summaryGroupIds = $derived(
-    new Set(
-      [...collapsibleIds].filter(
-        (id) => (rowsByNodeId.get(id)?.indent ?? 0) < 1,
-      ),
-    ),
-  );
 
-  let expandedGroups = $state<Set<string>>(new Set());
-  let expandedGroupsInitialised = false;
-  $effect(() => {
-    if (expandedGroupsInitialised || pnlRows.length === 0) return;
-    expandedGroupsInitialised = true;
-    expandedGroups = new Set(
-      [...summaryGroupIds].filter((id) => !operationalGroupIds.has(id)),
-    );
-  });
-
-  function toggleGroup(nodeId: string): void {
-    const next = new Set(expandedGroups);
-    if (next.has(nodeId)) next.delete(nodeId);
-    else next.add(nodeId);
-    expandedGroups = next;
-  }
-
-  function isVisible(row: DisplayRow): boolean {
-    let group = row.group;
-    while (group) {
-      if (!expandedGroups.has(group)) return false;
-      group = rowsByNodeId.get(group)?.group;
-    }
-    return true;
-  }
-
-  const rows = $derived(
-    pnlRows
-      .filter(isVisible)
-      .map((row) => {
-        const monthlyActual =
-          getNode(glStore.tree, row.nodeId)?.monthlyActual ?? [];
-        return {
-          row,
-          node: getNode(glStore.tree, row.nodeId),
-          monthly: visibleMonthIndices.map((i) => monthlyActual[i] ?? 0),
-        };
-      })
-      .filter((r) => r.row.kind === "operational" || r.node !== undefined),
-  );
-
-  const displayRows = $derived(
-    rows.map((r) => ({
-      ...r,
-      // Cumulative sum is meaningless for rates/percentages/day-counts — operational
-      // driver rows always show their monthly (period) value, regardless of the toggle.
-      values:
-        ytdView && r.row.kind !== "operational"
-          ? cumulative(r.monthly)
-          : r.monthly,
+  // Statement table columns are the fiscal year's 12 months — column key is
+  // the real period code when periods have loaded (needed for the drill-down
+  // link below), falling back to a stable placeholder otherwise so a column
+  // is never keyed `undefined`.
+  const columns = $derived<StatementColumn[]>(
+    visibleMonthIndices.map((i, idx) => ({
+      key: monthPeriodCodes[i] ?? `pending-${idx}`,
+      label: months[i],
     })),
   );
+
+  function monthlyValuesFor(nodeId: string): number[] {
+    const monthlyActual = getNode(glStore.tree, nodeId)?.monthlyActual ?? [];
+    return visibleMonthIndices.map((i) => monthlyActual[i] ?? 0);
+  }
+
+  // Cumulative sum is meaningless for rates/percentages/day-counts — operational
+  // driver rows always show their monthly (period) value, regardless of the toggle.
+  function cellValue(row: DisplayRow, _column: StatementColumn, index: number): number {
+    const monthly = monthlyValuesFor(row.nodeId);
+    if (ytdView && row.kind !== "operational") {
+      return cumulative(monthly)[index] ?? 0;
+    }
+    return monthly[index] ?? 0;
+  }
+
+  function rowExists(row: DisplayRow): boolean {
+    return row.kind === "operational" || getNode(glStore.tree, row.nodeId) !== undefined;
+  }
+
+  function cellHref(
+    row: DisplayRow,
+    _column: StatementColumn,
+    index: number,
+  ): { href: string; title: string } | undefined {
+    const periodCode = monthPeriodCodes[visibleMonthIndices[index]];
+    if (!periodCode) return undefined;
+    const month = months[visibleMonthIndices[index]];
+    return {
+      href: `/vdt/${row.nodeId}?period=${periodCode}`,
+      title: `Explore ${month} in VDT Explorer`,
+    };
+  }
 
   // Level-1 children of NPAT in the real GL/FSI hierarchy — see docs/adr/0022.
   const revenue = $derived(getNode(glStore.tree, "PNL-0002"));
@@ -197,7 +138,7 @@
     const tooltips = trend.map((v, i) => {
       const year = i < monthLabels.length ? "Prior Year" : "This Year";
       const month = monthLabels[i % monthLabels.length];
-      return `${month} (${year}): ${formatRmAuto(v)}`;
+      return `${month} (${year}): ${formatMoney(v, currency, resolvedMoneyScale)}`;
     });
     return { trend, tooltips };
   }
@@ -213,7 +154,7 @@
           {
             id: "revenue-ytd",
             label: "Revenue",
-            value: formatRmAuto(revenue.actual),
+            value: formatMoney(revenue.actual, currency, resolvedMoneyScale),
             trend: revenueTrend.trend,
             trendTooltips: revenueTrend.tooltips,
             trendFillClass: "fill-gray-900 dark:fill-gray-50",
@@ -221,7 +162,7 @@
           {
             id: "cost-of-revenue-ytd",
             label: "Cost of Revenue",
-            value: formatRmAuto(Math.abs(costOfRevenue.actual)),
+            value: formatMoney(Math.abs(costOfRevenue.actual), currency, resolvedMoneyScale),
             trend: costOfRevenueTrend.trend,
             trendTooltips: costOfRevenueTrend.tooltips,
             trendFillClass: "fill-red-600 dark:fill-red-400",
@@ -229,7 +170,7 @@
           {
             id: "gross-profit-ytd",
             label: "Gross Profit",
-            value: formatRmAuto(grossProfit.actual),
+            value: formatMoney(grossProfit.actual, currency, resolvedMoneyScale),
             trend: grossProfitTrend.trend,
             trendTooltips: grossProfitTrend.tooltips,
             trendFillClass: "fill-emerald-600 dark:fill-emerald-400",
@@ -237,7 +178,7 @@
           {
             id: "npat-ytd",
             label: "NPAT",
-            value: formatRmAuto(npat.actual),
+            value: formatMoney(npat.actual, currency, resolvedMoneyScale),
             trend: npatTrend.trend,
             trendTooltips: npatTrend.tooltips,
             trendFillClass: "fill-blue-600 dark:fill-blue-400",
@@ -310,53 +251,18 @@
         ]
       : [],
   );
-
-  // Values already carry the right sign server-side (see docs/adr/0023) — a
-  // negative number is a subtraction/loss, shown in parens.
-  function statementValue(value: number): string {
-    const text = Math.abs(value).toFixed(1);
-    return value < 0 && value !== 0 ? `(${text})` : text;
-  }
-
-  function operationalValue(
-    value: number,
-    unit: OperationalUnit | "RM_M" | undefined,
-  ): string {
-    switch (unit) {
-      case "RM_M":
-        // A Driver Formula bound to a GL leaf produces money — same signed,
-        // parens-for-negative treatment as any other statement row.
-        return statementValue(value);
-      case "usd-per-day":
-        // Small values (e.g. an RM_M-scaled Driver Formula term — see
-        // docs/adr/0030) need more than 0 decimals or they'd all show "$0k/d".
-        return value < 10 ? `$${value.toFixed(3)}k/d` : `$${value.toFixed(0)}k/d`;
-      case "usd-per-month":
-        return value < 10 ? `$${value.toFixed(3)}k/mo` : `$${value.toFixed(0)}k/mo`;
-      case "percent":
-        return `${value.toFixed(1)}%`;
-      case "days":
-        return value.toFixed(1);
-      case "count":
-        return value.toFixed(0);
-      case "ratio":
-        return `${value.toFixed(2)}×`;
-      default:
-        return value.toFixed(1);
-    }
-  }
 </script>
 
 <PageHeader title="Financial Trends" />
 <PageBody>
-  <ContextBar showYtd showPeriod={false} bind:ytd={ytdView} />
+  <ContextBar showYtd showPeriod={false} bind:ytd={ytdView} showMoneyScale {currency} {moneyValues} bind:moneyScale />
 
   {#if glStore.status === "loading"}
     <div class="pt-4 flex-1 min-w-0 flex items-center justify-center">Loading…</div>
   {:else if glStore.status === "not-yet-modelled"}
     <div class="pt-4 flex-1 min-w-0 flex">
       <NotYetModelled
-        label="No GL data modelled for the selected company/BU yet."
+        label="No GL data modelled for the selected company yet."
         class="flex-1 flex flex-col items-center justify-center"
       />
     </div>
@@ -373,11 +279,13 @@
           <MonthlyTrendChart
             series={monthlyPerformanceChart}
             months={visibleMonthLabels}
+            {currency}
+            moneyScale={resolvedMoneyScale}
           />
         </Card>
 
         <Card class="flex-1 min-w-0" title="Profit Bridge: Revenue to NPAT">
-          <ProfitBridge steps={profitBridgeSteps} height={300} />
+          <ProfitBridge steps={profitBridgeSteps} height={300} {currency} moneyScale={resolvedMoneyScale} />
         </Card>
       </div>
 
@@ -399,220 +307,28 @@
                 Show GL code
               </label>
               <div class="text-xs text-gray-500 dark:text-gray-400">
-                RM millions
+                {moneyCaption(currency, resolvedMoneyScale)}
               </div>
             </div>
           </div>
         {/snippet}
-        <div class="overflow-x-auto">
-          <div class="relative flex flex-col min-w-[1080px]">
-            <div
-              role="separator"
-              aria-orientation="vertical"
-              onpointerdown={startResize}
-              class="absolute top-0 bottom-0 w-2.5 -translate-x-1/2 cursor-col-resize touch-none z-10 group/resize"
-              style="left: {lineItemWidth}px"
-            >
-              <div
-                class="mx-auto h-full w-px bg-transparent group-hover/resize:bg-indigo-400 dark:group-hover/resize:bg-indigo-500"
-              ></div>
-            </div>
-            <div
-              class="grid items-center py-1 text-xs text-indigo-700 dark:text-indigo-300 border-b border-indigo-200 dark:border-indigo-900"
-              style="grid-template-columns: {gridTemplateColumns}"
-            >
-              <span>Line item</span>
-              {#each visibleMonthIndices as monthIdx (monthIdx)}
-                <span class="flex items-center justify-end gap-1">
-                  {months[monthIdx]}
-                  <svg class="w-3 h-3 shrink-0 invisible" viewBox="0 0 24 24"
-                    ><circle cx="10.5" cy="10.5" r="6.5" /></svg
-                  >
-                </span>
-              {/each}
-            </div>
-            {#snippet monthCell(
-              nodeId: string,
-              periodCode: string | undefined,
-              month: string,
-              display: string,
-            )}
-              {#if periodCode}
-                <a
-                  class="group/cell flex items-center justify-end gap-1 no-underline text-inherit tabular-nums"
-                  href="/vdt/{nodeId}?period={periodCode}"
-                  use:link
-                  onclick={(e) => e.stopPropagation()}
-                  title="Explore {month} in VDT Explorer"
-                >
-                  <span>{display}</span>
-                  <svg
-                    class="w-3 h-3 shrink-0 text-indigo-500 dark:text-indigo-400 opacity-0 group-hover/cell:opacity-100 transition-opacity"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                  >
-                    <circle cx="10.5" cy="10.5" r="6.5" />
-                    <line x1="16" y1="16" x2="21" y2="21" />
-                  </svg>
-                </a>
-              {:else}
-                <!-- periods haven't loaded (or failed to) — plain text, no dead/undefined link -->
-                <span class="flex items-center justify-end tabular-nums"
-                  >{display}</span
-                >
-              {/if}
-            {/snippet}
-            {#snippet truncatedLabel(row: DisplayRow)}
-              <span class="group/label relative min-w-0">
-                <span class="truncate block">{displayLabel(row)}</span>
-                <span
-                  class="pointer-events-none absolute left-0 top-full z-30 mt-1 hidden whitespace-nowrap rounded bg-gray-900 dark:bg-gray-700 px-2 py-1 text-xs font-normal text-white shadow-lg group-hover/label:block"
-                >
-                  {displayLabel(row)}
-                </span>
-              </span>
-            {/snippet}
-            {#snippet operationalCells(row: DisplayRow, values: number[], isCollapsible: boolean)}
-              <span class="{indentClass(row.indent)} flex flex-col min-w-0">
-                <span class="flex items-center gap-1.5 min-w-0">
-                  {#if isCollapsible}
-                    <span
-                      class="inline-block w-4 shrink-0 text-base leading-none text-amber-600 dark:text-amber-400 transition-transform duration-150 {expandedGroups.has(
-                        row.nodeId,
-                      )
-                        ? 'rotate-90'
-                        : ''}"
-                    >
-                      ▸
-                    </span>
-                  {/if}
-                  <span
-                    class="text-[9px] uppercase tracking-wide font-semibold text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-400/40 rounded px-1 shrink-0"
-                    >{row.driverNodeType === "formula" ? "Formula" : "Ops"}</span
-                  >
-                  {@render truncatedLabel(row)}
-                </span>
-                {#if row.driverNodeType === "formula" && row.expression}
-                  <span
-                    class="truncate text-[10px] font-normal normal-case tracking-normal text-amber-600/70 dark:text-amber-400/60 {isCollapsible
-                      ? 'pl-6'
-                      : ''}"
-                    title={row.expression}
-                  >
-                    {row.expression}
-                  </span>
-                {/if}
-              </span>
-              {#each values as value, i (i)}
-                <span class="text-right tabular-nums"
-                  >{operationalValue(value, row.unit)}</span
-                >
-              {/each}
-            {/snippet}
-            {#each displayRows as { row, values } (row.nodeId)}
-              {#if row.kind === "operational"}
-                {#if collapsibleIds.has(row.nodeId)}
-                  <div
-                    role="button"
-                    tabindex="0"
-                    onclick={() => toggleGroup(row.nodeId)}
-                    onkeydown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        toggleGroup(row.nodeId);
-                      }
-                    }}
-                    transition:slide={{ duration: 150 }}
-                    class="grid items-center py-1.5 text-sm cursor-pointer text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-400/10"
-                    style="grid-template-columns: {gridTemplateColumns}"
-                  >
-                    {@render operationalCells(row, values, true)}
-                  </div>
-                {:else}
-                  <div
-                    transition:slide={{ duration: 150 }}
-                    class="grid items-center py-1.5 text-sm text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-400/10"
-                    style="grid-template-columns: {gridTemplateColumns}"
-                  >
-                    {@render operationalCells(row, values, false)}
-                  </div>
-                {/if}
-              {:else if collapsibleIds.has(row.nodeId)}
-                <div
-                  role="button"
-                  tabindex="0"
-                  onclick={() => toggleGroup(row.nodeId)}
-                  onkeydown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      toggleGroup(row.nodeId);
-                    }
-                  }}
-                  transition:slide={{ duration: 150 }}
-                  class="grid items-center py-1.5 text-sm cursor-pointer text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 {row.isSubtotal
-                    ? 'font-bold bg-indigo-50 dark:bg-indigo-900/30 rounded'
-                    : ''}"
-                  style="grid-template-columns: {gridTemplateColumns}"
-                >
-                  <span
-                    class="flex items-center gap-1.5 min-w-0 {indentClass(
-                      row.indent,
-                    )} {row.indent > 0
-                      ? 'text-gray-500 dark:text-gray-400'
-                      : ''}"
-                  >
-                    <span
-                      class="inline-block w-4 shrink-0 text-base leading-none text-indigo-600 dark:text-indigo-400 transition-transform duration-150 {expandedGroups.has(
-                        row.nodeId,
-                      )
-                        ? 'rotate-90'
-                        : ''}"
-                    >
-                      ▸
-                    </span>
-                    {@render truncatedLabel(row)}
-                  </span>
-                  {#each values as value, i (i)}
-                    {@render monthCell(
-                      row.nodeId,
-                      monthPeriodCodes[visibleMonthIndices[i]],
-                      months[visibleMonthIndices[i]],
-                      statementValue(value),
-                    )}
-                  {/each}
-                </div>
-              {:else}
-                <div
-                  transition:slide={{ duration: 150 }}
-                  class="grid items-center py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 {row.isSubtotal
-                    ? 'font-bold bg-indigo-50 dark:bg-indigo-900/30 rounded'
-                    : ''} {row.isFinal
-                    ? 'bg-indigo-600 dark:bg-indigo-500 text-white rounded pl-1.5'
-                    : ''}"
-                  style="grid-template-columns: {gridTemplateColumns}"
-                >
-                  <span
-                    class="flex min-w-0 {row.indent > 0
-                      ? `${indentClass(row.indent)} text-gray-500 dark:text-gray-400`
-                      : ''}"
-                  >
-                    {@render truncatedLabel(row)}
-                  </span>
-                  {#each values as value, i (i)}
-                    {@render monthCell(
-                      row.nodeId,
-                      monthPeriodCodes[visibleMonthIndices[i]],
-                      months[visibleMonthIndices[i]],
-                      statementValue(value),
-                    )}
-                  {/each}
-                </div>
-              {/if}
-            {/each}
-          </div>
-        </div>
+        <StatementTable
+          rows={pnlRows}
+          {columns}
+          {cellValue}
+          {rowExists}
+          {cellHref}
+          labelFor={displayLabel}
+          showLabelTooltip
+          resizable
+          initialLineItemWidth={280}
+          lineItemMinWidth={160}
+          lineItemMaxWidth={640}
+          columnMinWidthPx={64}
+          minTableWidthPx={1080}
+          {currency}
+          moneyScale={resolvedMoneyScale}
+        />
       </Card>
     </div>
   {/if}

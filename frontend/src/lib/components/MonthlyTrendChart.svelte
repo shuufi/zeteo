@@ -4,16 +4,19 @@
   import { cubicOut } from 'svelte/easing';
   import { Plot, Line, Text } from 'svelteplot';
   import type { MonthlySeries } from '../data/types';
+  import { formatMoneyNumber, moneyCaption, type MoneyScale } from '../data/format';
 
   let {
     series = [],
     months = [],
     height = 300,
-  }: { series?: MonthlySeries[]; months?: string[]; height?: number } = $props();
+    currency = '',
+    moneyScale = 'units',
+  }: { series?: MonthlySeries[]; months?: string[]; height?: number; currency?: string; moneyScale?: MoneyScale } = $props();
 
   const data = $derived(
     series.flatMap((s) =>
-      s.values.map((value, i) => ({ month: months[i], label: s.label, value, valueLabel: value.toFixed(0) }))
+      s.values.map((value, i) => ({ month: months[i], label: s.label, value, valueLabel: formatMoneyNumber(value, moneyScale) }))
     )
   );
 
@@ -54,6 +57,7 @@
   });
 </script>
 
+<div class="mb-1 text-right text-xs text-gray-500 dark:text-gray-400">{moneyCaption(currency, moneyScale)}</div>
 <div class="chart-colors w-full" style="clip-path: inset(0 {(1 - reveal.current) * 100}% 0 0);">
   <Plot
     {height}

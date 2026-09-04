@@ -12,14 +12,15 @@ Run with: python backend/seed.py
 """
 
 import csv
-import json
 import random
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
-from sqlmodel import Session, delete
+from sqlmodel import Session, SQLModel
 
 from db import engine, init_db
 from models import (
+    ActivityNode,
     CompanyNode,
     CompanyNodeType,
     Driver,
@@ -32,21 +33,39 @@ from models import (
     NormalBalance,
     Period,
     PeriodType,
+    PostingActivityAccount,
     Scenario,
 )
+from seed_vdt import build_crew_mix_seed, build_pending_account_seed, load_activity_hierarchy
 
 REPO_ROOT = Path(__file__).parent.parent
 CSV_PATH = REPO_ROOT / "docs" / "anaplan_is_master_data.csv"
-COMPANIES_JSON_PATH = Path(__file__).parent / "data" / "companies.json"
+COMPANIES_CSV_PATH = REPO_ROOT / "docs" / "misc_companies.csv"
 
 SEED = 42
 MONTHS = range(1, 13)
 
 # Root of the Business chip's hierarchy — see docs/adr/0028. Not itself in
-# companies.json (that file only holds the real BU/Company data); synthesised
-# here the same way build_periods() synthesises each year's Year row.
+# the source CSV (which holds the real BU/Company data); synthesised here the
+# same way build_periods() synthesises each year's Year row.
 GROUP_CODE = "MISC"
 GROUP_LABEL = "MISC Group"
+
+BUSINESS_UNIT_LABELS = {
+    "AET": "AET",
+    "ALAM": "ALAM",
+    "GAS": "Gas Business Unit",
+    "MHB": "Malaysia Marine and Heavy Engineering",
+    "CORP": "MISC",
+    "MMS": "MISC Maritime Services",
+    "MISCM": "MISC Ship Management",
+    "OBU": "Offshore Business Unit",
+}
+
+# The source's corporate BU is coded MISC, which would collide with the
+# synthetic MISC Group root in CompanyNode's shared adjacency-list namespace.
+# Preserve the existing application-facing CORP identifier used for that BU.
+BUSINESS_UNIT_CODES = {"MISC": "CORP"}
 
 # Three real fiscal years, calendar-aligned (Jan start) — see docs/adr/0032,
 # which replaced the single-FY26-only model. Chronological order matters:
@@ -87,28 +106,51 @@ def build_periods() -> list[Period]:
 
 
 # Only this one company carries fabricated fact data — every other company
-# still exists in the hierarchy (Business picker, BU rollups) but renders
-# Not-yet-modelled, the same mechanism already used for unsampled companies —
+# still exists in the Business picker hierarchy but renders Not-yet-modelled;
+# BU/Group monetary rollups remain unavailable until FX is modelled —
 # see docs/adr/0024, docs/adr/0032.
 FOCUS_COMPANY_CODE = "0190"
 
 
 def build_company_nodes() -> list[CompanyNode]:
-    data = json.loads(COMPANIES_JSON_PATH.read_text(encoding="utf-8"))
+    rows = list(csv.DictReader(COMPANIES_CSV_PATH.open(encoding="utf-8-sig")))
+    rows_by_bu: dict[str, list[dict[str, str]]] = {}
+    seen_codes: set[str] = set()
+    for row in rows:
+        bu_code = row["Business Unit"].strip()
+        company_code = row["Company Code"].strip()
+        company_name = row["Company Name"].strip()
+        currency = row["Currency"].strip().upper()
+        if not bu_code or not company_code or not company_name or len(currency) != 3 or not currency.isalpha():
+            raise ValueError(f"Invalid Company master-data row: {row}")
+        if company_code in seen_codes:
+            raise ValueError(f"Duplicate Company Code in {COMPANIES_CSV_PATH}: {company_code}")
+        seen_codes.add(company_code)
+        rows_by_bu.setdefault(bu_code, []).append({**row, "Currency": currency})
+
     nodes = [CompanyNode(code=GROUP_CODE, label=GROUP_LABEL, parent_code=None, node_type=CompanyNodeType.GROUP, order=1)]
-    for bu_order, bu in enumerate(data["businessUnits"], start=1):
+    for bu_order, (source_bu_code, companies) in enumerate(rows_by_bu.items(), start=1):
+        bu_code = BUSINESS_UNIT_CODES.get(source_bu_code, source_bu_code)
         nodes.append(
-            CompanyNode(code=bu["code"], label=bu["label"], parent_code=GROUP_CODE, node_type=CompanyNodeType.BUSINESS_UNIT, order=bu_order)
+            CompanyNode(
+                code=bu_code,
+                label=BUSINESS_UNIT_LABELS.get(bu_code, bu_code),
+                parent_code=GROUP_CODE,
+                node_type=CompanyNodeType.BUSINESS_UNIT,
+                order=bu_order,
+            )
         )
-        for company_order, company in enumerate(bu["companies"], start=1):
+        for company_order, company in enumerate(companies, start=1):
+            company_code = company["Company Code"].strip()
             nodes.append(
                 CompanyNode(
-                    code=company["code"],
-                    label=company["name"],
-                    parent_code=bu["code"],
+                    code=company_code,
+                    label=company["Company Name"].strip(),
+                    parent_code=bu_code,
                     node_type=CompanyNodeType.COMPANY,
                     order=company_order,
-                    is_sampled=company["code"] == FOCUS_COMPANY_CODE,
+                    is_sampled=company_code == FOCUS_COMPANY_CODE,
+                    currency=company["Currency"],
                 )
             )
     return nodes
@@ -140,7 +182,7 @@ NODE_TYPE_BY_CSV_VALUE = {
 # benchmark/root-cause) — see docs/adr/0022.
 FULLY_MODELLED_NODE = "PNL-0024"
 
-# Target FY24 ANNUAL total (RM_M) for MISC Ship Management for each account-
+# Target FY24 ANNUAL total (absolute MYR) for MISC Ship Management for each account-
 # code-prefix category — a fee-based ship management business, so smaller and
 # leaner than an asset-owning shipowner BU: modest revenue, thin opex, no
 # large secondary cost allocations. Tuned for a plausible ~12% NPAT margin in
@@ -151,11 +193,11 @@ FULLY_MODELLED_NODE = "PNL-0024"
 # share of Revenue in FY24 stays a big share in FY26, only the category
 # total moves.
 CATEGORY_ANNUAL_TARGET_FY24 = {
-    "4": 240.0,  # Revenue
-    "5": 175.0,  # Cost of Revenue
-    "6": 8.0,  # Other Operating Income
-    "7": 42.0,  # Other Operating Expenses / Finance Costs / Clearing / Tax
-    "8": 3.0,  # Secondary Cost Elements (internal allocations)
+    "4": 240_000_000.0,  # Revenue
+    "5": 175_000_000.0,  # Cost of Revenue
+    "6": 8_000_000.0,  # Other Operating Income
+    "7": 42_000_000.0,  # Other Operating Expenses / Finance Costs / Clearing / Tax
+    "8": 3_000_000.0,  # Secondary Cost Elements (internal allocations)
 }
 
 # Category-level YoY growth (applied FY24->FY25 and FY25->FY26) — Revenue
@@ -214,19 +256,31 @@ def load_hierarchy_nodes() -> list[GLNode]:
     return nodes
 
 
-def monthly_curve(rng: random.Random, annual_total: float) -> list[float]:
+MONEY_QUANTUM = Decimal("0.01")
+
+
+def money(value: float | Decimal) -> Decimal:
+    return Decimal(str(value)).quantize(MONEY_QUANTUM, rounding=ROUND_HALF_UP)
+
+
+def monthly_curve(rng: random.Random, annual_total: float) -> list[Decimal]:
     """A noisy seasonal monthly split of an annual total, summing back to it."""
     seasonality = [0.9, 0.85, 0.95, 1.0, 1.05, 1.1, 1.1, 1.05, 1.0, 0.95, 1.0, 1.05]
     weights = [s * rng.uniform(0.85, 1.15) for s in seasonality]
     total_weight = sum(weights)
-    return [round(annual_total * w / total_weight, 3) for w in weights]
+    values = [money(annual_total * w / total_weight) for w in weights]
+    values[-1] += money(annual_total) - sum(values, Decimal("0.00"))
+    return values
 
 
-def prorate(monthly_actual: list[float], scaled_total: float) -> list[float]:
-    actual_total = sum(monthly_actual)
+def prorate(monthly_actual: list[Decimal], scaled_total: float) -> list[Decimal]:
+    actual_total = sum(monthly_actual, Decimal("0.00"))
     if actual_total == 0:
-        return [0.0] * 12
-    return [round(v * scaled_total / actual_total, 3) for v in monthly_actual]
+        return [Decimal("0.00")] * 12
+    target = money(scaled_total)
+    values = [(v * target / actual_total).quantize(MONEY_QUANTUM, rounding=ROUND_HALF_UP) for v in monthly_actual]
+    values[-1] += target - sum(values, Decimal("0.00"))
+    return values
 
 
 def generate_gl_facts(rng: random.Random, leaves: list[GLNode], company: str) -> list[GLFact]:
@@ -263,35 +317,51 @@ def main() -> None:
     leaves = [n for n in hierarchy if n.node_type == NodeType.POSTING_GL_ACCOUNT]
     facts = generate_gl_facts(rng, leaves, FOCUS_COMPANY_CODE)
 
+    # VDT (activity-based) hierarchy pilot — see docs/adr/0033. Structure
+    # comes from docs/vdt-hierarchy-crew-cost.csv; `gl_level_by_code` lets
+    # its Activity Nodes compute their own `level` from the parent chain
+    # without a Hierarchy Level CSV column of their own.
+    gl_level_by_code = {n.code: n.level for n in hierarchy}
+    activity_nodes, accounts = load_activity_hierarchy(gl_level_by_code)
+    vdt_drivers, vdt_formulas, vdt_terms, vdt_facts = build_crew_mix_seed(FOCUS_COMPANY_CODE, FISCAL_YEARS)
+    pending_drivers, pending_formulas, pending_terms, pending_facts = build_pending_account_seed(FOCUS_COMPANY_CODE, FISCAL_YEARS)
+    vdt_drivers += pending_drivers
+    vdt_formulas += pending_formulas
+    vdt_terms += pending_terms
+    vdt_facts += pending_facts
+
+    # Seed is a full reproducible rebuild. Drop first so schema changes (such
+    # as Company.currency and exact decimal amounts) cannot leave a stale
+    # checked-in SQLite shape behind.
+    SQLModel.metadata.drop_all(engine)
     init_db()
     with Session(engine) as session:
-        # Driver Formula demo (docs/adr/0030) is dropped for now, not just
-        # emptied of facts — an orphaned Formula binding with no DriverFact
-        # data would compute as zero and silently override that leaf's real
-        # fabricated GLFact value (see docs/adr/0032). Revisit once/if the
-        # driver-decomposition demo is re-targeted at FOCUS_COMPANY_CODE.
-        session.exec(delete(DriverFormulaTerm))
-        session.exec(delete(DriverFormula))
-        session.exec(delete(DriverFact))
-        session.exec(delete(Driver))
-        session.exec(delete(GLFact))
-        session.exec(delete(GLNode))
-        session.exec(delete(Period))
-        session.exec(delete(CompanyNode))
-        session.commit()
-
+        # Driver/DriverFormula data (docs/adr/0030) previously stayed dropped
+        # after ADR-0032 (an orphaned Formula binding with no DriverFact data
+        # would compute as zero and silently override a leaf's real fabricated
+        # GLFact value) — now actually repopulated, targeting the new VDT
+        # hierarchy's Posting Activity Accounts rather than GL leaves, so
+        # that risk doesn't apply here.
         session.add_all(hierarchy)
         session.add_all(periods)
         session.add_all(company_nodes)
+        session.add_all(activity_nodes)
+        session.add_all(accounts)
+        session.add_all(vdt_drivers)
+        session.add_all(vdt_formulas)
+        session.add_all(vdt_terms)
         session.commit()
 
         session.add_all(facts)
+        session.add_all(vdt_facts)
         session.commit()
 
     print(f"Seeded {len(hierarchy)} GL/FSI nodes")
     print(f"Seeded {len(periods)} periods across {len(FISCAL_YEARS)} fiscal years ({', '.join(FISCAL_YEARS)})")
     print(f"Seeded {len(company_nodes)} company nodes ({GROUP_LABEL} + BUs + companies, 1 sampled: {FOCUS_COMPANY_CODE})")
     print(f"Seeded {len(facts)} GL facts for {FOCUS_COMPANY_CODE} across {len(FISCAL_YEARS)} years")
+    print(f"Seeded {len(activity_nodes)} Activity Nodes and {len(accounts)} Posting Activity Accounts (VDT hierarchy pilot — docs/adr/0033)")
+    print(f"Seeded {len(vdt_drivers)} Drivers / {len(vdt_formulas)} Driver Formulas for {len(accounts)} Posting Activity Accounts")
     print(f"Fully-modelled example node: {FULLY_MODELLED_NODE}")
 
 

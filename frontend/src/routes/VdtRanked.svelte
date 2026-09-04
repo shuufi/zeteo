@@ -1,18 +1,26 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { link, router } from 'svelte-spa-router';
   import PageHeader from '../lib/components/PageHeader.svelte';
   import PageBody from '../lib/components/PageBody.svelte';
   import ContextBar from '../lib/components/ContextBar.svelte';
   import ValueDriverFlow from '../lib/components/ValueDriverFlow.svelte';
-  import Sparkline from '../lib/components/Sparkline.svelte';
   import ChipRow from '../lib/components/ChipRow.svelte';
   import NotYetModelled from '../lib/components/NotYetModelled.svelte';
-  import { glStore, loadScope } from '../lib/data/gl-store.svelte';
+  import { vdtStore, loadVdtScope } from '../lib/data/vdt-store.svelte';
   import { getNode, getAncestors, rankChildren } from '../lib/data/gl-client';
   import { periodState, DEFAULT_PERIOD_CODE } from '../lib/state/period.svelte';
   import { periodStore, periodLabel } from '../lib/data/period-store.svelte';
   import { scopeState } from '../lib/state/scope.svelte';
-  import { formatRm, formatVar, pct } from '../lib/data/format';
+  import {
+    formatStatementMoney,
+    formatVar,
+    hierarchyMoneyValues,
+    moneyCaption,
+    pct,
+    resolveMoneyScale,
+    type MoneyScaleChoice,
+  } from '../lib/data/format';
 
   let { params }: { params: { id: string } } = $props();
 
@@ -31,39 +39,57 @@
 
   // Syncs the URL's ?period= into the shared periodState + refetches when it
   // differs — e.g. arriving via a Financial P&L cell deep-link
-  // (see docs/adr/0026). Once glStore.tree reflects the requested period, its
+  // (see docs/adr/0026). Once vdtStore.tree reflects the requested period, its
   // nodes' actual/budget/priorYear are already scoped server-side — no
   // client-side re-derivation needed (contrast with the old getMonthlyNodeView).
   $effect(() => {
     if (periodCode && periodCode !== periodState.code) {
       periodState.set(periodCode);
-      loadScope(scopeState.code, periodCode);
+      loadVdtScope(scopeState.code, periodCode);
     }
   });
 
-  const node = $derived(getNode(glStore.tree, params.id));
+  // vdtStore isn't populated by App.svelte's app-wide onMount (that's
+  // glStore/Accounting only) — a deep-link straight into /vdt/:id needs its
+  // own lazy trigger, same pattern VdtTree.svelte already uses.
+  onMount(() => {
+    if (vdtStore.status !== 'ready') loadVdtScope(scopeState.code, periodState.code);
+  });
+
+  const node = $derived(getNode(vdtStore.tree, params.id));
   const ancestors = $derived(
-    node ? getAncestors(glStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}${periodQuery}` })) : []
+    node ? getAncestors(vdtStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}${periodQuery}` })) : []
   );
   // Real GL/FSI nodes carry no curated rank — every child ranks live by
   // contribution magnitude instead (see gl-client.ts rankChildren).
-  const rankedChildren = $derived(node ? rankChildren(glStore.tree, node) : []);
+  const rankedChildren = $derived(node ? rankChildren(vdtStore.tree, node) : []);
+  let moneyScale = $state<MoneyScaleChoice>('auto');
+  const moneyValues = $derived(node ? hierarchyMoneyValues(vdtStore.tree, node.id) : []);
+  const resolvedMoneyScale = $derived(resolveMoneyScale(moneyScale, moneyValues));
+  const currency = $derived(vdtStore.meta?.currency ?? '');
+
+  let lastScaleNode = '';
+  $effect(() => {
+    const key = `${params.id}:${periodCode ?? ''}`;
+    if (lastScaleNode && key !== lastScaleNode) moneyScale = 'auto';
+    lastScaleNode = key;
+  });
 
 </script>
 
-{#if glStore.status === 'loading'}
+{#if vdtStore.status === 'loading'}
   <PageHeader title="Value Driver" />
   <PageBody>Loading…</PageBody>
-{:else if glStore.status === 'not-yet-modelled'}
+{:else if vdtStore.status === 'not-yet-modelled'}
   <PageHeader title="Value Driver" />
   <PageBody>
     <ContextBar />
-    <NotYetModelled label="No GL data modelled for the selected company/BU yet." />
+    <NotYetModelled label="No GL data modelled for the selected company yet." />
   </PageBody>
 {:else if node}
   <PageHeader title={isScoped ? `${node.name} — ${scopedLabel}` : node.name} />
   <PageBody>
-    <ContextBar {ancestors} />
+    <ContextBar {ancestors} showMoneyScale {currency} {moneyValues} bind:moneyScale />
 
     <div class="flex flex-col gap-4 pt-4">
     {#if isScoped}
@@ -72,29 +98,14 @@
         <a class="no-underline hover:underline" href="/vdt/{node.id}?period={DEFAULT_PERIOD_CODE}" use:link>view full year →</a>
       </div>
     {/if}
-    <div class="flex gap-4">
-      <div class="w-60 flex-none border-2 border-gray-900 dark:border-gray-50 rounded-lg p-4 bg-white dark:bg-gray-800">
-        <div class="text-xs text-gray-500 dark:text-gray-400">{node.name}</div>
-        <div class="font-black text-2xl text-gray-900 dark:text-gray-50">{formatRm(Math.abs(node.actual))}</div>
-        <div class="text-xs text-red-600 dark:text-red-400">vs Budget {formatRm(Math.abs(node.budget))} · {formatVar(pct(node.actual, node.budget))}</div>
-        {#if node.priorYear !== undefined}
-          <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Prior year: {formatRm(Math.abs(node.priorYear))}</div>
-        {/if}
-        {#if node.monthlyActual.length}
-          <div class="mt-2.5 border-b-[1.5px] border-gray-200 dark:border-gray-700">
-            <Sparkline points={node.monthlyActual} width={180} height={30} />
-          </div>
-          <div class="text-[10px] text-gray-500 dark:text-gray-400">trend, {node.monthlyActual.length} periods</div>
-        {/if}
-      </div>
-
-      <div class="flex-1 border-[1.5px] border-gray-200 dark:border-gray-700 rounded-lg py-2.5 px-4 bg-white dark:bg-gray-800">
+    <div class="border-[1.5px] border-gray-200 dark:border-gray-700 rounded-lg py-2.5 px-4 bg-white dark:bg-gray-800">
         {#if rankedChildren.length}
           <div class="hidden">Driver</div>
           <div class="flex flex-col">
             <div class="grid grid-cols-[1.4fr_0.6fr_0.6fr_0.5fr_0.8fr_0.5fr] items-center text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 pb-1">
               <span>Driver</span><span>Actual</span><span>Budget</span><span>Var%</span><span>Contribution</span><span>Rank</span>
             </div>
+            <div class="py-1 text-right text-[10px] text-gray-500 dark:text-gray-400">{moneyCaption(currency, resolvedMoneyScale)}</div>
             {#each rankedChildren as child (child.id)}
               <a
                 class="grid grid-cols-[1.4fr_0.6fr_0.6fr_0.5fr_0.8fr_0.5fr] items-center text-sm py-1 no-underline text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900"
@@ -102,8 +113,8 @@
                 use:link
               >
                 <span>▶ {child.name}</span>
-                <span>{child.actual.toFixed(1)}</span>
-                <span>{child.budget.toFixed(1)}</span>
+                <span>{formatStatementMoney(child.actual, resolvedMoneyScale)}</span>
+                <span>{formatStatementMoney(child.budget, resolvedMoneyScale)}</span>
                 <span
                   class={child.direction === 'adverse'
                     ? 'text-red-600 dark:text-red-400'
@@ -130,7 +141,6 @@
             linkLabel="Open Driver Diagnostic"
           />
         {/if}
-      </div>
     </div>
 
     {#if node.childIds.length}
@@ -142,7 +152,7 @@
           </div>
         </div>
         <div class="h-[34rem]">
-          <ValueDriverFlow rootId={node.id} />
+          <ValueDriverFlow rootId={node.id} {currency} moneyScale={resolvedMoneyScale} />
         </div>
       </div>
     {/if}

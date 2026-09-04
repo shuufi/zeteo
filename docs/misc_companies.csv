@@ -1,153 +1,169 @@
-Business Unit,Code,Name
-GAS,0007,MISC Tankers Sdn Bhd
-GAS,0064,Puteri Intan Sdn. Bhd.
-GAS,0065,Puteri Delima Sdn Bhd
-GAS,0066,Puteri Nilam Sdn Bhd
-GAS,0067,Puteri Zamrud Sdn Bhd
-GAS,0068,Puteri Firus Sdn Bhd
-GAS,0092,Asia LNG Transport Sdn Bhd
-GAS,0093,Asia LNG Transport Dua Sdn Bhd
-MISC,0109,MISC Berhad
-MISC,0136,MISC Agencies Sdn Bhd
-MISC,0141,MISC Agencies (Netherlands) B.V.
-ES,0190,MISC Ship Management Sdn. Bhd.
-GAS,0212,Puteri Intan Satu (L) Pte Ltd
-GAS,0213,Puteri Delima Satu (L) Pte Ltd
-GAS,0214,Puteri Nilam Satu (L) PL Pte Ltd
-GAS,0215,Puteri Zamrud Satu (L) Pte Ltd
-GAS,0216,Puteri Firus Satu (L) Pte Ltd
-GAS,0217,Puteri Mutiara Satu (L) Pte Ltd
-MISC,0270,MISC Capital (L) Ltd
-MISC,0294,MISC Tanker Holdings Sdn Bhd
-MISC,0295,MISC Tanker Holdings (Bermuda) Ltd
-GAS,0379,GAS ASIA TERMINAL (L) Pte Ltd
-GAS,0389,MISC PNG Shipping Limited
-GAS,0483,Seri Camellia (L) Pvt Ltd
-GAS,0484,Seri Cenderawasih Pvt Ltd
-GAS,0485,Seri Cempaka (L) Pvt Ltd
-GAS,0486,Seri Camar (L) Pvt Ltd
-GAS,0487,Seri Cemara (L) Pvt Ltd
-MHB,0489,MMHE EPIC Marine & Services Sdn Bhd
-ES,0494,Eaglestar Marine Holdings (L) Pte Ltd
-ES,0495,Eaglestar Shipmanagement (L) Pte Ltd
-ES,0496,Eaglestar Marine (S) Pte Ltd
-ES,0500,Eaglestar Marine B.V.
-MHB,0545,Malaysia Marine and Heavy Engineering Holdings Berhad
-MHB,0546,Malaysia Marine and Heavy Engineering Sdn. Bhd.
-MHB,0607,MMHE LNG Sdn. Bhd.
-MHB,0608,Techno Indah Sdn. Bhd.
-ES,0630,Eaglestar Marine (Malaysia) Sdn. Bhd. (Fka AET Shipmanagement (Malaysia) Sdn. Bhd.)
-ES,0633,Eaglestar Shipmanagement (S) Pte. Ltd.
-ES,0638,Eaglestar Marine India Private Limited
-ES,0649,Eaglestar Shipmanagement (USA) LLC
-GAS,0679,Portovenere and Lerici (Labuan) Pte Ltd
-GAS,0680,Portovenere and Lerici (Singapore) Pte Ltd
-MISC,0691,Magellan X Pte. Ltd.
-MISC,0692,SOL-X Pte. Ltd.
-MISC,0693,Spares CNX Pte. Ltd.
-MISC,0694,CHORD X Pte. Ltd.
-GAS,0696,Future Horizon (L) Pte Ltd
-GAS,0697,Polaris LNG One Pte. Ltd.
-GAS,0698,Polaris LNG Two Pte.Ltd.
-MHB,0740,MHS Integrated Engineering Sdn. Bhd.
-ES,0745,Eaglestar Shipmanagement GAS (S) Pte. Ltd.
-ES,0746,Eaglestar Shipmanagement Ventures (S) Pte. Ltd.
-MISC,0763,MISC maritime MMEG (Education group)
-MHB,0765,Technip MMHE (Kasawari) Joint Venture
-MISC,0767,Magellan X Holdings (L) Pte Ltd
-MHB,0821,Malaysia Marine and Heavy Engineering Saudi Limited
-GAS,0889,Seri Everest (Singapore) Pte. Ltd.
-GAS,0890,Seri Erlang (Singapore) Pte. Ltd.
-GAS,0891,Seri Emory (Singapore) Pte. Ltd.
-GAS,0892,Seri Emei (Singapore) Pte. Ltd.
-GAS,0893,Seri Emperor (Singapore) Pte. Ltd.
-GAS,0894,Seri Elbert (Singapore) Pte. Ltd.
-MISC,0920,MISC Capital Two (Labuan) Limited
-ES,0864,Eaglestar Marine (Philippines) Corporation
-ES,ES01,ES Crewing Services Ptd Ltd
-ES,ES02,ES Marine Services Ptd Ltd
-ES,ES03,Eaglestar Joint Ventures Pte Ltd
-MMASB,0100,Malaysian Maritime Academy Sdn. Bhd.
-MMS,0026,MISC Maritime Services Sdn Bhd
-SUPSB,0044,Sungai Udang Port Sdn Bhd
-OBU,0272,MISC Offshore Floating Terminals (L) Ltd.
-OBU,0284,Malaysia Deepwater Floating Terminal (Kikeh) Limited
-OBU,0305,MISC Offshore Holdings (Brazil) Sdn. Bhd.
-OBU,0318,Malaysia Deepwater Production Contractors Sdn. Bhd.
-OBU,0333,Malaysia Offshore Mobile Production (Labuan) Ltd.
-OBU,0342,Malaysia Vietnam Offshore Terminal (L) Ltd.
-OBU,0361,Gumusut-Kakap Semi-Floating Production System (L) Limited
-OBU,0423,MISC Offshore Floating Terminals Dua (L) Ltd.
-OBU,0433,Malaysia Offshore Mobile Production Dua (Labuan) Ltd.
-OBU,0676,Mekar Bergading Offshore Floating (L) Limited
-OBU,0795,MISC Offshore (Singapore) Pte. Ltd.
-OBU,0796,MISC Offshore (Americas) Holdings Pte. Ltd.
-OBU,0799,MISC Offshore Services Pte. Ltd.
-OBU,0817,MISC Offshore (USA) LLC
-OBU,0580,FPSO Ventures Sdn. Bhd.
-OBU,0598,Brazilian Deepwater Production Contractors Ltd.
-OBU,0599,Brazilian Deepwater Production Ltd.
-OBU,0600,Brazilian Deepwater Floating Terminals Ltd.
-OBU,0609,Vietnam Offshore Floating Terminal (Ruby) Ltd
-OBU,0675,MISC do Brasil Servicos de Energia Ltda
-OBU,0709,MISC Servi�os de Petr�leo do Brasil Ltda
-OBU,0818,Brazilian Deepwater Production B.V.
-OBU,0876,Operacoes Maritamas em Mar Profundo Brasileiro Ltda
-OBU,1053,MISC OBU Holdings (L) Pte Ltd
-OBU,1054,MISC OBU One (L) Pte Ltd
-OBU,1055,MISC OBU Two (L) Pte Ltd
-AET,0627,AET Tanker Holdings Sdn. Bhd.
-AET,0628,AET Holdings (L) Pte. Ltd.
-AET,0629,AET UK Limited
-AET,0631,AET Petroleum Tanker (M) Sdn. Bhd.
-AET,0632,AET Tankers Pte. Ltd.
-AET,0634,AET Inc. Limited
-AET,0635,AET Agencies Inc.
-AET,0636,AET Offshore Services Inc.
-AET,0637,AET Lightering Services LLC
-AET,0639,AET Tankers India Private Limited
-AET,0640,AET Shuttle Tankers Sdn. Bhd.
-AET,0641,AET Tankers (Suezmax) Pte. Ltd.
-AET,0642,AET MCV Alpha L.L.C.
-AET,0643,AET MCV Beta L.L.C.
-AET,0644,AET MCV Gamma L.L.C.
-AET,0645,AET MCV Delta Sdn. Bhd.
-AET,0647,AET Sea Shuttle AS
-AET,0652,AET Product Tankers Sdn Bhd
-AET,0653,Odley Worldwide Inc.
-AET,0654,Oldson Ventures Ltd.
-AET,0655,Twyford International Business Corp.
-AET,0656,Zangwill Business Corp.
-AET,0657,Hendham Enterprises Ltd.
-AET,0658,Atenea Services S.A.
-AET,0659,Paramount Tankers Corp.
-AET,0660,AET Bermuda One Limited
-AET,0661,AET Singapore One Pte. Ltd.
-AET,0672,AET Labuan One Pte. Ltd.
-AET,0683,AET Pte Ltd
-AET,0684,AET Singapore Holdings Pte Ltd
-AET,0685,AET Shuttle Tankers II Pte Ltd
-AET,0686,AET Bermuda Holdings Limited
-AET,0687,AET Labuan Pte. Ltd.
-AET,0695,AET Sea Shuttle II AS
-AET,0797,AET DP Shuttle Pte. Ltd.
-AET,0798,AET DP Shuttle II Pte. Ltd.
-AET,0814,AET Azerbaijan Limited
-AET,0815,AET STS Limited Inc.
-AET,0887,AET Shuttle Tankers III Pte. Ltd.
-AET,0899,AET Malaysia One Sdn. Bhd.
-AET,0901,AET DP Shuttle Tankers Sdn. Bhd.
-AET,0902,AET Tankers VLCC Pte. Ltd.
-AET,0903,AET Tankers VLCC II Sdn. Bhd.
-AET,0918,AET Norway AS
-AET,0747,AET Brasil Servicos STS Ltda
-AET,0748,AET Brasil Servicos Maritimos Ltda
-AET,0623,Akudel S.A.
-AET,0872,ELS Lightering Services S.A.
-AET,0905,Cawerty S.A.
-AET,0906,Zascul S.A.
-AET,0907,Lifisol S.A.
-AET,0908,Ship Service S.A.
-AET,1037,AET Tankers VLCC III Pte. Ltd.
-AET,1038,AET Tankers VLCC IV Pte. Ltd.
-AET,1047,AET Tankers VLCC V Pte. Ltd
+Business Unit,Company Code,Company Name,Currency
+GAS,0007,MISC Tankers Sdn. Bhd.,USD
+MMS,0026,MISC Maritime Services Sd,MYR
+MMS,0044,Sungai Udang Port Sdn Bhd,MYR
+GAS,0064,Puteri Intan Sdn. Bhd.,USD
+GAS,0065,Puteri Delima Sdn. Bhd.,USD
+GAS,0066,Puteri Nilam Sdn. Bhd.,USD
+GAS,0067,Puteri Zamrud Sdn. Bhd.,USD
+GAS,0068,Puteri Firus Sdn. Bhd.,USD
+GAS,0092,Asia LNG Transport SB,USD
+GAS,0093,Asia LNG Transport Dua SB,USD
+ALAM,0100,Malaysian Maritime Academ,MYR
+MISC,0109,MISC BERHAD,USD
+MISC,0132,MISC Ferry Services Sdn.B,MYR
+MISC,0136,MISC Agencies Sdn. Bhd.,MYR
+MISC,0141,MISC Agencies (Netherland,EUR
+MISCM,0190,MISC Ship Management SB,MYR
+GAS,0212,Puteri Intan Satu (L) PL,USD
+GAS,0213,Puteri Delima Satu (L) PL,USD
+GAS,0214,Puteri Nilam Satu (L) PL,USD
+GAS,0215,Puteri Zamrud Satu (L) PL,USD
+GAS,0216,Puteri Firus Satu (L) PL,USD
+GAS,0217,Puteri Mutiara Satu (L)PL,USD
+MISC,0270,MISC Capital (L) Ltd.,USD
+OBU,0272,MISC Offshore Floating Te,USD
+GAS,0279,M.I.S.C. Nigeria Ltd.,NGN
+MISC,0280,MISC International (L)Ltd,USD
+OBU,0284,Malaysia Deepwater Floati,USD
+MISC,0294,MISC Tanker Holdings SB,MYR
+MISC,0295,MISC Tanker Holdings Berm,USD
+OBU,0305,MISC Offshore Holdings (B,USD
+OBU,0318,Malaysia Deepwater Produc,USD
+OBU,0333,Malaysia Offshore Mobile,USD
+OBU,0342,Malaysia Vietnam Offshore,USD
+OBU,0361,Gumusut-Kakap Semi-Floati,USD
+MISC,0372,MTTI Sdn Bhd,USD
+GAS,0379,Gas Asia Terminal (L) PL,USD
+GAS,0389,MISC PNG Shipping Limited,USD
+OBU,0423,MISC Offshore Floating Te,USD
+OBU,0433,Malaysia Offshore Mobile,USD
+GAS,0483,Seri Camellia (L) PL,USD
+GAS,0484,Seri Cenderawasih PL,USD
+GAS,0485,Seri Cempaka (L) PL,USD
+GAS,0486,Seri Camar (L) PL,USD
+GAS,0487,Seri Cemara (L) PL,USD
+MHB,0489,MMHE EPIC Marine&Services,MYR
+MISCM,0494,MISC Marine H (L) PL,USD
+MISCM,0495,MISC Shipmgt (L) PL,USD
+MISCM,0496,MISC Marine Singpore PL,USD
+MISCM,0500,Eaglestar Marine B.V.,EUR
+MHB,0545,MMHE Holding Berhad,MYR
+MHB,0546,M'sia Marine&Heavy Eng SB,MYR
+MISC,0606,MMHE - ATB SDN BHD,MYR
+MHB,0607,MMHE LNG Sdn. Bhd.,MYR
+MHB,0608,Techno Indah Sdn. Bhd.,MYR
+MHB,0611,MMHE - TPGM Sdn.Bhd.,MYR
+MHB,0612,MMHE International SB,MYR
+MHB,0621,T.En MHB Hull Engineering,MYR
+AET,0627,AET Tanker Holdings Sdn.,USD
+AET,0628,AET Holdings (L) Pte. Ltd,USD
+AET,0629,AET UK Limited,GBP
+MISCM,0630,MISC Marine (Malaysia) SB,MYR
+AET,0631,AET Petroleum Tanker (M),USD
+AET,0632,AET Tankers Pte. Ltd.,USD
+MISCM,0633,MISC Shipmgt (S) PL,USD
+AET,0634,AET Inc Pte. Ltd.,USD
+AET,0635,AET Agencies Inc.,USD
+AET,0636,AET Offshore Services Inc,USD
+AET,0637,AET Lightering Services L,USD
+MISCM,0638,Eaglestar Marine India PL,INR
+AET,0639,AET Tankers India Private,INR
+AET,0640,AET Shuttle Tankers Sdn.,USD
+AET,0641,AET Tankers (Suezmax)  Pt,USD
+AET,0642,AET MCV Alpha Pte. Ltd.,USD
+AET,0643,AET MCV Beta Pte. Ltd.,USD
+AET,0644,AET MCV Gamma Pte. Ltd.,USD
+AET,0645,AET MCV Delta Sdn. Bhd.,USD
+AET,0647,AET Sea Shuttle AS,USD
+MISCM,0649,MISC Shipmgt (USA),USD
+AET,0652,AET Product Tankers Sdn B,USD
+AET,0653,Odley Worldwide Inc.,USD
+AET,0654,Oldson Ventures Ltd.,USD
+AET,0655,Twyford International Bus,USD
+AET,0656,Zangwill Business Corp.,USD
+AET,0657,Hendham Enterprises Ltd.,USD
+AET,0658,Atenea Services S.A.,USD
+AET,0659,Paramount Tankers Corp.,USD
+AET,0660,AET Bermuda One Pte. Ltd.,USD
+AET,0661,AET Singapore One Pte. Lt,USD
+AET,0672,AET Labuan One Pte. Ltd.,USD
+OBU,0676,Mekar Bergading Offshore,USD
+GAS,0679,Portovenere & Lerici (L),USD
+GAS,0680,Portovenere & Lerici (S),USD
+AET,0683,AET Pte Ltd,USD
+AET,0684,AET Singapore Holdings Pt,USD
+AET,0685,AET Shuttle Tankers II Pt,USD
+AET,0686,AET Bermuda Holdings Limi,USD
+AET,0687,AET Labuan Pte. Ltd.,USD
+MISC,0691,Magellan X Pte. Ltd.,USD
+MISC,0692,SOL-X Pte. Ltd.,USD
+MISCM,0693,Spares CNX Pte. Ltd.,USD
+MISC,0694,CHORD X Pte. Ltd.,USD
+AET,0695,AET Sea Shuttle II AS,USD
+GAS,0696,Future Horizon (L) PL,USD
+GAS,0697,Polaris LNG One PL,USD
+GAS,0698,Polaris LNG Two PL,USD
+MHB,0740,MHS Integrated Engineerin,MYR
+MISCM,0745,MISC Shipmgt GAS (S),USD
+MISCM,0746,MISC Shipmgt Vtrs (S),USD
+AET,0747,AET Brasil Servicos STS L,BRL
+AET,0748,AET Brasil Serv. Mar. Lt,BRL
+MISC,0763,MISC Maritime Edu. Group,USD
+MHB,0765,TMJV - Kasawari,MYR
+MISC,0767,Magellan X Holdings (L),USD
+OBU,0795,MISC Offshore (Singapore),USD
+OBU,0796,MISC Offshore (Americas),USD
+AET,0797,AET DP Shuttle Pte. Ltd.,USD
+AET,0798,AET DP Shuttle II Pte. Lt,USD
+OBU,0799,MISC Offshore Services Pt,USD
+OBU,0817,MISC Offshore (USA) LLC,USD
+MHB,0821,MMHE Saudi Ltd,MYR
+GAS,0863,Western Pacific Shipping,USD
+AET,0887,AET Shuttle Tankers III P,USD
+GAS,0889,Seri Everest (S) Pte. Ltd,USD
+GAS,0890,Seri Erlang (S) Pte. Ltd,USD
+GAS,0891,Seri Emory (S) Pte. Ltd.,USD
+GAS,0892,Seri Emei (S) Pte. Ltd.,USD
+GAS,0893,Seri Emperor (S) Pte. Ltd,USD
+GAS,0894,Seri Elbert (S) Pte. Ltd.,USD
+AET,0899,AET Malaysia One Sdn. Bhd,USD
+AET,0901,AET DP Shuttle Tankers Sd,USD
+AET,0902,AET Tankers VLCC Pte. Ltd,USD
+AET,0903,AET Tankers VLCC II Sdn.,USD
+AET,0918,AET Norway AS,NOK
+MISC,0920,MISC Capital Two (L) Ltd,USD
+GAS,0949,OASIS LNG NO. 7 PTE. LTD.,USD
+GAS,0953,OASIS LNG NO. 11 PTE. LTD,USD
+GAS,0954,OASIS LNG NO. 12 PTE. LTD,USD
+GAS,0955,POLARIS LNG THREE PTE. LT,USD
+GAS,0956,POLARIS LNG FOUR PTE. LTD,USD
+GAS,0958,Puteri Intan (L) Pte Ltd,USD
+GAS,0959,Puteri Delima (L) Pte Ltd,USD
+GAS,0960,Puteri Nilam (L) Pte Ltd,USD
+GAS,0961,Puteri Zamrud (L) Pte Ltd,USD
+MISCM,0964,MISC Marine Services PL,USD
+MISCM,0965,MISC Crewing Pte Ltd,USD
+AET,1037,AET Tankers VLCC III Pte.,USD
+AET,1038,AET Tankers VLCC IV Pte.,USD
+GAS,1046,POLESTAR ONE (S) PTE.LTD.,USD
+AET,1047,AET Tankers VLCC V Pte. L,USD
+MISC,1048,MISC Assets Holding(L)PTE,USD
+MISCM,1049,MISC Marine Svs (H)(L) PL,USD
+GAS,1050,MISC GAS HOLDINGS (L) PTE,USD
+GAS,1051,MISC GAS TANKERS ONE (L),USD
+GAS,1052,MISC GAS TANKERS TWO (L),USD
+OBU,1053,MISC OBU Holdings (L) Pte,USD
+OBU,1054,MISC OBU One (L) Pte. Ltd,USD
+OBU,1055,MISC OBU Two (L) Pte. Ltd,USD
+MISC,1056,MISC AET Holdings (L) Pte,USD
+GAS,1066,OASIS LNG DESTINY PTE.LTD,USD
+GAS,1074,SOUTHERN GAS TERMN (L) PL,USD
+GAS,1093,DEACTIVATE POLARIS LNG 5,USD
+GAS,1094,DEACTIVATE POLARIS LNG 6,USD
+GAS,1095,DEACTIVATE POLARIS LNG 7,USD
+GAS,1104,POLARIS LNG FIVE PTE LTD,USD
+GAS,1105,POLARIS LNG SIX PTE LTD,USD
+GAS,1106,POLARIS LNG SEVEN PTE LTD,USD
+MISC,1151,FLOATING PROD SOLUTION SB,USD
+OBU,1154,MISC Kelidang (B) Sdn Bhd,USD

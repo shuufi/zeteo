@@ -8,8 +8,10 @@
   import Home from './routes/Home.svelte';
   import FinancialPerformance from './routes/FinancialPerformance.svelte';
   import FinancialComparison from './routes/FinancialComparison.svelte';
+  import VdtStatement from './routes/VdtStatement.svelte';
   import VdtRanked from './routes/VdtRanked.svelte';
-  import VdtFlow from './routes/VdtFlow.svelte';
+  import VdtTree from './routes/VdtTree.svelte';
+  import VdtReconciliation from './routes/VdtReconciliation.svelte';
   import DriverDiagnostic from './routes/DriverDiagnostic.svelte';
   import AskZeteo from './routes/AskZeteo.svelte';
   import Initiatives from './routes/Initiatives.svelte';
@@ -19,9 +21,11 @@
     '/': Home,
     '/financial': FinancialPerformance,
     '/financial/compare': FinancialComparison,
+    '/vdt': VdtStatement,
+    '/vdt/reconciliation': VdtReconciliation,
     '/vdt/:id': VdtRanked,
-    '/vdt-flow': VdtFlow,
-    '/vdt-flow/:id': VdtFlow,
+    '/vdt-tree': VdtTree,
+    '/vdt-tree/:id': VdtTree,
     '/diagnostic/:id': DriverDiagnostic,
     '/diagnostic/:id/:tab': DriverDiagnostic,
     '/ask': AskZeteo,
