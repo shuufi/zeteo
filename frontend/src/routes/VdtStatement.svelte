@@ -423,6 +423,11 @@
               cellDirection={comparisonCellDirection}
               cellDeltaPct={comparisonCellDeltaPct}
               showDeltaColoring
+              showLabelTooltip
+              resizable
+              initialLineItemWidth={280}
+              lineItemMinWidth={160}
+              lineItemMaxWidth={640}
               columnMinWidthPx={110}
               minTableWidthPx={640}
               resetKey={SOC_CREW_COST}
