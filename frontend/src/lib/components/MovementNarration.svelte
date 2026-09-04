@@ -45,7 +45,7 @@
   {:else if status === 'ready' && narration}
     <div class="flex items-start gap-2">
       <span class="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-gray-700 dark:bg-gray-700 dark:text-gray-200">
-        {formatMoney(narration.netAmount, currency, moneyScale)}
+        {formatMoney(Math.abs(narration.netAmount), currency, moneyScale)}
       </span>
       <p class="text-gray-900 dark:text-gray-50">{narration.headline}</p>
     </div>
@@ -54,7 +54,7 @@
         {#each narration.bullets as bullet (bullet.nodeId)}
           <li>
             <span class="font-semibold tabular-nums text-gray-900 dark:text-gray-100">
-              {formatMoney(bullet.amount, currency, moneyScale)} — {bullet.nodeName}:
+              {formatMoney(Math.abs(bullet.amount), currency, moneyScale)} — {bullet.nodeName}:
             </span>
             {bullet.text}
           </li>
