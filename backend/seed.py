@@ -36,7 +36,7 @@ from models import (
     PostingActivityAccount,
     Scenario,
 )
-from seed_vdt import build_crew_mix_seed, load_activity_hierarchy
+from seed_vdt import build_crew_mix_seed, build_pending_account_seed, load_activity_hierarchy
 
 REPO_ROOT = Path(__file__).parent.parent
 CSV_PATH = REPO_ROOT / "docs" / "anaplan_is_master_data.csv"
@@ -324,6 +324,11 @@ def main() -> None:
     gl_level_by_code = {n.code: n.level for n in hierarchy}
     activity_nodes, accounts = load_activity_hierarchy(gl_level_by_code)
     vdt_drivers, vdt_formulas, vdt_terms, vdt_facts = build_crew_mix_seed(FOCUS_COMPANY_CODE, FISCAL_YEARS)
+    pending_drivers, pending_formulas, pending_terms, pending_facts = build_pending_account_seed(FOCUS_COMPANY_CODE, FISCAL_YEARS)
+    vdt_drivers += pending_drivers
+    vdt_formulas += pending_formulas
+    vdt_terms += pending_terms
+    vdt_facts += pending_facts
 
     # Seed is a full reproducible rebuild. Drop first so schema changes (such
     # as Company.currency and exact decimal amounts) cannot leave a stale
@@ -356,7 +361,7 @@ def main() -> None:
     print(f"Seeded {len(company_nodes)} company nodes ({GROUP_LABEL} + BUs + companies, 1 sampled: {FOCUS_COMPANY_CODE})")
     print(f"Seeded {len(facts)} GL facts for {FOCUS_COMPANY_CODE} across {len(FISCAL_YEARS)} years")
     print(f"Seeded {len(activity_nodes)} Activity Nodes and {len(accounts)} Posting Activity Accounts (VDT hierarchy pilot — docs/adr/0033)")
-    print(f"Seeded {len(vdt_drivers)} Drivers / {len(vdt_formulas)} Driver Formulas for the first 3 of {len(accounts)} Posting Activity Accounts")
+    print(f"Seeded {len(vdt_drivers)} Drivers / {len(vdt_formulas)} Driver Formulas for {len(accounts)} Posting Activity Accounts")
     print(f"Fully-modelled example node: {FULLY_MODELLED_NODE}")
 
 

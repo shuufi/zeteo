@@ -1,32 +1,32 @@
-Code,Description,Parent Code,Node Type,FA GL
-V201000000,SOC Crew Cost,PNL-0011,Activity Node,
-V201010000,Crew Pay and Benefits Cost,V201000000,Activity Node,
-V201010100,Salaries & Allowances,V201010000,Activity Node,
-V201010101,Base salary by rank and nationality,V201010100,Activity Node,
-VA00000001,Senior officer nationality mix,V201010101,Posting Activity Account,5100100100
-VA00000002,Junior officer nationality mix,V201010101,Posting Activity Account,5100100100
-VA00000003,Ratings / crew nationality mix,V201010101,Posting Activity Account,5100100100
-VA00000004,Allowance entitlement,V201010100,Posting Activity Account,5100100600
-VA00000005,Leave pay accrual,V201010100,Posting Activity Account,5100100400
-VA00000006,Overtime hours,V201010100,Posting Activity Account,5100100300
-VA00000007,Bonus eligibility,V201010100,Posting Activity Account,5100100500
-VA00000008,EPF & Other Contributions,V201010000,Posting Activity Account,5100100800
-V201020000,Crew Traveling and Welfare Cost,V201000000,Activity Node,
-V201020100,Joining & Repatriation,V201020000,Activity Node,
-VA00000009,Airfare & Visa matrix,V201020100,Posting Activity Account,5150101100
-VA00000010,Transportation and launch boat,V201020100,Posting Activity Account,5150101200
-VA00000011,Accommodation days,V201020100,Posting Activity Account,5150101300
-VA00000012,Agency / port handling,V201020100,Posting Activity Account,5060100500
-V201020200,Victualling Charges,V201020000,Activity Node,
-VA00000013,Base victualling consumption,V201020200,Posting Activity Account,5060100600
-VA00000014,"Extra meals, freight and holiday budget",V201020200,Posting Activity Account,5060100600
-V201020300,Crew Medical,V201020000,Activity Node,
-VA00000015,Medical check-up volume,V201020300,Posting Activity Account,5100101500
-VA00000016,Sickness / injury cases,V201020300,Posting Activity Account,5100101200
-V201030000,Other Crew Cost,V201000000,Activity Node,
-V201030100,Manning office and admin fees,V201030000,Activity Node,
-VA00000017,Manning monthly fee,V201030100,Posting Activity Account,5060100400
-VA00000018,Joining admin fee,V201030100,Posting Activity Account,5060100400
-VA00000019,Insurance premium,V201030000,Posting Activity Account,5100101300
-VA00000020,Union fee,V201030000,Posting Activity Account,5100102600
-VA00000021,Recruitment activity,V201030000,Posting Activity Account,5100101400
+Code,Description,Parent Code,Node Type,FA GL,Formula
+V201000000,SOC Crew Cost,PNL-0011,Activity Node,,
+V201010000,Crew Pay and Benefits Cost,V201000000,Activity Node,,
+V201010100,Salaries & Allowances,V201010000,Activity Node,,
+V201010101,Base salary by rank and nationality,V201010100,Activity Node,,
+VA00000001,Senior officer nationality mix,V201010101,Posting Activity Account,5100100100,senior_nationality_mix * average_salary_rate
+VA00000002,Junior officer nationality mix,V201010101,Posting Activity Account,5100100100,junior_nationality_mix * average_salary_rate
+VA00000003,Ratings / crew nationality mix,V201010101,Posting Activity Account,5100100100,rating / crew_nationality_mix * average_salary rate
+VA00000004,Allowance entitlement,V201010100,Posting Activity Account,5100100600,quantity * rate
+VA00000005,Leave pay accrual,V201010100,Posting Activity Account,5100100400,salary_base * leave_factor
+VA00000006,Overtime hours,V201010100,Posting Activity Account,5100100300,overtime_hours * hourly_rate
+VA00000007,Bonus eligibility,V201010100,Posting Activity Account,5100100500,eligible_crew * bonus_per_crew
+VA00000008,EPF & Other Contributions,V201010000,Posting Activity Account,5100100800,eligible_payroll_base * contribution_rate
+V201020000,Crew Traveling and Welfare Cost,V201000000,Activity Node,,
+V201020100,Joining & Repatriation,V201020000,Activity Node,,
+VA00000009,Airfare & Visa matrix,V201020100,Posting Activity Account,5150101100,no_of_movements * weighted_avg_airfare
+VA00000010,Transportation and launch boat,V201020100,Posting Activity Account,5150101200,no_of_movements * weighted_transport_cost
+VA00000011,Accommodation days,V201020100,Posting Activity Account,5150101300,room_nights * avg_hotel_rate
+VA00000012,Agency / port handling,V201020100,Posting Activity Account,5060100500,no_of_movements * avg_agency_fee
+V201020200,Victualling Charges,V201020000,Activity Node,,
+VA00000013,Base victualling consumption,V201020200,Posting Activity Account,5060100600,crew * monthly_rate
+VA00000014,"Extra meals, freight and holiday budget",V201020200,Posting Activity Account,5060100600,annual_lump_sum
+V201020300,Crew Medical,V201020000,Activity Node,,
+VA00000015,Medical check-up volume,V201020300,Posting Activity Account,5100101500,no_of_medical_checkup * avg_rate
+VA00000016,Sickness / injury cases,V201020300,Posting Activity Account,5100101200,no_of_sickness_injury * avg_cost_per_case
+V201030000,Other Crew Cost,V201000000,Activity Node,,
+V201030100,Manning office and admin fees,V201030000,Activity Node,,
+VA00000017,Manning monthly fee,V201030100,Posting Activity Account,5060100400,no_of_crew * fee_per_month
+VA00000018,Joining admin fee,V201030100,Posting Activity Account,5060100400,no_of_movements * joining_admin_fee
+VA00000019,Insurance premium,V201030000,Posting Activity Account,5100101300,insured_crew * premium
+VA00000020,Union fee,V201030000,Posting Activity Account,5100102600,no_of_eligible_crew * fee
+VA00000021,Recruitment activity,V201030000,Posting Activity Account,5100101400,no_of_new_hires * recruitment_cost
