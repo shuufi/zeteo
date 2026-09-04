@@ -226,12 +226,18 @@ def post_vdt_narration(
 
 
 @app.get("/api/vdt/reconciliation")
-def get_vdt_reconciliation(scope: str, node: str, period: Optional[str] = None, session: Session = Depends(get_session)):
-    """Side-by-side Accounting-vs-VDT breakdown of the same node/scope/period —
-    see docs/adr/0033. No delta/polarity coloring: unlike /api/gl/comparison
-    (which diffs the SAME hierarchy across two periods), the two hierarchies
-    here are independent estimates that aren't required to reconcile — the
-    gap between them is the point, not something to score favourable/adverse.
+def get_vdt_reconciliation(
+    scope: str, node: str, period: Optional[str] = None, ytd: bool = False, session: Session = Depends(get_session)
+):
+    """VDT-hierarchy subtree at `node`, plus the Accounting nodes needed to
+    show each Posting Activity Account leaf's FA GL anchor alongside it — see
+    docs/adr/0033, docs/adr/0037. `node` anchors in the VDT tree (it's
+    routinely a VDT-only Activity Node, e.g. SOC Crew Cost, with no same-code
+    Accounting node at all), so `accounting.nodes` is not a subtree of the
+    same code — it's just the specific anchor nodes the VDT subtree's leaves
+    point to, keyed by their own GL code. No delta/polarity coloring: the two
+    hierarchies are independent estimates that aren't required to reconcile —
+    the gap between them is the point, not something to score.
     """
     if not session.exec(select(GLNode).limit(1)).first():
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
@@ -249,18 +255,26 @@ def get_vdt_reconciliation(scope: str, node: str, period: Optional[str] = None, 
         }
 
     try:
-        accounting_tree = build_tree(session, resolved["companies"], period)
-        vdt_tree = build_vdt_tree(session, resolved["companies"], period)
+        accounting_tree = build_tree(session, resolved["companies"], period, ytd=ytd)
+        vdt_tree = build_vdt_tree(session, resolved["companies"], period, ytd=ytd)
     except UnknownPeriod:
         raise HTTPException(404, f"Unknown period: {period}")
 
-    root = accounting_tree.get(node)
+    root = vdt_tree.get(node)
     if root is None:
         raise HTTPException(404, f"Unknown node: {node}")
-    if root["nodeType"] not in ("Reporting Root", "Reporting Node"):
+    if root["nodeType"] not in VDT_COMPARISON_ROOT_TYPES:
         raise HTTPException(
-            400, f"{node} is a {root['nodeType']} — only a Reporting Root/Reporting Node can anchor a reconciliation"
+            400, f"{node} is a {root['nodeType']} — only {'/'.join(VDT_COMPARISON_ROOT_TYPES)} can anchor a reconciliation"
         )
+
+    vdt_nodes = subtree(vdt_tree, node)
+    anchor_codes = {
+        n["faGlCode"]
+        for n in vdt_nodes.values()
+        if n["nodeType"] == "Posting Activity Account" and n.get("faGlCode")
+    }
+    accounting_nodes = {code: accounting_tree[code] for code in anchor_codes if code in accounting_tree}
 
     return {
         "scope": scope,
@@ -268,6 +282,7 @@ def get_vdt_reconciliation(scope: str, node: str, period: Optional[str] = None, 
         "notYetModelled": False,
         "node": node,
         "period": period,
-        "accounting": {"nodes": subtree(accounting_tree, node)},
-        "vdt": {"nodes": subtree(vdt_tree, node)},
+        "ytd": ytd,
+        "accounting": {"nodes": accounting_nodes},
+        "vdt": {"nodes": vdt_nodes},
     }

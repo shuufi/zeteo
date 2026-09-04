@@ -55,7 +55,7 @@
   }: {
     rows: DisplayRow[];
     columns: StatementColumn[];
-    cellValue: (row: DisplayRow, column: StatementColumn, index: number) => number;
+    cellValue: (row: DisplayRow, column: StatementColumn, index: number) => number | null;
     rowExists?: (row: DisplayRow) => boolean;
     cellHref?: (row: DisplayRow, column: StatementColumn, index: number) => CellLink | undefined;
     cellDirection?: (row: DisplayRow) => Direction;
@@ -211,8 +211,12 @@
     return deltaTextClass(row, cellDirection(row));
   }
 
+  // null means "not comparable" (e.g. a VDT-only Activity Node has no
+  // same-code Accounting counterpart) — rendered as a dash, never coerced
+  // into 0 or NaN, and never gets the delta % suffix.
   function cellText(row: DisplayRow, column: StatementColumn, index: number): string {
     const raw = cellValue(row, column, index);
+    if (raw === null) return '—';
     const text = row.kind === 'operational' ? operationalValue(raw, row.unit) : statementValue(raw);
     const suffix = column.isDelta && cellDeltaPct ? deltaPctLabel(cellDeltaPct(row)) : '';
     return `${text}${suffix}`;

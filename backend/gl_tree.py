@@ -18,7 +18,7 @@ from sqlmodel import Session, col, select
 from diagnostic_content import DIAGNOSTIC_CONTENT
 from driver_engine import DriverEngine
 from models import GLFact, GLNode, NodeType, NormalBalance, Period, PeriodType
-from periods import load_period_hierarchy, month_codes_of_year, month_indices_for
+from periods import load_period_hierarchy, month_codes_of_year, month_indices_for, ytd_month_indices_for
 
 
 ZERO = Decimal("0")
@@ -314,7 +314,7 @@ def sum_children_entry(child_entries: list[dict]) -> dict:
     }
 
 
-def build_tree(session: Session, companies: list[str], period_code: Optional[str] = None) -> dict[str, dict]:
+def build_tree(session: Session, companies: list[str], period_code: Optional[str] = None, ytd: bool = False) -> dict[str, dict]:
     nodes = session.exec(select(GLNode)).all()
     node_by_code = {n.code: n for n in nodes}
     children_by_parent: dict[str, list[str]] = defaultdict(list)
@@ -330,7 +330,11 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
     year_code = _year_of(period_by_code, period_code) if period_code is not None else (years[-1].code if years else None)
     prior_year_code = _prior_year_code(period_by_code, year_code) if year_code else None
     # None (whole year requested) means every one of the 12 monthly slots counts.
-    scope_indices = month_indices_for(period_by_code, period_children, period_code)
+    scope_indices = (
+        ytd_month_indices_for(period_by_code, period_children, period_code)
+        if ytd
+        else month_indices_for(period_by_code, period_children, period_code)
+    )
 
     def scoped_sum_local(monthly_values: list[Decimal]) -> Decimal:
         return scoped_sum(monthly_values, scope_indices)

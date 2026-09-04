@@ -60,12 +60,11 @@
     grain = $bindable<PeriodType>("Month"),
     periodA = $bindable<string | undefined>(undefined),
     periodB = $bindable<string | undefined>(undefined),
-    showReconciliation = false,
-    reconciliationNode = $bindable<string | undefined>(undefined),
     vdtComparison = false,
     vdtComparisonMode = $bindable("vs This Year"),
     vdtPeriodA = $bindable<string | undefined>(undefined),
     vdtPeriodB = $bindable<string | undefined>(undefined),
+    showComparisonChip = true,
     showMoneyScale = false,
     currency = "",
     moneyValues = [],
@@ -82,14 +81,16 @@
     grain?: PeriodType;
     periodA?: string;
     periodB?: string;
-    showReconciliation?: boolean;
-    reconciliationNode?: string;
     /** Activates vs Last Year/vs This Year live on this ContextBar instance —
      * everywhere else the chip stays decorative (ADR-0005). See docs/adr/0034. */
     vdtComparison?: boolean;
     vdtComparisonMode?: string;
     vdtPeriodA?: string;
     vdtPeriodB?: string;
+    /** The vs Budget/vs Last Year/vs This Year chip that stays decorative
+     * everywhere it isn't wired live (ADR-0005) — set false to omit it
+     * entirely on screens it has no bearing on at all. */
+    showComparisonChip?: boolean;
     showMoneyScale?: boolean;
     currency?: string;
     moneyValues?: number[];
@@ -171,11 +172,6 @@
     <span class="text-gray-400 dark:text-gray-500">vs</span>
     <PeriodSelect label="Period B" periods={periodsForGrain[grain]} bind:value={periodB} />
   {/if}
-  {#if showReconciliation}
-    <div class="w-72">
-      <NodePicker bind:value={reconciliationNode} />
-    </div>
-  {/if}
   {#if vdtComparison}
     <ChipSelect id="comparison-select" options={comparisonOptions} bind:selected={vdtComparisonMode} />
     {#if vdtComparisonMode === "vs This Year"}
@@ -185,7 +181,7 @@
     {:else if vdtComparisonMode === "vs Last Year"}
       <PeriodSelect label="Period" periods={vdtYearMonths} bind:value={vdtPeriodA} />
     {/if}
-  {:else}
+  {:else if showComparisonChip}
     <ChipSelect
       id="comparison-select"
       options={comparisonOptions}

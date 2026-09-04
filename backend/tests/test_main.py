@@ -41,16 +41,47 @@ def test_vdt_reconciliation_endpoint_shape(session):
     codes = fixture_graph(session)
     client = _client(session)
 
-    resp = client.get("/api/vdt/reconciliation", params={"scope": codes["company"], "node": codes["cor"], "period": codes["year"]})
+    resp = client.get("/api/vdt/reconciliation", params={"scope": codes["company"], "node": codes["act_top"], "period": codes["year"]})
     assert resp.status_code == 200
     body = resp.json()
     assert set(body.keys()) >= {"accounting", "vdt", "node", "scope"}
-    # Accounting side keeps the old GL subtree; VDT side replaced it wholesale.
-    assert codes["gl_old_leaf"] in body["accounting"]["nodes"]
-    assert codes["gl_old_leaf"] not in body["vdt"]["nodes"]
+    # node anchors in the VDT tree — act_top is VDT-only, no same-code
+    # Accounting node exists for it at all (see docs/adr/0037).
     assert codes["act_top"] in body["vdt"]["nodes"]
+    assert codes["act_sub"] in body["vdt"]["nodes"]
+    assert codes["gl_old_leaf"] not in body["vdt"]["nodes"]
+    # accounting.nodes is a minimal FA-GL-anchor lookup, not a same-code
+    # subtree — both va_driven/va_undriven point at gl_anchor_leaf, so it's
+    # the only Accounting node returned; the old GL subtree is absent.
+    assert set(body["accounting"]["nodes"].keys()) == {codes["gl_anchor_leaf"]}
+    assert codes["gl_old_leaf"] not in body["accounting"]["nodes"]
     # No delta/polarity fields — this isn't a diff, see docs/adr/0033.
-    assert "delta" not in body["accounting"]["nodes"][codes["cor"]]
+    assert "delta" not in body["accounting"]["nodes"][codes["gl_anchor_leaf"]]
+
+
+def test_vdt_reconciliation_ytd_scopes_both_trees(session):
+    codes = fixture_graph(session)
+    client = _client(session)
+
+    quarter = f"{codes['year']}-Q2"
+    plain = client.get(
+        "/api/vdt/reconciliation", params={"scope": codes["company"], "node": codes["act_top"], "period": quarter}
+    ).json()
+    ytd = client.get(
+        "/api/vdt/reconciliation",
+        params={"scope": codes["company"], "node": codes["act_top"], "period": quarter, "ytd": "true"},
+    ).json()
+    assert ytd["ytd"] is True
+    # gl_anchor_leaf's fact is a uniform 30.0/month — Q2 alone sums 3 months,
+    # YTD through Q2 sums 6 (see docs/adr/0037, periods.py's Quarter YTD fix).
+    plain_gl = plain["accounting"]["nodes"][codes["gl_anchor_leaf"]]["actual"]
+    ytd_gl = ytd["accounting"]["nodes"][codes["gl_anchor_leaf"]]["actual"]
+    assert ytd_gl == plain_gl * 2
+    # Same cumulative widening on the VDT side (va_driven's Driver Formula
+    # output), not just the Accounting anchor.
+    plain_vdt = plain["vdt"]["nodes"][codes["va_driven"]]["actual"]
+    ytd_vdt = ytd["vdt"]["nodes"][codes["va_driven"]]["actual"]
+    assert ytd_vdt == plain_vdt * 2
 
 
 def test_vdt_reconciliation_rejects_leaf_node(session):

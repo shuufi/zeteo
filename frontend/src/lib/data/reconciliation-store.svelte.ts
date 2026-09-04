@@ -39,11 +39,12 @@ export const reconciliationStore = {
   },
 };
 
-export async function loadReconciliation(scope: string, node: string, periodCode?: string): Promise<void> {
+export async function loadReconciliation(scope: string, node: string, periodCode?: string, ytd = false): Promise<void> {
   status = 'loading';
   try {
     const params = new URLSearchParams({ scope, node });
     if (periodCode) params.set('period', periodCode);
+    if (ytd) params.set('ytd', 'true');
     const res = await fetch(`/api/vdt/reconciliation?${params}`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     const data = await res.json();
