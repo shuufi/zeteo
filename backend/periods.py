@@ -57,6 +57,28 @@ def month_indices_for(
     return collect_month_orders(period_code)
 
 
+def ytd_month_indices_for(
+    period_by_code: dict[str, Period],
+    children_by_parent: dict[str, list[str]],
+    period_code: Optional[str],
+) -> Optional[set[int]]:
+    """Cumulative Jan-through-period coverage, for YTD scoping (see docs/adr/0034).
+
+    Only meaningful for a Month period — comparison's period pickers are
+    always Month-grain (see VDT Statement comparison). A Quarter or Year
+    period already covers a fixed, non-cumulative set of months, so those
+    fall back to month_indices_for() unchanged.
+    """
+    if period_code is None:
+        return None
+    period = period_by_code.get(period_code)
+    if period is None:
+        raise UnknownPeriod(period_code)
+    if period.period_type != PeriodType.MONTH:
+        return month_indices_for(period_by_code, children_by_parent, period_code)
+    return set(range(period.order))
+
+
 def month_codes_of_year(
     period_by_code: dict[str, Period],
     children_by_parent: dict[str, list[str]],

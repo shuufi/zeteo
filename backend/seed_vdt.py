@@ -106,6 +106,18 @@ _CREW_MIX_FORMULAS = [
     ),
 ]
 
+# Deliberate within-year drift so adjacent months (e.g. Aug vs Sep) show a
+# legible movement in VDT Statement's comparison bridge — see docs/adr/0034.
+# Before this, only hc_growth/rate_growth (year-over-year) existed and every
+# month within a year was flat (annual base plus pure noise), so a "vs This
+# Year" comparison of two arbitrary months barely moved. Centered on month
+# 6.5 (mid-year) so the annual average stays close to hc_base/rate_annual,
+# same as before this change — only the within-year shape changed, not the
+# year's overall level. Sized well above the noise bands below (±0.5%/±0.3%)
+# so a single-month step reads clearly instead of getting lost in noise.
+_MONTHLY_HC_GROWTH = 0.02
+_MONTHLY_RATE_GROWTH = 0.015
+
 
 def build_crew_mix_seed(
     focus_company: str, fiscal_years: list[str]
@@ -138,14 +150,16 @@ def build_crew_mix_seed(
             rate_annual = rate_base * ((1 + rate_growth) ** year_index)
             for month in range(1, 13):
                 period_code = f"{fiscal_year}-M{month:02d}"
+                hc_month = hc_annual * ((1 + _MONTHLY_HC_GROWTH) ** (month - 6.5))
+                rate_month = rate_annual * ((1 + _MONTHLY_RATE_GROWTH) ** (month - 6.5))
                 facts.append(
                     DriverFact(
-                        code=hc_code, company=focus_company, period_code=period_code, scenario=Scenario.ACTUAL, amount=round(hc_annual * rng.uniform(0.97, 1.03), 3)
+                        code=hc_code, company=focus_company, period_code=period_code, scenario=Scenario.ACTUAL, amount=round(hc_month * rng.uniform(0.995, 1.005), 3)
                     )
                 )
                 facts.append(
                     DriverFact(
-                        code=hc_code, company=focus_company, period_code=period_code, scenario=Scenario.BUDGET, amount=round(hc_annual * rng.uniform(0.97, 1.03), 3)
+                        code=hc_code, company=focus_company, period_code=period_code, scenario=Scenario.BUDGET, amount=round(hc_month * rng.uniform(0.995, 1.005), 3)
                     )
                 )
                 facts.append(
@@ -154,7 +168,7 @@ def build_crew_mix_seed(
                         company=focus_company,
                         period_code=period_code,
                         scenario=Scenario.ACTUAL,
-                        amount=round(rate_annual * rng.uniform(0.98, 1.02), 6),
+                        amount=round(rate_month * rng.uniform(0.997, 1.003), 6),
                     )
                 )
                 facts.append(
@@ -163,7 +177,7 @@ def build_crew_mix_seed(
                         company=focus_company,
                         period_code=period_code,
                         scenario=Scenario.BUDGET,
-                        amount=round(rate_annual * rng.uniform(0.98, 1.02), 6),
+                        amount=round(rate_month * rng.uniform(0.997, 1.003), 6),
                     )
                 )
 

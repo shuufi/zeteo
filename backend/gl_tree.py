@@ -120,16 +120,26 @@ def _stitch_driver_nodes(
     return nodes, formula_ids
 
 
-GL_NODE_TYPES = {NodeType.REPORTING_ROOT.value, NodeType.REPORTING_NODE.value, NodeType.POSTING_GL_ACCOUNT.value}
+# Node types whose "actual" is RM-comparable money, across both hierarchies
+# (see docs/adr/0033) — Driver/Driver Formula units (rate/%/days/ratio)
+# aren't, so favourable/adverse doesn't apply to them.
+MONEY_NODE_TYPES = {
+    NodeType.REPORTING_ROOT.value,
+    NodeType.REPORTING_NODE.value,
+    NodeType.POSTING_GL_ACCOUNT.value,
+    "Activity Node",
+    "Posting Activity Account",
+}
 
 
 def diff_subtree(tree_a: dict[str, dict], tree_b: dict[str, dict], root: str) -> dict[str, dict]:
-    """Diffs two build_tree() outputs (same companies, different periods) down
-    from `root`, returning only that subtree with valueA/valueB/delta per
-    node — see docs/adr/0031. `root`'s parentId is nulled so callers can walk
-    the result exactly like a fresh tree (a root is whichever node has no
-    parent). Driver/Driver Formula nodes get `direction: "neutral"` — their
-    units aren't RM-comparable, so favourable/adverse doesn't apply to them.
+    """Diffs two build_tree()/build_vdt_tree() outputs (same companies,
+    different periods) down from `root`, returning only that subtree with
+    valueA/valueB/delta per node — see docs/adr/0031 and docs/adr/0034.
+    `root`'s parentId is nulled so callers can walk the result exactly like a
+    fresh tree (a root is whichever node has no parent). Driver/Driver
+    Formula nodes get `direction: "neutral"` — their units aren't
+    RM-comparable, so favourable/adverse doesn't apply to them.
     """
     result: dict[str, dict] = {}
 
@@ -152,7 +162,8 @@ def diff_subtree(tree_a: dict[str, dict], tree_b: dict[str, dict], root: str) ->
             "valueB": round(value_b, 3),
             "delta": delta,
             "deltaPct": round(delta / abs(value_a) * 100, 1) if value_a else None,
-            "direction": _direction(value_b, value_a) if a["nodeType"] in GL_NODE_TYPES else "neutral",
+            "direction": _direction(value_b, value_a) if a["nodeType"] in MONEY_NODE_TYPES else "neutral",
+            **({"expression": a["expression"]} if "expression" in a else {}),
         }
         for child_id in a["childIds"]:
             walk(child_id)

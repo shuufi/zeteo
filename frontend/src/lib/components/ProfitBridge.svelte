@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { Tween } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
-  import { Plot, BarY, Text } from 'svelteplot';
+  import { Plot, BarY, RuleY, Text } from 'svelteplot';
   import type { BridgeStep } from '../data/types';
   import { formatRmAuto } from '../data/format';
 
@@ -103,13 +103,14 @@
   <div class="chart-colors w-full" style="clip-path: inset({(1 - reveal.current) * 100}% 0 0 0);">
     <Plot
       {height}
-      marginBottom={70}
-      x={{ label: false, domain: bars.map((b) => b.label), tickRotate: -35 }}
+      marginBottom={50}
+      x={{ label: false, domain: bars.map((b) => b.label), wordWrap: true }}
       y={{ label: false, axis: false, grid: false, domain: [yMin, yMax] }}
       color={{
         scheme: { total: 'var(--total)', increase: 'var(--increase)', decrease: 'var(--decrease)', neutral: 'var(--neutral)' },
       }}
     >
+      <RuleY data={[0]} y={(d) => d} stroke="var(--axis)" />
       <BarY data={bars} sort={false} x="label" y1="y1" y2="y2" fill="kind" />
       <Text data={bars} x="label" y={(d) => Math.max(d.y1, d.y2)} text="valueLabel" dy={-6} textAnchor="middle" fontSize={9} />
     </Plot>
@@ -118,15 +119,20 @@
 
 <style>
   .chart-colors {
-    --total: var(--color-green-700);
+    /* Total bars are start/end anchors, not a favourable/adverse value —
+       indigo (the app's theme accent) keeps green/red reserved purely for
+       the delta bars' own direction. */
+    --total: var(--color-indigo-600);
     --increase: var(--color-green-600);
     --decrease: var(--color-red-600);
     --neutral: var(--color-gray-400);
+    --axis: var(--color-gray-300);
   }
   :global(.dark) .chart-colors {
-    --total: var(--color-green-500);
+    --total: var(--color-indigo-400);
     --increase: var(--color-green-400);
     --decrease: var(--color-red-400);
     --neutral: var(--color-gray-500);
+    --axis: var(--color-gray-600);
   }
 </style>

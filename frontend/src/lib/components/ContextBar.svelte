@@ -12,10 +12,10 @@
   import { periodDraft } from "../state/period-draft.svelte";
   import { loadScope } from "../data/gl-store.svelte";
   import { vdtStore, loadVdtScope } from "../data/vdt-store.svelte";
-  import { periodStore } from "../data/period-store.svelte";
+  import { periodStore, periodYearOf } from "../data/period-store.svelte";
   import type { PeriodType } from "../data/types";
 
-  const comparisonOptions = ["vs Budget", "vs Prior Year", "vs Forecast"];
+  const comparisonOptions = ["vs Budget", "vs Last Year", "vs This Year"];
 
   // Business/Period only stage a draft when picked (see docs/adr/0027) —
   // this is what actually commits scopeState/periodState and refetches.
@@ -55,6 +55,10 @@
     periodB = $bindable<string | undefined>(undefined),
     showReconciliation = false,
     reconciliationNode = $bindable<string | undefined>(undefined),
+    vdtComparison = false,
+    vdtComparisonMode = $bindable("vs This Year"),
+    vdtPeriodA = $bindable<string | undefined>(undefined),
+    vdtPeriodB = $bindable<string | undefined>(undefined),
   }: {
     ancestors?: Crumb[];
     currentLabel?: string;
@@ -69,7 +73,24 @@
     periodB?: string;
     showReconciliation?: boolean;
     reconciliationNode?: string;
+    /** Activates vs Last Year/vs This Year live on this ContextBar instance —
+     * everywhere else the chip stays decorative (ADR-0005). See docs/adr/0034. */
+    vdtComparison?: boolean;
+    vdtComparisonMode?: string;
+    vdtPeriodA?: string;
+    vdtPeriodB?: string;
   } = $props();
+
+  // VDT Statement comparison's Period pickers are always Month-grain,
+  // restricted to the current fiscal year (see docs/adr/0034) — "vs This
+  // Year" would be a contradiction in terms otherwise, and "vs Last Year"
+  // only needs one picker since its pair is derived automatically.
+  const vdtCurrentYearId = $derived(periodYearOf(periodState.code));
+  const vdtYearMonths = $derived(
+    Object.values(periodStore.tree)
+      .filter((p) => p.periodType === "Month" && p.id.startsWith(`${vdtCurrentYearId}-M`))
+      .sort((a, b) => a.order - b.order),
+  );
 
   const grains: PeriodType[] = ["Month", "Quarter", "Year"];
 
@@ -134,11 +155,22 @@
       <NodePicker bind:value={reconciliationNode} />
     </div>
   {/if}
-  <ChipSelect
-    id="comparison-select"
-    options={comparisonOptions}
-    selected={context.comparison}
-  />
+  {#if vdtComparison}
+    <ChipSelect id="comparison-select" options={comparisonOptions} bind:selected={vdtComparisonMode} />
+    {#if vdtComparisonMode === "vs This Year"}
+      <PeriodSelect label="Period A" periods={vdtYearMonths} bind:value={vdtPeriodA} />
+      <span class="text-gray-400 dark:text-gray-500">vs</span>
+      <PeriodSelect label="Period B" periods={vdtYearMonths} bind:value={vdtPeriodB} />
+    {:else if vdtComparisonMode === "vs Last Year"}
+      <PeriodSelect label="Period" periods={vdtYearMonths} bind:value={vdtPeriodA} />
+    {/if}
+  {:else}
+    <ChipSelect
+      id="comparison-select"
+      options={comparisonOptions}
+      selected={context.comparison}
+    />
+  {/if}
   {#if showYtd}
     <label
       class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer select-none"

@@ -36,7 +36,7 @@ from gl_tree import (
     sum_children_entry,
 )
 from models import ActivityNode, GLNode, NodeType, NormalBalance, PeriodType, PostingActivityAccount
-from periods import load_period_hierarchy, month_indices_for
+from periods import load_period_hierarchy, month_indices_for, ytd_month_indices_for
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,9 @@ def _compute_posting_activity_account(
     }
 
 
-def build_vdt_tree(session: Session, companies: list[str], period_code: Optional[str] = None) -> dict[str, dict]:
+def build_vdt_tree(
+    session: Session, companies: list[str], period_code: Optional[str] = None, ytd: bool = False
+) -> dict[str, dict]:
     gl_nodes = session.exec(select(GLNode)).all()
     gl_by_code = {n.code: n for n in gl_nodes}
     activity_nodes = session.exec(select(ActivityNode)).all()
@@ -117,7 +119,11 @@ def build_vdt_tree(session: Session, companies: list[str], period_code: Optional
     years = sorted((p for p in period_by_code.values() if p.period_type == PeriodType.YEAR), key=lambda p: p.order)
     year_code = _year_of(period_by_code, period_code) if period_code is not None else (years[-1].code if years else None)
     prior_year_code = _prior_year_code(period_by_code, year_code) if year_code else None
-    scope_indices = month_indices_for(period_by_code, period_children, period_code)
+    scope_indices = (
+        ytd_month_indices_for(period_by_code, period_children, period_code)
+        if ytd
+        else month_indices_for(period_by_code, period_children, period_code)
+    )
 
     def scoped_sum_local(monthly_values: list[float]) -> float:
         return scoped_sum(monthly_values, scope_indices)

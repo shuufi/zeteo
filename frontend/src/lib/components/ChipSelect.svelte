@@ -3,14 +3,22 @@
     id,
     prefix = '',
     options,
-    selected = options[0],
+    selected = $bindable(options[0]),
   }: { id: string; prefix?: string; options: string[]; selected?: string } = $props();
+
+  // Selecting an option always fires a native bubbling change event on the
+  // host (@tailwindplus/elements) — bind:selected only actually stays live
+  // where a caller listens for it; callers that just pass a static value
+  // (see docs/adr/0005) see no different behaviour than before.
+  function handleChange(e: Event): void {
+    selected = (e.currentTarget as HTMLElement & { value: string }).value;
+  }
 </script>
 
 <div class="flex items-center gap-1.5">
   {#if prefix}<span class="text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">{prefix}</span>{/if}
 
-  <el-select {id} name={id} value={selected} class="inline-block">
+  <el-select {id} name={id} value={selected} onchange={handleChange} class="inline-block">
     <button
       type="button"
       class="grid min-w-36 cursor-default grid-cols-1 rounded-md bg-white py-1.5 pr-2 pl-3 text-left text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus-visible:outline-indigo-500"

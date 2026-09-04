@@ -6,18 +6,27 @@
   import Card from "../lib/components/Card.svelte";
   import ProfitBridge from "../lib/components/ProfitBridge.svelte";
   import NotYetModelled from "../lib/components/NotYetModelled.svelte";
+  import MovementNarration from "../lib/components/MovementNarration.svelte";
   import StatementTable, {
     type StatementColumn,
   } from "../lib/components/StatementTable.svelte";
   import { vdtStore, loadVdtScope } from "../lib/data/vdt-store.svelte";
-  import { getNode, buildDisplayRows } from "../lib/data/gl-client";
-  import { periodStore, loadPeriods, periodYearOf } from "../lib/data/period-store.svelte";
+  import { vdtComparisonStore, loadVdtComparison } from "../lib/data/vdt-comparison-store.svelte";
+  import { narrationStore, generateNarration } from "../lib/data/narration-store.svelte";
+  import { getNode, getChildren, buildDisplayRows } from "../lib/data/gl-client";
+  import { getComparisonNode, getComparisonChildren, buildComparisonRows } from "../lib/data/comparison-client";
+  import { periodStore, loadPeriods, periodYearOf, periodLabel, priorYearSibling } from "../lib/data/period-store.svelte";
   import { periodState } from "../lib/state/period.svelte";
   import { scopeState } from "../lib/state/scope.svelte";
   import { months, cumulative } from "../lib/data/format";
-  import type { DisplayRow } from "../lib/data/types";
+  import type { DisplayRow, Direction, BridgeStep } from "../lib/data/types";
 
-  let ytdView = $state(false);
+  const SOC_CREW_COST = "V201000000";
+
+  // Defaults on for "vs This Year" (the page's own default comparison mode) —
+  // a single month-over-month step is rarely the interesting comparison for
+  // a cost line, cumulative-to-date is.
+  let ytdView = $state(true);
 
   onMount(loadPeriods);
 
@@ -41,12 +50,106 @@
   );
   const visibleMonthIndices = $derived(monthPeriodCodes.map((_, i) => i));
 
+  // --- vs This Year / vs Last Year comparison (see docs/adr/0034) ---
+  let vdtComparisonMode = $state("vs This Year");
+  // Higher default than FinancialComparison's 0.7 — SOC Crew Cost's
+  // month-over-month swings run much smaller relative to its total
+  // (~1%, vs P&L-level comparisons) so the delta bars need more of the
+  // chart's height to read as anything but a sliver against the total bars.
+  let bridgeEmphasis = $state(0.9);
+  let vdtPeriodA = $state<string | undefined>(undefined);
+  let vdtPeriodB = $state<string | undefined>(undefined);
+  const isComparisonMode = $derived(vdtComparisonMode === "vs This Year" || vdtComparisonMode === "vs Last Year");
+
+  // "vs Last Year" only exposes one picker (the "this year" side) — its pair
+  // is derived automatically, same month one fiscal year back.
+  const resolvedPeriodA = $derived(
+    vdtComparisonMode === "vs Last Year" ? (vdtPeriodA ? priorYearSibling(vdtPeriodA) : undefined) : vdtPeriodA,
+  );
+  const resolvedPeriodB = $derived(vdtComparisonMode === "vs Last Year" ? vdtPeriodA : vdtPeriodB);
+
+  // Default both pickers to the current real-world month once the current
+  // year's Month periods have loaded — "vs This Year" defaults to the two
+  // most recent months, "vs Last Year" to the current month (see docs/adr/0034).
+  $effect(() => {
+    if (vdtPeriodA !== undefined || monthPeriodCodes.length < 12) return;
+    const currentMonthIndex = new Date().getMonth();
+    vdtPeriodA = monthPeriodCodes[Math.max(0, currentMonthIndex - 1)];
+    vdtPeriodB = monthPeriodCodes[currentMonthIndex];
+  });
+
+  $effect(() => {
+    if (!isComparisonMode || !resolvedPeriodA || !resolvedPeriodB) return;
+    loadVdtComparison(scopeState.code, SOC_CREW_COST, resolvedPeriodA, resolvedPeriodB, ytdView);
+    narrationStore.reset();
+  });
+
+  function handleExplainMovement(): void {
+    if (!resolvedPeriodA || !resolvedPeriodB) return;
+    generateNarration(scopeState.code, SOC_CREW_COST, resolvedPeriodA, resolvedPeriodB, ytdView);
+  }
+
+  const comparisonRoot = $derived(getComparisonNode(vdtComparisonStore.tree, SOC_CREW_COST));
+
+  function bridgeKind(direction: Direction): BridgeStep["kind"] {
+    return direction === "favourable" ? "increase" : direction === "adverse" ? "decrease" : "neutral";
+  }
+
+  // SOC Crew Cost is a cost — actual/valueA/valueB are negative by sign
+  // convention (docs/adr/0023), so a literal signed waterfall would grow
+  // downward from zero. That reads as upside-down to a finance user (a cost
+  // *increase* should grow the bar, not shrink it toward zero) — so the
+  // chart displays magnitude (sign-flipped when the root is a cost), while
+  // color still tracks favourable/adverse off the real signed direction
+  // (see docs/adr/0034), not the flipped display value.
+  const bridgeFlip = $derived(comparisonRoot && comparisonRoot.valueA < 0 ? -1 : 1);
+
+  const comparisonBridgeSteps = $derived<BridgeStep[]>(
+    comparisonRoot
+      ? [
+          { label: periodLabel(resolvedPeriodA ?? ""), value: comparisonRoot.valueA * bridgeFlip, kind: "total" },
+          ...getComparisonChildren(vdtComparisonStore.tree, comparisonRoot)
+            .filter((c) => c.nodeType !== "Driver Formula" && c.nodeType !== "Driver")
+            .map((c) => ({ label: c.name, value: c.delta * bridgeFlip, kind: bridgeKind(c.direction) })),
+          { label: periodLabel(resolvedPeriodB ?? ""), value: comparisonRoot.valueB * bridgeFlip, kind: "total" as const },
+        ]
+      : [],
+  );
+
+  const comparisonRows = $derived(buildComparisonRows(vdtComparisonStore.tree, SOC_CREW_COST));
+
+  const comparisonColumns = $derived<StatementColumn[]>([
+    { key: "A", label: periodLabel(resolvedPeriodA ?? "") },
+    { key: "B", label: periodLabel(resolvedPeriodB ?? "") },
+    { key: "delta", label: "Δ", isDelta: true },
+  ]);
+
+  function comparisonCellValue(row: DisplayRow, column: StatementColumn): number {
+    const node = getComparisonNode(vdtComparisonStore.tree, row.nodeId);
+    if (!node) return 0;
+    if (column.key === "A") return node.valueA;
+    if (column.key === "B") return node.valueB;
+    return node.delta;
+  }
+
+  function comparisonCellDirection(row: DisplayRow): Direction {
+    return getComparisonNode(vdtComparisonStore.tree, row.nodeId)?.direction ?? "neutral";
+  }
+
+  function comparisonCellDeltaPct(row: DisplayRow): number | null {
+    return getComparisonNode(vdtComparisonStore.tree, row.nodeId)?.deltaPct ?? null;
+  }
+
+  function comparisonRowExists(row: DisplayRow): boolean {
+    return getComparisonNode(vdtComparisonStore.tree, row.nodeId) !== undefined;
+  }
+
   let showGlCode = $state(false);
   function displayLabel(row: DisplayRow): string {
     return showGlCode ? `${row.nodeId} ${row.label}` : row.label;
   }
 
-  const pnlRows = $derived(buildDisplayRows(vdtStore.tree));
+  const pnlRows = $derived(buildDisplayRows(vdtStore.tree, "V201000000"));
 
   const columns = $derived<StatementColumn[]>(
     visibleMonthIndices.map((i, idx) => ({
@@ -86,37 +189,25 @@
     };
   }
 
-  // Same level-1-under-NPAT codes as Trends — shared verbatim outside the
-  // Cost of Revenue/Revenue pilot scope, and Revenue/Cost of Revenue
-  // themselves resolve fine here too (VDT just has different children
-  // beneath them where an Activity Node has been seeded — see docs/adr/0033).
-  const revenue = $derived(getNode(vdtStore.tree, "PNL-0002"));
-  const costOfRevenue = $derived(getNode(vdtStore.tree, "PNL-0011"));
-  const grossProfit = $derived(getNode(vdtStore.tree, "PNL-0001"));
-  const gaExpenses = $derived(getNode(vdtStore.tree, "PNL-0030"));
-  const otherIncomeExpenses = $derived(getNode(vdtStore.tree, "PNL-0054"));
-  const secondaryCost = $derived(getNode(vdtStore.tree, "PNL-0086"));
-  const taxation = $derived(getNode(vdtStore.tree, "PNL-0087"));
-  const npat = $derived(getNode(vdtStore.tree, "NPAT"));
+  // Default bridge scope: SOC Crew Cost (V201000000, under Cost of Revenue —
+  // see docs/vdt-hierarchy-crew-cost.csv), decomposed into its direct
+  // Activity Node children.
+  const socCrewCost = $derived(getNode(vdtStore.tree, "V201000000"));
+  const socCrewCostChildren = $derived(socCrewCost ? getChildren(vdtStore.tree, socCrewCost) : []);
+
+  // Same magnitude flip as comparisonBridgeSteps — SOC Crew Cost's actual is
+  // negative (a cost), and a literal signed bridge would grow downward.
+  const singlePeriodFlip = $derived(socCrewCost && socCrewCost.actual < 0 ? -1 : 1);
 
   const profitBridgeSteps = $derived(
-    revenue &&
-      costOfRevenue &&
-      grossProfit &&
-      gaExpenses &&
-      otherIncomeExpenses &&
-      secondaryCost &&
-      taxation &&
-      npat
+    socCrewCost && socCrewCostChildren.length
       ? [
-          { label: "Revenue", value: revenue.actual, kind: "total" as const },
-          { label: "Cost of Revenue", value: costOfRevenue.actual, kind: "decrease" as const },
-          { label: "Gross Profit", value: grossProfit.actual, kind: "total" as const },
-          { label: "G&A Expenses", value: gaExpenses.actual, kind: "decrease" as const },
-          { label: "Other Income & Expenses", value: otherIncomeExpenses.actual, kind: "decrease" as const },
-          { label: "Secondary Cost Elements", value: secondaryCost.actual, kind: "decrease" as const },
-          { label: "Taxation", value: taxation.actual, kind: "decrease" as const },
-          { label: "NPAT", value: npat.actual, kind: "total" as const },
+          ...socCrewCostChildren.map((child) => ({
+            label: child.name,
+            value: child.actual * singlePeriodFlip,
+            kind: "decrease" as const,
+          })),
+          { label: socCrewCost.name, value: socCrewCost.actual * singlePeriodFlip, kind: "total" as const },
         ]
       : [],
   );
@@ -124,9 +215,81 @@
 
 <PageHeader title="Value Driver" />
 <PageBody>
-  <ContextBar showYtd showPeriod={false} bind:ytd={ytdView} />
+  <ContextBar
+    showYtd
+    showPeriod={false}
+    bind:ytd={ytdView}
+    vdtComparison
+    bind:vdtComparisonMode
+    bind:vdtPeriodA
+    bind:vdtPeriodB
+  />
 
-  {#if vdtStore.status === "loading"}
+  {#if isComparisonMode}
+    {#if !resolvedPeriodA || !resolvedPeriodB}
+      <div class="pt-4 text-sm text-gray-500 dark:text-gray-400">Pick a period to compare.</div>
+    {:else if vdtComparisonStore.status === "loading"}
+      <div class="pt-4 flex-1 min-w-0 flex items-center justify-center">Loading…</div>
+    {:else if vdtComparisonStore.status === "not-yet-modelled"}
+      <div class="pt-4 flex-1 min-w-0 flex">
+        <NotYetModelled
+          label="No VDT data modelled for the selected company/BU yet."
+          class="flex-1 flex flex-col items-center justify-center"
+        />
+      </div>
+    {:else if comparisonRoot}
+      <div class="flex flex-col gap-4 pt-4 min-w-0 lg:flex-row">
+        <div class="flex flex-col gap-4 min-w-0 flex-1">
+          <Card>
+            {#snippet header()}
+              <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+                <div class="font-bold text-sm text-gray-900 dark:text-gray-50">
+                  SOC Crew Cost: {periodLabel(resolvedPeriodA ?? "")} → {periodLabel(resolvedPeriodB ?? "")}
+                </div>
+                <label class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 select-none">
+                  Emphasize changes
+                  <input type="range" min="0" max="1" step="0.05" bind:value={bridgeEmphasis} class="accent-indigo-600 dark:accent-indigo-400" />
+                </label>
+              </div>
+            {/snippet}
+            <ProfitBridge steps={comparisonBridgeSteps} height={300} emphasis={bridgeEmphasis} />
+          </Card>
+
+          <Card>
+            {#snippet header()}
+              <div class="flex justify-between items-baseline mb-2">
+                <div class="font-bold text-sm text-gray-900 dark:text-gray-50">SOC Crew Cost (VDT)</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">RM millions</div>
+              </div>
+            {/snippet}
+            <StatementTable
+              rows={comparisonRows}
+              columns={comparisonColumns}
+              cellValue={comparisonCellValue}
+              rowExists={comparisonRowExists}
+              cellDirection={comparisonCellDirection}
+              cellDeltaPct={comparisonCellDeltaPct}
+              showDeltaColoring
+              columnMinWidthPx={110}
+              minTableWidthPx={640}
+              resetKey={SOC_CREW_COST}
+            />
+          </Card>
+        </div>
+
+        <div class="lg:w-80 shrink-0">
+          <Card>
+            <MovementNarration
+              status={narrationStore.status}
+              text={narrationStore.text}
+              error={narrationStore.error}
+              onGenerate={handleExplainMovement}
+            />
+          </Card>
+        </div>
+      </div>
+    {/if}
+  {:else if vdtStore.status === "loading"}
     <div class="pt-4 flex-1 min-w-0 flex items-center justify-center">Loading…</div>
   {:else if vdtStore.status === "not-yet-modelled"}
     <div class="pt-4 flex-1 min-w-0 flex">
@@ -137,7 +300,7 @@
     </div>
   {:else}
     <div class="flex flex-col gap-4 pt-4 min-w-0">
-      <Card title="Profit Bridge: Revenue to NPAT">
+      <Card title="Cost Bridge: SOC Crew Cost">
         <ProfitBridge steps={profitBridgeSteps} height={300} />
       </Card>
 
@@ -145,7 +308,7 @@
         {#snippet header()}
           <div class="flex justify-between items-baseline mb-2">
             <div class="font-bold text-sm text-gray-900 dark:text-gray-50">
-              Income Statement (VDT)
+              SOC Crew Cost (VDT)
             </div>
             <div class="flex items-center gap-3">
               <label
