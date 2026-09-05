@@ -54,7 +54,10 @@
     refreshedAt = "",
     showYtd = false,
     showPeriod = true,
+    periodYearOnly = false,
     ytd = $bindable(false),
+    showScenario = false,
+    scenario = $bindable<"actual" | "budget">("actual"),
     showComparison = false,
     comparisonNode = $bindable<string | undefined>(undefined),
     grain = $bindable<PeriodType>("Month"),
@@ -75,7 +78,15 @@
     refreshedAt?: string;
     showYtd?: boolean;
     showPeriod?: boolean;
+    /** Restricts the Period picker to Year-level nodes only, no Quarter/Month
+     * drill-down — for screens whose whole point is a full fiscal year at
+     * once (see docs/adr/0039). */
+    periodYearOnly?: boolean;
     ytd?: boolean;
+    /** The Actual/Budget data-selection chip (see docs/adr/0039) — distinct
+     * from the vs Budget/Last Year/This Year comparison chip below. */
+    showScenario?: boolean;
+    scenario?: "actual" | "budget";
     showComparison?: boolean;
     comparisonNode?: string;
     grain?: PeriodType;
@@ -143,7 +154,15 @@
 >
   <BusinessPicker />
   {#if showPeriod}
-    <PeriodPicker />
+    <PeriodPicker yearOnly={periodYearOnly} />
+  {/if}
+  {#if showScenario}
+    <ChipSelect
+      id="scenario-select"
+      options={["actual", "budget"]}
+      labels={["Actual", "Budget"]}
+      bind:selected={scenario}
+    />
   {/if}
   {#if showComparison}
     <div class="w-72">
