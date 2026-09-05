@@ -69,7 +69,7 @@
 
   {#if reconciliationStore.status === "loading"}
     <div class="pt-4 flex-1 min-w-0 flex flex-col items-center justify-center gap-2">
-      <LottieLoader size={160} />
+      <LottieLoader size={480} />
       <div class="text-sm text-gray-500 dark:text-gray-400">Loading…</div>
     </div>
   {:else if reconciliationStore.status === "not-yet-modelled"}

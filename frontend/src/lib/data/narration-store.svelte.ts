@@ -20,7 +20,7 @@ let narration = $state<MovementNarrationData | null>(null);
 let error = $state('');
 
 /**
- * VDT Statement's movement narration — on-demand only (see docs/adr/0034),
+ * VDT Comparison's movement narration — on-demand only (see docs/adr/0034),
  * never auto-fetched on period changes. Failure is isolated here: the
  * bridge/table read from vdtComparisonStore independently and keep working
  * whether or not this ever succeeds.

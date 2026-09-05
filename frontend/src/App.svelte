@@ -8,7 +8,8 @@
   import Home from './routes/Home.svelte';
   import FinancialPerformance from './routes/FinancialPerformance.svelte';
   import FinancialComparison from './routes/FinancialComparison.svelte';
-  import VdtStatement from './routes/VdtStatement.svelte';
+  import VdtComparison from './routes/VdtComparison.svelte';
+  import VdtExplorerRedirect from './routes/VdtExplorerRedirect.svelte';
   import VdtRanked from './routes/VdtRanked.svelte';
   import VdtTree from './routes/VdtTree.svelte';
   import VdtReconciliation from './routes/VdtReconciliation.svelte';
@@ -21,7 +22,8 @@
     '/': Home,
     '/financial': FinancialPerformance,
     '/financial/compare': FinancialComparison,
-    '/vdt': VdtStatement,
+    '/vdt': VdtExplorerRedirect,
+    '/vdt/compare': VdtComparison,
     '/vdt/reconciliation': VdtReconciliation,
     '/vdt/:id': VdtRanked,
     '/vdt-tree': VdtTree,

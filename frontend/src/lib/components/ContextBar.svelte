@@ -103,7 +103,7 @@
     moneyScaleOptions.map((o) => (o.value === "auto" ? moneyScaleControlLabel("auto", automaticMoneyScale) : o.label)),
   );
 
-  // VDT Statement comparison's Period pickers are always Month-grain,
+  // VDT Comparison's Period pickers are always Month-grain,
   // restricted to the current fiscal year (see docs/adr/0034) — "vs This
   // Year" would be a contradiction in terms otherwise, and "vs Last Year"
   // only needs one picker since its pair is derived automatically.

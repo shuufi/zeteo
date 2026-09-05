@@ -109,7 +109,7 @@ _CREW_MIX_FORMULAS = [
 ]
 
 # Deliberate within-year drift so adjacent months (e.g. Aug vs Sep) show a
-# legible movement in VDT Statement's comparison bridge — see docs/adr/0034.
+# legible movement in VDT Comparison's bridge — see docs/adr/0034.
 # Before this, only hc_growth/rate_growth (year-over-year) existed and every
 # month within a year was flat (annual base plus pure noise), so a "vs This
 # Year" comparison of two arbitrary months barely moved. Centered on month

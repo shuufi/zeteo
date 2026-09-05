@@ -20,7 +20,7 @@ let status = $state<Status>('idle');
 let meta = $state<VdtComparisonMeta | null>(null);
 
 /**
- * VDT Statement's own comparison tree — a separate store from comparisonStore
+ * VDT Comparison's own comparison tree — a separate store from comparisonStore
  * (Accounting hierarchy, GET /api/gl/comparison) since they hit different
  * endpoints/trees, even though both share the ComparisonNode shape — see
  * docs/adr/0034.
