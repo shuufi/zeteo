@@ -1,4 +1,4 @@
-"""LLM-generated movement narration for VDT Statement comparisons — see docs/adr/0034.
+"""LLM-generated movement narration for VDT Comparison — see docs/adr/0034.
 
 Backend-mediated: the OpenAI key never reaches the browser, and the prompt is
 built entirely from numbers the backend already computed (a comparison

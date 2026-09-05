@@ -30,8 +30,9 @@
         {
           href: '/vdt',
           label: 'Explorer',
-          activePath: /^\/vdt$|^\/vdt\/(?!reconciliation)|^\/vdt-tree(\/.*)?$|^\/diagnostic(\/.*)?$/,
+          activePath: /^\/vdt$|^\/vdt\/(?!reconciliation|compare)|^\/vdt-tree(\/.*)?$|^\/diagnostic(\/.*)?$/,
         },
+        { href: '/vdt/compare', label: 'Comparison', activePath: '/vdt/compare' },
         { href: '/vdt/reconciliation', label: 'Reconciliation', activePath: '/vdt/reconciliation' },
       ],
     },
