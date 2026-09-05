@@ -29,7 +29,7 @@
       children: [
         {
           href: '/vdt',
-          label: 'Explorer',
+          label: 'Trends',
           activePath: /^\/vdt$|^\/vdt\/(?!reconciliation|compare)|^\/vdt-tree(\/.*)?$|^\/diagnostic(\/.*)?$/,
         },
         { href: '/vdt/compare', label: 'Comparison', activePath: '/vdt/compare' },

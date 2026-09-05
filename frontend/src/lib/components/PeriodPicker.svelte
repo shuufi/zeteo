@@ -3,6 +3,8 @@
   import { periodDraft } from '../state/period-draft.svelte';
   import { periodStore, loadPeriods, periodLabel } from '../data/period-store.svelte';
 
+  let { yearOnly = false }: { yearOnly?: boolean } = $props();
+
   loadPeriods();
 
   let open = $state(false);
@@ -29,7 +31,9 @@
   // actually commits it to periodState and refetches (see docs/adr/0027).
   function select(period: PeriodNode): void {
     periodDraft.set(period.id);
-    if (period.childIds.length === 0) {
+    // yearOnly (see docs/adr/0039) never drills into Quarter/Month — a Year
+    // pick always closes the dropdown immediately, same as picking a leaf.
+    if (yearOnly || period.childIds.length === 0) {
       open = false;
       return;
     }
@@ -65,7 +69,7 @@
       ? 'bg-indigo-600 text-white'
       : 'text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}"
   >
-    {#if period.childIds.length}
+    {#if period.childIds.length && !yearOnly}
       <svg
         viewBox="0 0 20 20"
         fill="currentColor"
@@ -95,7 +99,7 @@
 {/snippet}
 
 <div class="flex items-center gap-1.5" bind:this={rootEl}>
-  <span class="text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">Period:</span>
+  <span class="text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">{yearOnly ? 'Year' : 'Period'}:</span>
 
   <div class="relative">
     <button
