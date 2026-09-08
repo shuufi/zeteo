@@ -139,6 +139,7 @@ export interface HierarchyNode {
   budget: number;
   priorYear: number;
   monthlyActual: number[];
+  monthlyBudget: number[];
   monthlyPriorYear: number[];
   direction: Direction;
   hasFullData: boolean;

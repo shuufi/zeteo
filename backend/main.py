@@ -9,12 +9,14 @@ load_dotenv()
 from company_tree import InvalidMonetaryScope, MissingCompanyCurrency, UnknownScope, build_company_tree, resolve_scope
 from db import get_session
 from gl_tree import build_tree, diff_subtree, subtree
-from models import GLNode
+from models import GLNode, PeriodType
 from narration import NarrationUnavailable, generate_narration
 from periods import UnknownPeriod, build_period_tree, load_period_hierarchy
+from trend_analysis import TrendAnalysisUnavailable, generate_trend_analysis
 from vdt_tree import build_vdt_tree
 
 VDT_COMPARISON_ROOT_TYPES = ("Reporting Root", "Reporting Node", "Activity Node")
+VDT_TRENDS_ANCHOR = "V201000000"  # SOC Crew Cost, same fixed pilot anchor as VDT Comparison/Reconciliation
 
 app = FastAPI(title="Zeteo API")
 
@@ -223,6 +225,48 @@ def post_vdt_narration(
     except NarrationUnavailable as exc:
         raise HTTPException(503, str(exc))
     return {"narration": narration}
+
+
+@app.post("/api/vdt/trend-analysis")
+def post_vdt_trend_analysis(
+    scope: str,
+    year: str,
+    scenario: str = "actual",
+    session: Session = Depends(get_session),
+):
+    """Whole-year MoM Trend Analysis narrative for VDT Trends — see
+    docs/adr/0040. Always reads the fixed pilot anchor (SOC Crew Cost) and the
+    underlying non-cumulative monthly series, regardless of the screen's YTD
+    toggle — flagging needs monthly deltas, which a cumulative series would
+    make meaningless.
+    """
+    if scenario not in ("actual", "budget"):
+        raise HTTPException(400, "scenario must be 'actual' or 'budget'")
+
+    if not session.exec(select(GLNode).limit(1)).first():
+        raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
+
+    resolved = _resolve_monetary_scope(session, scope)
+    if resolved.get("notYetModelled"):
+        raise HTTPException(404, "No VDT data modelled for the selected company yet")
+
+    period_by_code, _ = load_period_hierarchy(session)
+    year_row = period_by_code.get(year)
+    if year_row is None:
+        raise HTTPException(404, f"Unknown period: {year}")
+    if year_row.period_type != PeriodType.YEAR:
+        raise HTTPException(400, f"{year} is not a fiscal-year period")
+
+    tree = build_vdt_tree(session, resolved["companies"], year)
+    if VDT_TRENDS_ANCHOR not in tree:
+        raise HTTPException(404, f"Anchor {VDT_TRENDS_ANCHOR} missing from VDT tree")
+
+    cache_key = (scope, year, scenario)
+    try:
+        result = generate_trend_analysis(cache_key, tree, VDT_TRENDS_ANCHOR, scenario, year_label=year)
+    except TrendAnalysisUnavailable as exc:
+        raise HTTPException(503, str(exc))
+    return {"trendAnalysis": result}
 
 
 @app.get("/api/vdt/reconciliation")

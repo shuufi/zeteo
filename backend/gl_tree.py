@@ -109,6 +109,7 @@ def _stitch_driver_nodes(
                 "budget": float(round(d_budget, 3)),
                 "priorYear": float(round(d_prior, 3)),
                 "monthlyActual": [float(round(v, 3)) for v in d_actual_monthly],
+                "monthlyBudget": [float(round(v, 3)) for v in d_budget_monthly],
                 "monthlyPriorYear": [float(round(v, 3)) for v in d_prior_monthly],
                 "direction": _direction(d_actual, d_budget),
                 "hasFullData": False,
@@ -127,6 +128,7 @@ def _stitch_driver_nodes(
             "budget": _money_json(budget) if is_money else float(round(budget, 3)),
             "priorYear": _money_json(prior) if is_money else float(round(prior, 3)),
             "monthlyActual": [_money_json(v) if is_money else float(round(v, 3)) for v in actual_monthly],
+            "monthlyBudget": [_money_json(v) if is_money else float(round(v, 3)) for v in budget_monthly],
             "monthlyPriorYear": [_money_json(v) if is_money else float(round(v, 3)) for v in prior_monthly],
             "direction": _direction(actual, budget),
             "hasFullData": False,
@@ -288,12 +290,14 @@ def compute_gl_leaf(
     prior_actual_monthly = prior_monthly.get(code, {}).get("actual", [ZERO] * 12)
     sign = 1 if node.normal_balance == NormalBalance.CREDIT else -1
     monthly_actual = [v * sign for v in actual_monthly]
+    monthly_budget = [v * sign for v in budget_monthly]
     monthly_prior = [v * sign for v in prior_actual_monthly]
     return {
         "monthlyActual": monthly_actual,
+        "monthlyBudget": monthly_budget,
         "monthlyPriorYear": monthly_prior,
         "actual": scoped_sum(monthly_actual, scope_indices),
-        "budget": scoped_sum(budget_monthly, scope_indices) * sign,
+        "budget": scoped_sum(monthly_budget, scope_indices),
         "priorYear": scoped_sum(monthly_prior, scope_indices),
     }
 
@@ -304,9 +308,11 @@ def sum_children_entry(child_entries: list[dict]) -> dict:
     vdt_tree.py (Activity Node) — summing children is summing children
     regardless of which table the parent/children rows live in."""
     monthly_actual = [sum((e["monthlyActual"][i] for e in child_entries), ZERO) for i in range(12)]
+    monthly_budget = [sum((e["monthlyBudget"][i] for e in child_entries), ZERO) for i in range(12)]
     monthly_prior = [sum((e["monthlyPriorYear"][i] for e in child_entries), ZERO) for i in range(12)]
     return {
         "monthlyActual": monthly_actual,
+        "monthlyBudget": monthly_budget,
         "monthlyPriorYear": monthly_prior,
         "actual": sum((e["actual"] for e in child_entries), ZERO),
         "budget": sum((e["budget"] for e in child_entries), ZERO),
@@ -383,6 +389,7 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
             "budget": _money_json(entry["budget"]),
             "priorYear": _money_json(entry["priorYear"]),
             "monthlyActual": [_money_json(v) for v in entry["monthlyActual"]],
+            "monthlyBudget": [_money_json(v) for v in entry["monthlyBudget"]],
             "monthlyPriorYear": [_money_json(v) for v in entry["monthlyPriorYear"]],
             "direction": _direction(entry["actual"], entry["budget"]),
             "hasFullData": full_data is not None,
