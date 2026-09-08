@@ -1,7 +1,7 @@
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 
 let status = $state<Status>('idle');
-export interface NarrationBullet {
+export interface VarianceAnalysisBullet {
   nodeId: string;
   nodeName: string;
   text: string;
@@ -10,54 +10,54 @@ export interface NarrationBullet {
   contributionPct: number | null;
 }
 
-export interface MovementNarrationData {
+export interface VarianceAnalysisData {
   headline: string;
   netAmount: number;
-  bullets: NarrationBullet[];
+  bullets: VarianceAnalysisBullet[];
 }
 
-let narration = $state<MovementNarrationData | null>(null);
+let varianceAnalysis = $state<VarianceAnalysisData | null>(null);
 let error = $state('');
 
 /**
- * VDT Comparison's movement narration — on-demand only (see docs/adr/0034),
+ * VDT Variance Analysis's narrative panel — on-demand only (see docs/adr/0034),
  * never auto-fetched on period changes. Failure is isolated here: the
  * bridge/table read from vdtComparisonStore independently and keep working
  * whether or not this ever succeeds.
  */
-export const narrationStore = {
+export const varianceAnalysisStore = {
   get status() {
     return status;
   },
-  get narration() {
-    return narration;
+  get varianceAnalysis() {
+    return varianceAnalysis;
   },
   get error() {
     return error;
   },
   reset(): void {
     status = 'idle';
-    narration = null;
+    varianceAnalysis = null;
     error = '';
   },
 };
 
-export async function generateNarration(scope: string, node: string, periodA: string, periodB: string, ytd: boolean): Promise<void> {
+export async function generateVarianceAnalysis(scope: string, node: string, periodA: string, periodB: string, ytd: boolean): Promise<void> {
   status = 'loading';
   error = '';
   try {
     const params = new URLSearchParams({ scope, node, periodA, periodB, ytd: String(ytd) });
-    const res = await fetch(`/api/vdt/narration?${params}`, { method: 'POST' });
+    const res = await fetch(`/api/vdt/variance-analysis?${params}`, { method: 'POST' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       throw new Error(body.detail ?? `Request failed: ${res.status}`);
     }
     const data = await res.json();
-    narration = data.narration;
+    varianceAnalysis = data.varianceAnalysis;
     status = 'ready';
   } catch (err) {
-    console.error('Failed to generate VDT movement narration', err);
-    error = err instanceof Error ? err.message : 'Unable to generate narration right now';
+    console.error('Failed to generate VDT variance analysis', err);
+    error = err instanceof Error ? err.message : 'Unable to generate variance analysis right now';
     status = 'error';
   }
 }

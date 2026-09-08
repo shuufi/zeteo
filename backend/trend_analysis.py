@@ -1,9 +1,9 @@
 """LLM-generated Trend Analysis narrative for VDT Trends — see docs/adr/0040.
 
-Distinct from narration.py: a monthly-series walk over server-flagged leaves,
-not a two-point diff over a full subtree. Detection is trend_flagging's job;
-this module only turns flagged facts into prose. Backend-mediated the same
-way narration.py is — the OpenAI key never reaches the browser, and every
+Distinct from variance_analysis.py: a monthly-series walk over server-flagged
+leaves, not a two-point diff over a full subtree. Detection is trend_flagging's
+job; this module only turns flagged facts into prose. Backend-mediated the same
+way variance_analysis.py is — the OpenAI key never reaches the browser, and every
 number in the prompt was already computed server-side; the model narrates
 given facts, it never computes its own arithmetic.
 """

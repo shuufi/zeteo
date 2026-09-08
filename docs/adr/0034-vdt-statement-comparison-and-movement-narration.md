@@ -1,6 +1,6 @@
-# VDT Statement's Cost Bridge gains live period comparison (vs This Year / vs Last Year) plus an LLM-generated movement narration
+# VDT Statement's Cost Bridge gains live period comparison (vs This Year / vs Last Year) plus an LLM-generated Variance Analysis narrative
 
-Today VDT Statement's ("`/vdt`" landing) Cost Bridge is a single-period decomposition — SOC Crew Cost (`V201000000`) split into its direct children's actual values, no comparison axis. The Context Bar's `vs Budget` / `vs Prior Year` / `vs This Year` chip that sits above it is purely decorative (ADR-0005) everywhere it renders. This ADR activates that chip for VDT Statement specifically, reshapes the bridge into a genuine period-over-period comparison, and adds an LLM-generated narration explaining the movement — the first LLM integration in the codebase.
+Today VDT Statement's ("`/vdt`" landing) Cost Bridge is a single-period decomposition — SOC Crew Cost (`V201000000`) split into its direct children's actual values, no comparison axis. The Context Bar's `vs Budget` / `vs Prior Year` / `vs This Year` chip that sits above it is purely decorative (ADR-0005) everywhere it renders. This ADR activates that chip for VDT Statement specifically, reshapes the bridge into a genuine period-over-period comparison, and adds an LLM-generated narrative explaining the movement — the first LLM integration in the codebase. (Renamed from "movement narration" to "Variance Analysis" — see ADR-0038.)
 
 ## Comparison modes
 
@@ -17,21 +17,21 @@ This activation is scoped to VDT Statement only. The same chip renders inert as 
 
 The bridge changes from a same-period decomposition into a waterfall matching Comparison's existing shape (ADR-0031): start bar = SOC Crew Cost's total at Period A, one bar per direct child showing its Period A→B delta (colored increase/decrease), end bar = SOC Crew Cost's total at Period B. Backed by a new endpoint, `GET /api/vdt/comparison`, the VDT-hierarchy analogue of `GET /api/gl/comparison` — same request/response shape, different tree. The statement table below the bridge becomes comparison-aware too: Period A / Period B / Delta / Delta% columns for the same subtree, in place of today's single-period actual column.
 
-## Movement narration
+## Variance Analysis narrative
 
 A new panel to the right of the bridge, populated on demand (an "Explain movement" button — never auto-fired on picker changes, to avoid an LLM call per keystroke/tweak) with an LLM-written explanation of what drove the change.
 
-**Prompt payload is the full nested hierarchy, not a flat delta list** — root (SOC Crew Cost) → Activity Node children → Posting Activity Account leaves →, for formula-driven leaves, the Driver Formula's `expression_text` (ADR-0030) plus each Driver term's own Period A/B/delta values. This lets the narration attribute movement below the dollar level — e.g. "Crew Complement rose, Payroll Rate held flat" — rather than only naming which child moved. The full tree is sent unpruned; the VDT hierarchy's pilot scope (Cost of Revenue only, ADR-0033) is shallow enough that no top-N pruning is needed yet. All numbers in the prompt are backend-computed; the LLM is instructed to narrate only from the given facts, not to compute its own deltas or percentages, to keep arithmetic hallucination-free.
+**Prompt payload is the full nested hierarchy, not a flat delta list** — root (SOC Crew Cost) → Activity Node children → Posting Activity Account leaves →, for formula-driven leaves, the Driver Formula's `expression_text` (ADR-0030) plus each Driver term's own Period A/B/delta values. This lets the narrative attribute movement below the dollar level — e.g. "Crew Complement rose, Payroll Rate held flat" — rather than only naming which child moved. The full tree is sent unpruned; the VDT hierarchy's pilot scope (Cost of Revenue only, ADR-0033) is shallow enough that no top-N pruning is needed yet. All numbers in the prompt are backend-computed; the LLM is instructed to narrate only from the given facts, not to compute its own deltas or percentages, to keep arithmetic hallucination-free.
 
 Output shape: one headline sentence summarizing net movement, followed by 2-4 bullets each naming a contributor and its driver-level cause where available.
 
-**Architecture**: backend-mediated, a new `POST /api/vdt/narration` endpoint — the API key never reaches the browser, and the backend already owns the tree/formula data the prompt is built from. Model is `gpt-4o-mini` via a new `OPENAI_API_KEY` env var (none existed in this codebase before) and `OPENAI_MODEL` (defaults to `gpt-4o-mini`) — this is a "summarize given facts" task, not one that needs a larger model for a POC. Results are cached in-memory on the backend keyed by `(root, periodA, periodB, ytd)`, cleared on process restart; no persistence layer and no explicit regenerate action for now.
+**Architecture**: backend-mediated, a new `POST /api/vdt/variance-analysis` endpoint — the API key never reaches the browser, and the backend already owns the tree/formula data the prompt is built from. Model is `gpt-4o-mini` via a new `OPENAI_API_KEY` env var (none existed in this codebase before) and `OPENAI_MODEL` (defaults to `gpt-4o-mini`) — this is a "summarize given facts" task, not one that needs a larger model for a POC. Results are cached in-memory on the backend keyed by `(root, periodA, periodB, ytd)`, cleared on process restart; no persistence layer and no explicit regenerate action for now.
 
-Narration failure (missing key, API error, timeout) is isolated to its own panel — an inline "unable to generate narration" message — and never blocks or degrades the bridge, table, or chart, which must keep working with or without OpenAI configured.
+Variance Analysis failure (missing key, API error, timeout) is isolated to its own panel — an inline "unable to generate Variance Analysis" message — and never blocks or degrades the bridge, table, or chart, which must keep working with or without OpenAI configured.
 
 ## Considered and rejected
 
-**Auto-generating narration on every period change**: rejected — fires an OpenAI call on transient in-progress picker states, adds latency to what should be a fast comparison-browsing loop, and costs money per tweak rather than per deliberate "explain this" request.
+**Auto-generating the Variance Analysis narrative on every period change**: rejected — fires an OpenAI call on transient in-progress picker states, adds latency to what should be a fast comparison-browsing loop, and costs money per tweak rather than per deliberate "explain this" request.
 
 **Sending only a flat top-N delta list to the LLM** (no hierarchy, no driver terms): rejected once it was clear the backend already computes real Driver/Driver Formula decomposition (ADR-0030) per period — a flat list would have discarded exactly the quantity-vs-rate attribution this feature is meant to surface.
 
@@ -39,6 +39,6 @@ Narration failure (missing key, API error, timeout) is isolated to its own panel
 
 ## Open items
 
-`vs Budget` remains inert on VDT Statement — no budget-comparison bridge or narration shape is defined. Activating the chip on Home/VDT Ranked/Reconciliation is explicitly deferred. Narration has no explicit regenerate action; if results ever need to be refreshed within a process lifetime (e.g. underlying facts change), that's future work.
+`vs Budget` remains inert on VDT Statement — no budget-comparison bridge or Variance Analysis shape is defined. Activating the chip on Home/VDT Ranked/Reconciliation is explicitly deferred. The Variance Analysis narrative has no explicit regenerate action; if results ever need to be refreshed within a process lifetime (e.g. underlying facts change), that's future work.
 
 **Status**: accepted

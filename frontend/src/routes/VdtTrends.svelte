@@ -33,7 +33,7 @@
   } from "../lib/data/format";
   import type { DisplayRow } from "../lib/data/types";
 
-  // Same fixed pilot scope as VDT Comparison/Reconciliation (V201000000, SOC
+  // Same fixed pilot scope as VDT Variance Analysis/Reconciliation (V201000000, SOC
   // Crew Cost) — no node picker exists for the VDT hierarchy yet (docs/adr/0037).
   const SOC_CREW_COST = "V201000000";
 

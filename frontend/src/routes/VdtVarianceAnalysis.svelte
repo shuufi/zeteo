@@ -6,7 +6,7 @@
   import Card from "../lib/components/Card.svelte";
   import ProfitBridge from "../lib/components/ProfitBridge.svelte";
   import NotYetModelled from "../lib/components/NotYetModelled.svelte";
-  import MovementNarration from "../lib/components/MovementNarration.svelte";
+  import VarianceAnalysis from "../lib/components/VarianceAnalysis.svelte";
   import LottieLoader from "../lib/components/LottieLoader.svelte";
   import StatementTable, {
     type StatementColumn,
@@ -17,9 +17,9 @@
     loadVdtComparison,
   } from "../lib/data/vdt-comparison-store.svelte";
   import {
-    narrationStore,
-    generateNarration,
-  } from "../lib/data/narration-store.svelte";
+    varianceAnalysisStore,
+    generateVarianceAnalysis,
+  } from "../lib/data/variance-analysis-store.svelte";
   import {
     getNode,
     getChildren,
@@ -132,12 +132,12 @@
       resolvedPeriodB,
       ytdView,
     );
-    narrationStore.reset();
+    varianceAnalysisStore.reset();
   });
 
   function handleExplainMovement(): void {
     if (!resolvedPeriodA || !resolvedPeriodB) return;
-    generateNarration(
+    generateVarianceAnalysis(
       scopeState.code,
       SOC_CREW_COST,
       resolvedPeriodA,
@@ -336,7 +336,7 @@
   );
 </script>
 
-<PageHeader title="VDT Comparison" />
+<PageHeader title="VDT Variance Analysis" />
 <PageBody>
   <ContextBar
     showYtd
@@ -441,10 +441,10 @@
 
         <div class="lg:w-80 shrink-0">
           <Card>
-            <MovementNarration
-              status={narrationStore.status}
-              narration={narrationStore.narration}
-              error={narrationStore.error}
+            <VarianceAnalysis
+              status={varianceAnalysisStore.status}
+              varianceAnalysis={varianceAnalysisStore.varianceAnalysis}
+              error={varianceAnalysisStore.error}
               onGenerate={handleExplainMovement}
               {currency}
               moneyScale={resolvedMoneyScale}

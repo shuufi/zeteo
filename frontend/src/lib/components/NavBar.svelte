@@ -30,9 +30,9 @@
         {
           href: '/vdt',
           label: 'Trends',
-          activePath: /^\/vdt$|^\/vdt\/(?!reconciliation|compare)|^\/vdt-tree(\/.*)?$|^\/diagnostic(\/.*)?$/,
+          activePath: /^\/vdt$|^\/vdt\/(?!reconciliation|variance)|^\/vdt-tree(\/.*)?$|^\/diagnostic(\/.*)?$/,
         },
-        { href: '/vdt/compare', label: 'Comparison', activePath: '/vdt/compare' },
+        { href: '/vdt/variance', label: 'Variance', activePath: '/vdt/variance' },
         { href: '/vdt/reconciliation', label: 'Reconciliation', activePath: '/vdt/reconciliation' },
       ],
     },
