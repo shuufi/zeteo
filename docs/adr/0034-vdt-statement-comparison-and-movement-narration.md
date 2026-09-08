@@ -1,17 +1,17 @@
-# VDT Statement's Cost Bridge gains live period comparison (vs This Year / vs Last Year) plus an LLM-generated Variance Analysis narrative
+# VDT Variance Analysis gains live period comparison (vs This Year / vs Last Year) plus an LLM-generated Variance Analysis narrative
 
-Today VDT Statement's ("`/vdt`" landing) Cost Bridge is a single-period decomposition — SOC Crew Cost (`V201000000`) split into its direct children's actual values, no comparison axis. The Context Bar's `vs Budget` / `vs Prior Year` / `vs This Year` chip that sits above it is purely decorative (ADR-0005) everywhere it renders. This ADR activates that chip for VDT Statement specifically, reshapes the bridge into a genuine period-over-period comparison, and adds an LLM-generated narrative explaining the movement — the first LLM integration in the codebase. (Renamed from "movement narration" to "Variance Analysis" — see ADR-0038.)
+VDT Variance Analysis (`/vdt/variance`) presents SOC Crew Cost (`V201000000`) as a period-over-period Cost Bridge. The Context Bar's `vs Budget` / `vs Prior Year` / `vs This Year` chip was purely decorative (ADR-0005) everywhere it rendered. This ADR activates the chip for VDT Variance Analysis, reshapes the bridge into a genuine period-over-period comparison, and adds an LLM-generated narrative explaining the movement — the first LLM integration in the codebase. See ADR-0038 for the rename history.
 
 ## Comparison modes
 
-The chip's three options are relabelled `vs Budget` / `vs Last Year` / `vs This Year` (`vs Prior Year` renamed to match the language used to design this feature — same underlying "prior fiscal year" concept). Only `vs Last Year` and `vs This Year` gain live behavior; `vs Budget` stays inert on VDT Statement (no budget-comparison bridge shape defined yet).
+The chip's three options are relabelled `vs Budget` / `vs Last Year` / `vs This Year` (`vs Prior Year` renamed to match the language used to design this feature — same underlying "prior fiscal year" concept). Only `vs Last Year` and `vs This Year` gain live behavior; `vs Budget` stays inert on VDT Variance Analysis (no budget-comparison bridge shape defined yet).
 
 - **vs This Year**: two Period pickers, Period A and Period B, both restricted to the current fiscal year (`FY26`) — arbitrary cross-year comparison already exists as the separate Comparison screen (ADR-0031); this mode is deliberately within-year. Defaults to the two most recent months, e.g. `FY26-08` and `FY26-09`.
 - **vs Last Year**: one Period picker (defaults to the current month, `FY26-09`), the same month one fiscal year back is derived automatically (`FY25-09`) — mirrors how Trends' Period chip already treats "prior year" (ADR-0032): the real prior year's actuals, not a stored scenario.
 
 Grain is fixed to Month for both modes — no Quarter/Year toggle, and "grain" is never surfaced as UI language; pickers are labelled "Period A"/"Period B" (or a single "Period" in `vs Last Year` mode). The YTD checkbox stays orthogonal to comparison mode: when on, it converts whichever period(s) are selected from single-month to Jan-through-that-month cumulative ranges, in both modes.
 
-This activation is scoped to VDT Statement only. The same chip renders inert as before on Home, VDT Ranked, and Reconciliation; giving it live behavior there is a separate decision, not part of this change.
+This activation is scoped to VDT Variance Analysis only. The same chip renders inert as before on Home, VDT Ranked, and Reconciliation; giving it live behavior there is a separate decision, not part of this change.
 
 ## Cost Bridge reshaped
 
@@ -35,10 +35,10 @@ Variance Analysis failure (missing key, API error, timeout) is isolated to its o
 
 **Sending only a flat top-N delta list to the LLM** (no hierarchy, no driver terms): rejected once it was clear the backend already computes real Driver/Driver Formula decomposition (ADR-0030) per period — a flat list would have discarded exactly the quantity-vs-rate attribution this feature is meant to surface.
 
-**Activating the chip everywhere it renders** (Home, VDT Ranked, Reconciliation), not just VDT Statement: rejected as out of scope — those screens have no defined comparison behavior yet, and ADR-0005 made the chip inert deliberately; extending live behavior to them is a future, separate decision.
+**Activating the chip everywhere it renders** (Home, VDT Ranked, Reconciliation), not just VDT Variance Analysis: rejected as out of scope — those screens have no defined comparison behavior yet, and ADR-0005 made the chip inert deliberately; extending live behavior to them is a future, separate decision.
 
 ## Open items
 
-`vs Budget` remains inert on VDT Statement — no budget-comparison bridge or Variance Analysis shape is defined. Activating the chip on Home/VDT Ranked/Reconciliation is explicitly deferred. The Variance Analysis narrative has no explicit regenerate action; if results ever need to be refreshed within a process lifetime (e.g. underlying facts change), that's future work.
+`vs Budget` remains inert on VDT Variance Analysis — no budget-comparison bridge or Variance Analysis shape is defined. Activating the chip on Home/VDT Ranked/Reconciliation is explicitly deferred. The Variance Analysis narrative has no explicit regenerate action; if results ever need to be refreshed within a process lifetime (e.g. underlying facts change), that's future work.
 
 **Status**: accepted

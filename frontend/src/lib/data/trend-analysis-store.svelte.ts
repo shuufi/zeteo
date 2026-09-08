@@ -41,7 +41,7 @@ let error = $state('');
 
 /**
  * VDT Trends' on-demand Trend Analysis narrative — see docs/adr/0040. Never
- * auto-fetched, same rationale as Movement Narration (docs/adr/0034): fails
+ * auto-fetched, same rationale as Variance Analysis (docs/adr/0034): fails
  * independently of the statement table, which reads from vdtStore and keeps
  * working whether or not this ever succeeds.
  */
