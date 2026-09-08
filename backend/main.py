@@ -221,7 +221,9 @@ def post_vdt_variance_analysis(
 
     cache_key = (scope, node, period_a, period_b, ytd)
     try:
-        variance_analysis = generate_variance_analysis(cache_key, node, payload["nodes"], period_a, period_b)
+        variance_analysis = generate_variance_analysis(
+            cache_key, node, payload["nodes"], period_a, period_b, currency=payload["currency"]
+        )
     except VarianceAnalysisUnavailable as exc:
         raise HTTPException(503, str(exc))
     return {"varianceAnalysis": variance_analysis}
