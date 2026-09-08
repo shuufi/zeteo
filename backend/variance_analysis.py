@@ -1,4 +1,4 @@
-"""LLM-generated movement narration for VDT Comparison — see docs/adr/0034.
+"""LLM-generated Variance Analysis narrative for VDT Variance Analysis — see docs/adr/0034.
 
 Backend-mediated: the OpenAI key never reaches the browser, and the prompt is
 built entirely from numbers the backend already computed (a comparison
@@ -13,7 +13,7 @@ from typing import Any, Optional
 _cache: dict[tuple, dict[str, Any]] = {}
 
 
-class NarrationUnavailable(Exception):
+class VarianceAnalysisUnavailable(Exception):
     pass
 
 
@@ -52,14 +52,14 @@ def _render_node(nodes: dict[str, dict], code: str, depth: int, lines: list[str]
         _render_node(nodes, child_id, depth + 1, lines)
 
 
-def build_prompt(root: str, nodes: dict[str, dict], period_a: str, period_b: str) -> str:
+def build_variance_analysis_prompt(root: str, nodes: dict[str, dict], period_a: str, period_b: str) -> str:
     lines: list[str] = []
     _render_node(nodes, root, 0, lines)
     tree_text = "\n".join(lines)
     root_name = nodes.get(root, {}).get("name", root)
     return (
-        "You are a financial analyst writing a short analytical-review narration "
-        f"explaining the movement in {root_name} between period {period_a} (A) and "
+        "You are a financial analyst writing a short analytical-review variance "
+        f"analysis explaining the movement in {root_name} between period {period_a} (A) and "
         f"period {period_b} (B).\n\n"
         "Use ONLY the numbers and structure given below — never invent, recompute, "
         "or restate a figure differently than given. The hierarchy below shows how "
@@ -77,7 +77,7 @@ def build_prompt(root: str, nodes: dict[str, dict], period_a: str, period_b: str
         "brackets and without the name that follows it. "
         "Do not put currency symbols or monetary amounts in headline or bullet text: "
         "the application renders those raw values separately so its display scale can "
-        "change without regenerating this narration. Percentages (deltaPct) ARE scale-"
+        "change without regenerating this analysis. Percentages (deltaPct) ARE scale-"
         "independent, so you may and should reference them — but always state deltaPct "
         "as an unsigned number paired with the magnitude word (e.g. 'increased 12%'), "
         "never with its raw +/- sign, since that sign follows accounting convention "
@@ -95,23 +95,23 @@ def build_prompt(root: str, nodes: dict[str, dict], period_a: str, period_b: str
     )
 
 
-def _parse_narration(text: str, root: str, nodes: dict[str, dict]) -> dict[str, Any]:
+def _parse_variance_analysis(text: str, root: str, nodes: dict[str, dict]) -> dict[str, Any]:
     cleaned = text.strip()
     if cleaned.startswith("```"):
         cleaned = cleaned.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     try:
         generated = json.loads(cleaned)
     except json.JSONDecodeError as exc:
-        raise NarrationUnavailable("OpenAI returned invalid narration JSON") from exc
+        raise VarianceAnalysisUnavailable("OpenAI returned invalid variance analysis JSON") from exc
 
     headline = generated.get("headline") if isinstance(generated, dict) else None
     bullets = generated.get("bullets") if isinstance(generated, dict) else None
     if not isinstance(headline, str) or not headline.strip() or not isinstance(bullets, list):
-        raise NarrationUnavailable("OpenAI returned an invalid narration structure")
+        raise VarianceAnalysisUnavailable("OpenAI returned an invalid variance analysis structure")
 
     root_node = nodes.get(root)
     if root_node is None:
-        raise NarrationUnavailable("Narration root is missing from the comparison")
+        raise VarianceAnalysisUnavailable("Variance analysis root is missing from the comparison")
     root_delta = root_node["delta"]
 
     structured_bullets: list[dict[str, Any]] = []
@@ -150,7 +150,7 @@ def _parse_narration(text: str, root: str, nodes: dict[str, dict]) -> dict[str, 
         )
 
     if not structured_bullets:
-        raise NarrationUnavailable("OpenAI did not reference a valid monetary contributor")
+        raise VarianceAnalysisUnavailable("OpenAI did not reference a valid monetary contributor")
 
     return {
         "headline": headline.strip(),
@@ -159,7 +159,7 @@ def _parse_narration(text: str, root: str, nodes: dict[str, dict]) -> dict[str, 
     }
 
 
-def generate_narration(
+def generate_variance_analysis(
     cache_key: tuple,
     root: str,
     nodes: dict[str, dict],
@@ -171,15 +171,15 @@ def generate_narration(
 
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        raise NarrationUnavailable("OPENAI_API_KEY is not configured")
+        raise VarianceAnalysisUnavailable("OPENAI_API_KEY is not configured")
 
     try:
         from openai import OpenAI
     except ImportError as exc:
-        raise NarrationUnavailable("openai package not installed") from exc
+        raise VarianceAnalysisUnavailable("openai package not installed") from exc
 
     model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-    prompt = build_prompt(root, nodes, period_a, period_b)
+    prompt = build_variance_analysis_prompt(root, nodes, period_a, period_b)
 
     try:
         client = OpenAI(api_key=api_key)
@@ -190,11 +190,11 @@ def generate_narration(
         )
         text: Optional[str] = response.choices[0].message.content
     except Exception as exc:
-        raise NarrationUnavailable(f"OpenAI request failed: {exc}") from exc
+        raise VarianceAnalysisUnavailable(f"OpenAI request failed: {exc}") from exc
 
     if not text:
-        raise NarrationUnavailable("OpenAI returned an empty response")
+        raise VarianceAnalysisUnavailable("OpenAI returned an empty response")
 
-    narration = _parse_narration(text, root, nodes)
-    _cache[cache_key] = narration
-    return narration
+    variance_analysis = _parse_variance_analysis(text, root, nodes)
+    _cache[cache_key] = variance_analysis
+    return variance_analysis

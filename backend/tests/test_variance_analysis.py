@@ -1,11 +1,11 @@
-"""Movement narration keeps prose separate from raw monetary references."""
+"""Variance Analysis narrative keeps prose separate from raw monetary references."""
 
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from narration import _parse_narration, build_prompt  # noqa: E402
+from variance_analysis import _parse_variance_analysis, build_variance_analysis_prompt  # noqa: E402
 
 
 NODES = {
@@ -32,8 +32,8 @@ NODES = {
 }
 
 
-def test_narration_parser_attaches_authoritative_raw_deltas():
-    result = _parse_narration(
+def test_variance_analysis_parser_attaches_authoritative_raw_deltas():
+    result = _parse_variance_analysis(
         '{"headline":"Crew cost increased.","bullets":[{"nodeId":"CHILD","text":"Officer cost was the main contributor."}]}',
         "ROOT",
         NODES,
@@ -46,8 +46,8 @@ def test_narration_parser_attaches_authoritative_raw_deltas():
     assert result["bullets"][0]["contributionPct"] == 60.0
 
 
-def test_narration_prompt_uses_generic_money_unit_and_requests_no_formatted_amounts():
-    prompt = build_prompt("ROOT", NODES, "FY26-M01", "FY26-M02")
+def test_variance_analysis_prompt_uses_generic_money_unit_and_requests_no_formatted_amounts():
+    prompt = build_variance_analysis_prompt("ROOT", NODES, "FY26-M01", "FY26-M02")
 
     assert "Reporting Node, money" in prompt
     assert "RM_M" not in prompt
@@ -55,12 +55,12 @@ def test_narration_prompt_uses_generic_money_unit_and_requests_no_formatted_amou
     assert "Percentages (deltaPct) ARE scale-independent" in prompt
 
 
-def test_narration_prompt_labels_cost_increase_despite_negative_delta():
+def test_variance_analysis_prompt_labels_cost_increase_despite_negative_delta():
     # Crew Cost is a debit-normal account, so a real-world cost INCREASE is
     # stored as a MORE NEGATIVE delta (see docs/adr/0023) — the prompt must
     # hand the LLM an explicit "increased" label rather than let it infer
     # direction from delta's sign, or it will wrongly say "decreased".
-    prompt = build_prompt("ROOT", NODES, "FY26-M01", "FY26-M02")
+    prompt = build_variance_analysis_prompt("ROOT", NODES, "FY26-M01", "FY26-M02")
 
     assert "delta=-250000.0" in prompt or "delta=-250000" in prompt
     assert "magnitude increased" in prompt

@@ -10,13 +10,13 @@ from company_tree import InvalidMonetaryScope, MissingCompanyCurrency, UnknownSc
 from db import get_session
 from gl_tree import build_tree, diff_subtree, subtree
 from models import GLNode, PeriodType
-from narration import NarrationUnavailable, generate_narration
+from variance_analysis import VarianceAnalysisUnavailable, generate_variance_analysis
 from periods import UnknownPeriod, build_period_tree, load_period_hierarchy
 from trend_analysis import TrendAnalysisUnavailable, generate_trend_analysis
 from vdt_tree import build_vdt_tree
 
 VDT_COMPARISON_ROOT_TYPES = ("Reporting Root", "Reporting Node", "Activity Node")
-VDT_TRENDS_ANCHOR = "V201000000"  # SOC Crew Cost, same fixed pilot anchor as VDT Comparison/Reconciliation
+VDT_TRENDS_ANCHOR = "V201000000"  # SOC Crew Cost, same fixed pilot anchor as VDT Variance Analysis/Reconciliation
 
 app = FastAPI(title="Zeteo API")
 
@@ -152,7 +152,7 @@ def _vdt_comparison_payload(
     period_b: str,
     ytd: bool,
 ) -> dict:
-    """Shared by GET /api/vdt/comparison and POST /api/vdt/narration — both
+    """Shared by GET /api/vdt/comparison and POST /api/vdt/variance-analysis — both
     need the same resolved-scope, period-validated, diffed VDT subtree (see
     docs/adr/0034). Raises HTTPException on any resolution failure."""
     if not session.exec(select(GLNode).limit(1)).first():
@@ -206,8 +206,8 @@ def get_vdt_comparison(
     return _vdt_comparison_payload(session, scope, node, period_a, period_b, ytd)
 
 
-@app.post("/api/vdt/narration")
-def post_vdt_narration(
+@app.post("/api/vdt/variance-analysis")
+def post_vdt_variance_analysis(
     scope: str,
     node: str,
     period_a: str = Query(alias="periodA"),
@@ -221,10 +221,10 @@ def post_vdt_narration(
 
     cache_key = (scope, node, period_a, period_b, ytd)
     try:
-        narration = generate_narration(cache_key, node, payload["nodes"], period_a, period_b)
-    except NarrationUnavailable as exc:
+        variance_analysis = generate_variance_analysis(cache_key, node, payload["nodes"], period_a, period_b)
+    except VarianceAnalysisUnavailable as exc:
         raise HTTPException(503, str(exc))
-    return {"narration": narration}
+    return {"varianceAnalysis": variance_analysis}
 
 
 @app.post("/api/vdt/trend-analysis")
