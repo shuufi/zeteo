@@ -49,7 +49,7 @@
     </div>
   {:else if status === 'loading'}
     <div class="flex flex-col items-center justify-center gap-2 py-2">
-      <div class="w-1/2">
+      <div class="w-40">
         <LottieLoader src={thinkingSrc} size={400} aspectRatio={1} responsive />
       </div>
       <div class="text-xs text-gray-500 dark:text-gray-400">Thinking...</div>

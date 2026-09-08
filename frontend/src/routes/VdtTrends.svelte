@@ -159,7 +159,7 @@
     </div>
   {:else}
     <div class="pt-4 min-w-0">
-      <div class="max-w-2xl">
+      <div>
         <Card>
           <TrendAnalysis
             status={trendAnalysisStore.status}
