@@ -9,6 +9,11 @@
   import StatementTable, {
     type StatementColumn,
   } from "../lib/components/StatementTable.svelte";
+  import TrendAnalysis from "../lib/components/TrendAnalysis.svelte";
+  import {
+    trendAnalysisStore,
+    generateTrendAnalysis,
+  } from "../lib/data/trend-analysis-store.svelte";
   import { vdtStore, loadVdtScope } from "../lib/data/vdt-store.svelte";
   import { getNode, buildDisplayRows } from "../lib/data/gl-client";
   import {
@@ -107,6 +112,21 @@
   function displayLabel(row: DisplayRow): string {
     return showGlCode ? `${row.nodeId} ${row.label}` : row.label;
   }
+
+  function handleAnalyseTrends(): void {
+    if (!currentYearId) return;
+    generateTrendAnalysis(scopeState.code, currentYearId, scenario);
+  }
+
+  // Reset when the underlying data Trend Analysis reads changes: Company,
+  // Year, or Actual/Budget. GL-code toggle, Monetary scale, and YTD do NOT
+  // reset — none change the monthly series (docs/adr/0040).
+  let lastTrendKey = "";
+  $effect(() => {
+    const key = `${scopeState.code}:${currentYearId}:${scenario}`;
+    if (lastTrendKey && key !== lastTrendKey) trendAnalysisStore.reset();
+    lastTrendKey = key;
+  });
 </script>
 
 <PageHeader title="VDT Trends" />
@@ -139,47 +159,62 @@
     </div>
   {:else}
     <div class="pt-4 min-w-0">
-      <Card>
-        {#snippet header()}
-          <div class="flex justify-between items-baseline mb-2">
-            <div class="font-bold text-sm text-gray-900 dark:text-gray-50">
-              SOC Crew Cost (VDT)
-            </div>
-            <div class="flex items-center gap-3">
-              <label
-                class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none"
-              >
-                <input
-                  type="checkbox"
-                  bind:checked={showGlCode}
-                  class="h-3 w-3"
-                />
-                Show code
-              </label>
-              <div class="text-xs text-gray-500 dark:text-gray-400">
-                {moneyCaption(currency, resolvedMoneyScale)}
+      <div>
+        <Card>
+          <TrendAnalysis
+            status={trendAnalysisStore.status}
+            analysis={trendAnalysisStore.analysis}
+            error={trendAnalysisStore.error}
+            onGenerate={handleAnalyseTrends}
+            {currency}
+            moneyScale={resolvedMoneyScale}
+            {months}
+          />
+        </Card>
+      </div>
+      <div class="mt-4">
+        <Card>
+          {#snippet header()}
+            <div class="flex justify-between items-baseline mb-2">
+              <div class="font-bold text-sm text-gray-900 dark:text-gray-50">
+                SOC Crew Cost (VDT)
+              </div>
+              <div class="flex items-center gap-3">
+                <label
+                  class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none"
+                >
+                  <input
+                    type="checkbox"
+                    bind:checked={showGlCode}
+                    class="h-3 w-3"
+                  />
+                  Show code
+                </label>
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {moneyCaption(currency, resolvedMoneyScale)}
+                </div>
               </div>
             </div>
-          </div>
-        {/snippet}
-        <StatementTable
-          rows={pnlRows}
-          {columns}
-          {cellValue}
-          {rowExists}
-          {cellHref}
-          labelFor={displayLabel}
-          showLabelTooltip
-          resizable
-          initialLineItemWidth={280}
-          lineItemMinWidth={160}
-          lineItemMaxWidth={640}
-          columnMinWidthPx={64}
-          minTableWidthPx={1080}
-          {currency}
-          moneyScale={resolvedMoneyScale}
-        />
-      </Card>
+          {/snippet}
+          <StatementTable
+            rows={pnlRows}
+            {columns}
+            {cellValue}
+            {rowExists}
+            {cellHref}
+            labelFor={displayLabel}
+            showLabelTooltip
+            resizable
+            initialLineItemWidth={280}
+            lineItemMinWidth={160}
+            lineItemMaxWidth={640}
+            columnMinWidthPx={64}
+            minTableWidthPx={1080}
+            {currency}
+            moneyScale={resolvedMoneyScale}
+          />
+        </Card>
+      </div>
     </div>
   {/if}
 </PageBody>

@@ -76,6 +76,7 @@ def _compute_posting_activity_account(
     monthly_budget = [v * sign for v in budget_monthly]
     return {
         "monthlyActual": monthly_actual,
+        "monthlyBudget": monthly_budget,
         "monthlyPriorYear": [ZERO] * 12,
         "actual": scoped_sum(monthly_actual, scope_indices),
         "budget": scoped_sum(monthly_budget, scope_indices),
@@ -179,6 +180,7 @@ def build_vdt_tree(
                 "budget": _money_json(entry["budget"]),
                 "priorYear": _money_json(entry["priorYear"]),
                 "monthlyActual": [_money_json(v) for v in entry["monthlyActual"]],
+                "monthlyBudget": [_money_json(v) for v in entry["monthlyBudget"]],
                 "monthlyPriorYear": [_money_json(v) for v in entry["monthlyPriorYear"]],
                 "direction": _direction(entry["actual"], entry["budget"]),
                 "hasFullData": full_data is not None,
@@ -202,6 +204,7 @@ def build_vdt_tree(
                 "budget": _money_json(entry["budget"]),
                 "priorYear": _money_json(entry["priorYear"]),
                 "monthlyActual": [_money_json(v) for v in entry["monthlyActual"]],
+                "monthlyBudget": [_money_json(v) for v in entry["monthlyBudget"]],
                 "monthlyPriorYear": [_money_json(v) for v in entry["monthlyPriorYear"]],
                 "direction": _direction(entry["actual"], entry["budget"]),
                 "hasFullData": False,
@@ -221,6 +224,7 @@ def build_vdt_tree(
                 "budget": _money_json(entry["budget"]),
                 "priorYear": _money_json(entry["priorYear"]),
                 "monthlyActual": [_money_json(v) for v in entry["monthlyActual"]],
+                "monthlyBudget": [_money_json(v) for v in entry["monthlyBudget"]],
                 "monthlyPriorYear": [_money_json(v) for v in entry["monthlyPriorYear"]],
                 "direction": _direction(entry["actual"], entry["budget"]),
                 "hasFullData": False,

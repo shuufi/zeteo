@@ -120,6 +120,24 @@ _CREW_MIX_FORMULAS = [
 _MONTHLY_HC_GROWTH = 0.02
 _MONTHLY_RATE_GROWTH = 0.015
 
+# Deliberate one-off operational anomalies for VDT Trends' Trend Analysis
+# narrative (docs/adr/0040) to have something to narrate — without these, the
+# smooth compounding drift above never crosses Trend Analysis's 15% MoM /
+# 5%-of-root thresholds in any seeded year. Actual scenario only, so Budget
+# stays on the smooth baseline (the spike also reads as an Actual-vs-Budget
+# variance, not just an MoM swing). Each entry bumps exactly one month; the
+# following month's plain baseline then reads as a matching drop back down —
+# modelling a real one-off event (relief crew boarded for a drydock, a
+# crew-rotation batch) rather than a permanent step change.
+_SEEDED_ANOMALIES: dict[tuple[str, str, int], float] = {
+    ("DRV-CREWMIX-SR-HC", "FY26", 4): 1.25,   # relief senior officers boarded
+    ("DRV-CREWMOVE-COUNT", "FY26", 9): 1.70,  # crew rotation batch
+}
+
+
+def _apply_anomaly(driver_code: str, fiscal_year: str, month: int, value: float) -> float:
+    return value * _SEEDED_ANOMALIES.get((driver_code, fiscal_year, month), 1.0)
+
 
 def _decimal(value: float, places: str) -> Decimal:
     return Decimal(str(value)).quantize(Decimal(places), rounding=ROUND_HALF_UP)
@@ -158,13 +176,14 @@ def build_crew_mix_seed(
                 period_code = f"{fiscal_year}-M{month:02d}"
                 hc_month = hc_annual * ((1 + _MONTHLY_HC_GROWTH) ** (month - 6.5))
                 rate_month = rate_annual * ((1 + _MONTHLY_RATE_GROWTH) ** (month - 6.5))
+                hc_month_actual = _apply_anomaly(hc_code, fiscal_year, month, hc_month)
                 facts.append(
                     DriverFact(
                         code=hc_code,
                         company=focus_company,
                         period_code=period_code,
                         scenario=Scenario.ACTUAL,
-                        amount=_decimal(hc_month * rng.uniform(0.995, 1.005), "0.001"),
+                        amount=_decimal(hc_month_actual * rng.uniform(0.995, 1.005), "0.001"),
                     )
                 )
                 facts.append(
@@ -404,13 +423,16 @@ def build_pending_account_seed(
                 period_code = f"{fiscal_year}-M{month:02d}"
                 month_value = annual * ((1 + monthly_growth) ** (month - 6.5))
                 for scenario in (Scenario.ACTUAL, Scenario.BUDGET):
+                    value = month_value
+                    if scenario == Scenario.ACTUAL:
+                        value = _apply_anomaly(driver_code, fiscal_year, month, value)
                     facts.append(
                         DriverFact(
                             code=driver_code,
                             company=focus_company,
                             period_code=period_code,
                             scenario=scenario,
-                            amount=_decimal(month_value * rng.uniform(*noise_range), places),
+                            amount=_decimal(value * rng.uniform(*noise_range), places),
                         )
                     )
 
