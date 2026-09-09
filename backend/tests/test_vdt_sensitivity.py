@@ -3,8 +3,10 @@
 Unit tests exercise the module functions directly against `conftest.fixture_graph`
 (mirrors test_vdt_tree.py); endpoint tests use TestClient's SSE-streaming support
 (mirrors test_main.py's shape). Elasticity-computing tests use a short 2-month
-window to keep the per-month-rerun cost (and test runtime) small — window length
-itself is covered separately by the partial-window test.
+window for readable fixture data — a driver-direction rerun batches every
+month of the window into one call, so window length no longer drives rerun
+count; window-length handling itself is covered separately by the
+partial-window test.
 """
 
 import asyncio
@@ -185,7 +187,7 @@ def test_elasticity_both_directions_kept_and_cost_driver_bump_is_adverse(session
     engine = DriverEngine(session, [codes["company"]], window)
     vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
     candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
-    total = len(candidates) * 2 * len(window)
+    total = len(candidates) * 2
 
     events = list(
         compute_sensitivity(session, codes["company"], "actual", window, codes["root"], candidates, 10.0, engine, total)
@@ -251,7 +253,7 @@ def test_shared_driver_outside_scope_measured_to_npat_in_full(session):
     assert codes["driver_headcount"] in candidates
     assert "VA-3" not in vdt_before[codes["act_top"]]["childIds"]
 
-    total = len(candidates) * 2 * len(window)
+    total = len(candidates) * 2
     result = next(
         e
         for e in compute_sensitivity(
@@ -277,7 +279,7 @@ def test_shared_driver_outside_scope_measured_to_npat_in_full(session):
         plain_driver_engine = DriverEngine(plain_session, [session2_codes["company"]], window)
         plain_vdt = build_vdt_tree(plain_session, [session2_codes["company"]], month_codes=window)
         plain_candidates = terminal_driver_candidates(plain_driver_engine, session2_codes["act_top"], plain_vdt)
-        plain_total = len(plain_candidates) * 2 * len(window)
+        plain_total = len(plain_candidates) * 2
         without_va3_result = next(
             e
             for e in compute_sensitivity(
@@ -316,7 +318,7 @@ def test_baseline_npat_near_zero_flags_all_na_but_keeps_dollar_impact(session):
     engine = DriverEngine(session, [codes["company"]], window)
     vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
     candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
-    total = len(candidates) * 2 * len(window)
+    total = len(candidates) * 2
 
     result = next(
         e
@@ -350,7 +352,7 @@ def test_baseline_driver_zero_flags_na(session):
     engine = DriverEngine(session, [codes["company"]], window)
     vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
     candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
-    total = len(candidates) * 2 * len(window)
+    total = len(candidates) * 2
 
     result = next(
         e
@@ -393,7 +395,7 @@ def test_divide_by_zero_site_flags_candidate_feeding_it(session):
     vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
     candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
     assert "DRV-ZERO-DIVISOR" in candidates
-    total = len(candidates) * 2 * len(window)
+    total = len(candidates) * 2
 
     result = next(
         e
@@ -415,7 +417,7 @@ def test_empty_scope_returns_no_terminal_drivers_reason(session):
 
     candidates = terminal_driver_candidates(engine, codes["rev"], vdt_nodes)
     assert candidates == []
-    total = len(candidates) * 2 * len(window)
+    total = len(candidates) * 2
     assert total == 0
 
     events = list(
@@ -428,14 +430,20 @@ def test_empty_scope_returns_no_terminal_drivers_reason(session):
     assert result["candidates"] == []
 
 
-def test_partial_trailing_window_scales_reruns_to_its_own_width(session):
+def test_partial_trailing_window_batches_reruns_independent_of_width(session):
+    """Window width no longer multiplies the cycle count — every month in the
+    window batches into ONE compute_npat_with_overrides() call per direction
+    (see vdt_sensitivity.py's SENSITIVITY_MAX_CYCLES note), so a 3-month
+    partial window costs the same `candidates * 2` reruns as a 12-month one;
+    this only proves a partial (narrower-than-12) window still threads
+    correctly through that single batched call, not that reruns scale with it."""
     codes = fixture_graph(session)
     window = _window(session, codes, 3)  # a short "partial window" stand-in
     engine = DriverEngine(session, [codes["company"]], window)
     vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
     candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
-    total = len(candidates) * 2 * len(window)
-    assert total == len(candidates) * 2 * 3
+    total = len(candidates) * 2
+    assert total == len(candidates) * 2  # width-independent, unlike pre-batching
 
     events = list(
         compute_sensitivity(session, codes["company"], "actual", window, codes["root"], candidates, 10.0, engine, total)

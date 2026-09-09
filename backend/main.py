@@ -411,8 +411,10 @@ def get_vdt_reconciliation(
 
 async def _sensitivity_event_stream(events, request: Request, augment_result) -> AsyncIterator[bytes]:
     """Drives `compute_sensitivity()`'s generator, checking
-    `request.is_disconnected()` after each yielded event (an "each per-month
-    rerun", per docs/adr/0043) so an abandoned run performs no further
+    `request.is_disconnected()` after each yielded event (an "each
+    per-driver-direction rerun" — a whole window's months batch into one
+    `compute_npat_with_overrides` call, see vdt_sensitivity.py's
+    `SENSITIVITY_MAX_CYCLES` note) so an abandoned run performs no further
     compute — `events` is a lazy generator, so simply ending this loop
     (never calling `next()` again) is enough to stop it early. Module-level
     (not a nested closure) so it's directly unit-testable with a fake
@@ -493,7 +495,7 @@ def post_vdt_sensitivity(payload: SensitivityRequest, request: Request, session:
     engine = DriverEngine(session, resolved["companies"], window_codes)
     candidates = terminal_driver_candidates(engine, payload.scopeNode, vdt_nodes)
 
-    total = len(candidates) * 2 * len(window_codes)
+    total = len(candidates) * 2
     if total > SENSITIVITY_MAX_CYCLES:
         raise HTTPException(422, f"sensitivity run too large: {total} cycles, cap {SENSITIVITY_MAX_CYCLES}")
 

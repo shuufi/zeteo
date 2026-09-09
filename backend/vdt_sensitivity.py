@@ -40,11 +40,14 @@ NPAT_REL_EPSILON = Decimal("0.005")
 DRIVER_REL_EPSILON = Decimal("0.005")
 
 # Upfront cap on total engine reruns (terminal Drivers in scope x 2
-# directions x months in window) — an unbounded whole-book run is real
-# compute cost multiplied by however many concurrent SSE connections are
-# open (see docs/adr/0043's "Open items"). Each rerun is a full
-# build_vdt_tree() walk (see module docstring), so this is deliberately
-# conservative for a browser-facing on-demand run.
+# directions). A rerun batches every month in the window into ONE
+# compute_npat_with_overrides() call (one build_vdt_tree() walk covering
+# the whole DriverOverride.monthly_values array) rather than one walk per
+# month, so window width no longer multiplies the cycle count — only
+# amortized cost-per-call scales with it. An unbounded whole-book run is
+# still real compute cost multiplied by however many concurrent SSE
+# connections are open (see docs/adr/0043's "Open items"); this cap
+# remains deliberately conservative for a browser-facing on-demand run.
 SENSITIVITY_MAX_CYCLES = 1500
 
 
@@ -240,8 +243,10 @@ def compute_sensitivity(
 ) -> Iterator[dict]:
     """Generator driving the whole elasticity run — see docs/adr/0043's
     "Progress reporting" decision. Yields `{"type": "progress", ...}` after
-    EACH per-month rerun, then exactly one `{"type": "result", ...}` at the
-    end. A plain (sync) generator so main.py's SSE loop can check
+    EACH per-driver-direction rerun (all months in the window batched into
+    one `compute_npat_with_overrides` call — see module docstring's
+    `SENSITIVITY_MAX_CYCLES` note), then exactly one `{"type": "result", ...}`
+    at the end. A plain (sync) generator so main.py's SSE loop can check
     `request.is_disconnected()` between `next()` calls and simply stop
     consuming it early — nothing further gets computed once the caller
     abandons the loop (generators are lazy).
@@ -307,16 +312,17 @@ def compute_sensitivity(
         # below (dividing by a near-zero baseline is the undefined part).
         directions: dict[str, DirectionResult] = {}
         for key, sign in (("up", 1), ("down", -1)):
-            bumped_sum = ZERO
-            for m, month_code in enumerate(month_codes):
-                base_val = baseline_driver[code][m]
-                bumped_val = base_val * (Decimal("1") + sign * bump_frac)
-                rerun = compute_npat_with_overrides(
-                    session, company, scenario, [month_code], [DriverOverride(code, [bumped_val])], root_code
-                )
-                bumped_sum += rerun["npat"][0]
-                completed += 1
-                yield {"type": "progress", "completed": completed, "total": total}
+            # One call for the whole window, not one per month — build_vdt_tree()
+            # and the DriverEngine it's fed already walk every month in a single
+            # pass; looping compute_npat_with_overrides() per month was paying
+            # for that walk M times over for no reason (see SENSITIVITY_MAX_CYCLES).
+            bumped_values = [v * (Decimal("1") + sign * bump_frac) for v in baseline_driver[code]]
+            rerun = compute_npat_with_overrides(
+                session, company, scenario, month_codes, [DriverOverride(code, bumped_values)], root_code
+            )
+            bumped_sum = sum(rerun["npat"], ZERO)
+            completed += 1
+            yield {"type": "progress", "completed": completed, "total": total}
 
             npat_impact = bumped_sum - baseline_sum
             if na:
