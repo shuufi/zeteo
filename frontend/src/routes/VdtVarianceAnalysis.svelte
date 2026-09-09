@@ -48,14 +48,19 @@
     resolveMoneyScale,
     type MoneyScaleChoice,
   } from "../lib/data/format";
-  import type { DisplayRow, Direction, BridgeStep } from "../lib/data/types";
+  import type {
+    DisplayRow,
+    Direction,
+    BridgeStep,
+    PeriodType,
+  } from "../lib/data/types";
 
   const SOC_CREW_COST = "V201000000";
 
-  // Defaults on for "vs This Year" (the page's own default comparison mode) —
-  // a single month-over-month step is rarely the interesting comparison for
-  // a cost line, cumulative-to-date is.
+  // A single month-over-month step is rarely the interesting comparison for
+  // a cost line, so the default comparison is cumulative-to-date.
   let ytdView = $state(true);
+  let draftYtdView = $state(true);
 
   onMount(loadPeriods);
 
@@ -84,7 +89,12 @@
   const visibleMonthIndices = $derived(monthPeriodCodes.map((_, i) => i));
 
   // --- vs This Year / vs Last Year comparison (see docs/adr/0034) ---
+  // The Context Bar stages comparison choices. Only their applied counterparts
+  // drive the fetch and visible bridge/table (ADR-0042).
   let vdtComparisonMode = $state("vs Last Year");
+  let draftVdtComparisonMode = $state("vs Last Year");
+  let vdtComparisonPeriodType = $state<PeriodType>("Month");
+  let draftVdtComparisonPeriodType = $state<PeriodType>("Month");
   // Higher default than FinancialComparison's 0.7 — SOC Crew Cost's
   // month-over-month swings run much smaller relative to its total
   // (~1%, vs P&L-level comparisons) so the delta bars need more of the
@@ -92,11 +102,72 @@
   let bridgeEmphasis = $state(0.9);
   let vdtPeriodA = $state<string | undefined>(undefined);
   let vdtPeriodB = $state<string | undefined>(undefined);
+  let draftVdtPeriodA = $state<string | undefined>(undefined);
+  let draftVdtPeriodB = $state<string | undefined>(undefined);
+  let comparisonInitialized = $state(false);
+  let seededDraftPeriodType = $state<PeriodType | undefined>(undefined);
   const isComparisonMode = $derived(
     vdtComparisonMode === "vs This Year" ||
       vdtComparisonMode === "vs Last Year",
   );
   let moneyScale = $state<MoneyScaleChoice>("auto");
+
+  const draftComparisonPeriods = $derived(
+    Object.values(periodStore.tree)
+      .filter(
+        (p) =>
+          p.periodType === draftVdtComparisonPeriodType &&
+          (p.id === currentYearId || p.id.startsWith(`${currentYearId}-`)),
+      )
+      .sort((a, b) => a.order - b.order),
+  );
+
+  // A change in Compare by replaces stale draft picks with a valid latest
+  // pair. Year has only one current-fiscal-year Period and therefore always
+  // uses the matching-prior-year mode.
+  $effect(() => {
+    if (
+      seededDraftPeriodType === draftVdtComparisonPeriodType ||
+      !draftComparisonPeriods.length
+    )
+      return;
+    const latest = draftComparisonPeriods.at(-1)?.id;
+    const previous = draftComparisonPeriods.at(-2)?.id;
+    if (!latest) return;
+
+    draftVdtPeriodA = latest;
+    draftVdtPeriodB =
+      draftVdtComparisonPeriodType === "Year" ? undefined : previous;
+    if (draftVdtComparisonPeriodType === "Year")
+      draftVdtComparisonMode = "vs Last Year";
+    seededDraftPeriodType = draftVdtComparisonPeriodType;
+
+    if (!comparisonInitialized) {
+      vdtComparisonMode = draftVdtComparisonMode;
+      vdtComparisonPeriodType = draftVdtComparisonPeriodType;
+      vdtPeriodA = latest;
+      vdtPeriodB =
+        draftVdtComparisonPeriodType === "Year" ? undefined : previous;
+      ytdView = draftYtdView;
+      comparisonInitialized = true;
+    }
+  });
+
+  const vdtComparisonDirty = $derived(
+    draftVdtComparisonMode !== vdtComparisonMode ||
+      draftVdtComparisonPeriodType !== vdtComparisonPeriodType ||
+      draftVdtPeriodA !== vdtPeriodA ||
+      draftVdtPeriodB !== vdtPeriodB ||
+      draftYtdView !== ytdView,
+  );
+
+  function applyVdtComparison(): void {
+    vdtComparisonMode = draftVdtComparisonMode;
+    vdtComparisonPeriodType = draftVdtComparisonPeriodType;
+    vdtPeriodA = draftVdtPeriodA;
+    vdtPeriodB = draftVdtPeriodB;
+    ytdView = draftYtdView;
+  }
 
   // "vs Last Year" only exposes one picker (the "this year" side) — its pair
   // is derived automatically, same month one fiscal year back.
@@ -110,18 +181,6 @@
   const resolvedPeriodB = $derived(
     vdtComparisonMode === "vs Last Year" ? vdtPeriodA : vdtPeriodB,
   );
-
-  // Default to December (full fiscal year in view) once the current year's
-  // Month periods have loaded — "vs Last Year" (the page's own default
-  // mode) reads only vdtPeriodA, so Dec FYXX vs Dec FY(XX-1) is the default
-  // full-year comparison; "vs This Year" falls back to Nov vs Dec if the
-  // user switches modes without repicking (see docs/adr/0034).
-  $effect(() => {
-    if (vdtPeriodA !== undefined || monthPeriodCodes.length < 12) return;
-    const decemberIndex = monthPeriodCodes.length - 1;
-    vdtPeriodA = monthPeriodCodes[decemberIndex];
-    vdtPeriodB = monthPeriodCodes[decemberIndex - 1];
-  });
 
   $effect(() => {
     if (!isComparisonMode || !resolvedPeriodA || !resolvedPeriodB) return;
@@ -341,11 +400,14 @@
   <ContextBar
     showYtd
     showPeriod={false}
-    bind:ytd={ytdView}
+    bind:ytd={draftYtdView}
     vdtComparison
-    bind:vdtComparisonMode
-    bind:vdtPeriodA
-    bind:vdtPeriodB
+    bind:vdtComparisonMode={draftVdtComparisonMode}
+    bind:vdtComparisonPeriodType={draftVdtComparisonPeriodType}
+    bind:vdtPeriodA={draftVdtPeriodA}
+    bind:vdtPeriodB={draftVdtPeriodB}
+    {vdtComparisonDirty}
+    onVdtComparisonApply={applyVdtComparison}
     showMoneyScale
     {currency}
     {moneyValues}

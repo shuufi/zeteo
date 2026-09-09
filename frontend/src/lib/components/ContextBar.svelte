@@ -23,23 +23,27 @@
 
   const comparisonOptions = ["vs Budget", "vs Last Year", "vs This Year"];
 
-  // Business/Period only stage a draft when picked (see docs/adr/0027) —
-  // this is what actually commits scopeState/periodState and refetches.
+  // Business/Period stage a draft when picked (see docs/adr/0027); VDT
+  // Variance Analysis supplies its own staged comparison commit callback.
   function applyPending(): void {
-    scopeState.set(scopeDraft.code, scopeDraft.label);
-    periodState.set(periodDraft.code);
-    loadScope(scopeDraft.code, periodDraft.code);
-    // Only refresh the VDT tree if this session has already settled a load
-    // for it at least once (visited a /vdt* route) — its default 'loading'
-    // status before that first visit means "never fetched," not "in
-    // flight," so this avoids an unconditional second fetch on every Apply
-    // for users who never touch VDT Explorer.
-    if (vdtStore.status === "ready" || vdtStore.status === "not-yet-modelled" || vdtStore.status === "error") {
-      loadVdtScope(scopeDraft.code, periodDraft.code);
+    const hasContextDraft = scopeDraft.dirty || periodDraft.dirty;
+    if (hasContextDraft) {
+      scopeState.set(scopeDraft.code, scopeDraft.label);
+      periodState.set(periodDraft.code);
+      loadScope(scopeDraft.code, periodDraft.code);
+      // Only refresh the VDT tree if this session has already settled a load
+      // for it at least once (visited a /vdt* route) — its default 'loading'
+      // status before that first visit means "never fetched," not "in
+      // flight," so this avoids an unconditional second fetch on every Apply
+      // for users who never touch VDT Explorer.
+      if (vdtStore.status === "ready" || vdtStore.status === "not-yet-modelled" || vdtStore.status === "error") {
+        loadVdtScope(scopeDraft.code, periodDraft.code);
+      }
+      scopeDraft.reset();
+      periodDraft.reset();
+      moneyScale = "auto";
     }
-    scopeDraft.reset();
-    periodDraft.reset();
-    moneyScale = "auto";
+    onVdtComparisonApply();
   }
 
   interface Crumb {
@@ -65,8 +69,11 @@
     periodB = $bindable<string | undefined>(undefined),
     vdtComparison = false,
     vdtComparisonMode = $bindable("vs This Year"),
+    vdtComparisonPeriodType = $bindable<PeriodType>("Month"),
     vdtPeriodA = $bindable<string | undefined>(undefined),
     vdtPeriodB = $bindable<string | undefined>(undefined),
+    vdtComparisonDirty = false,
+    onVdtComparisonApply = () => {},
     showComparisonChip = true,
     showMoneyScale = false,
     currency = "",
@@ -96,8 +103,11 @@
      * everywhere else the chip stays decorative (ADR-0005). See docs/adr/0034. */
     vdtComparison?: boolean;
     vdtComparisonMode?: string;
+    vdtComparisonPeriodType?: PeriodType;
     vdtPeriodA?: string;
     vdtPeriodB?: string;
+    vdtComparisonDirty?: boolean;
+    onVdtComparisonApply?: () => void;
     /** The vs Budget/vs Last Year/vs This Year chip that stays decorative
      * everywhere it isn't wired live (ADR-0005) — set false to omit it
      * entirely on screens it has no bearing on at all. */
@@ -114,15 +124,23 @@
     moneyScaleOptions.map((o) => (o.value === "auto" ? moneyScaleControlLabel("auto", automaticMoneyScale) : o.label)),
   );
 
-  // VDT Variance Analysis's Period pickers are always Month-grain,
-  // restricted to the current fiscal year (see docs/adr/0034) — "vs This
-  // Year" would be a contradiction in terms otherwise, and "vs Last Year"
-  // only needs one picker since its pair is derived automatically.
+  // VDT Variance Analysis compares a same-type Month, Quarter, or Year within
+  // the current fiscal year (ADR-0042). `vs Last Year` derives the matching
+  // earlier Period, so it needs only one picker.
   const vdtCurrentYearId = $derived(periodYearOf(periodState.code));
-  const vdtYearMonths = $derived(
+  const vdtPeriods = $derived(
     Object.values(periodStore.tree)
-      .filter((p) => p.periodType === "Month" && p.id.startsWith(`${vdtCurrentYearId}-M`))
+      .filter(
+        (p) =>
+          p.periodType === vdtComparisonPeriodType &&
+          (p.id === vdtCurrentYearId || p.id.startsWith(`${vdtCurrentYearId}-`)),
+      )
       .sort((a, b) => a.order - b.order),
+  );
+  const vdtComparisonOptions = $derived(
+    vdtComparisonPeriodType === "Year"
+      ? ["vs Budget", "vs Last Year"]
+      : comparisonOptions,
   );
 
   const grains: PeriodType[] = ["Month", "Quarter", "Year"];
@@ -146,6 +164,13 @@
     grain = g;
     periodA = undefined;
     periodB = undefined;
+  }
+
+  function setVdtComparisonPeriodType(periodType: PeriodType): void {
+    if (periodType === vdtComparisonPeriodType) return;
+    vdtComparisonPeriodType = periodType;
+    if (periodType === "Year" && vdtComparisonMode === "vs This Year")
+      vdtComparisonMode = "vs Last Year";
   }
 </script>
 
@@ -192,13 +217,29 @@
     <PeriodSelect label="Period B" periods={periodsForGrain[grain]} bind:value={periodB} />
   {/if}
   {#if vdtComparison}
-    <ChipSelect id="comparison-select" options={comparisonOptions} bind:selected={vdtComparisonMode} />
+    <ChipSelect id="comparison-select" options={vdtComparisonOptions} bind:selected={vdtComparisonMode} />
+    <div class="flex items-center gap-1.5">
+      <span class="text-xs whitespace-nowrap text-gray-500 dark:text-gray-400">Compare by:</span>
+      <div class="inline-flex rounded-md shadow-xs">
+        {#each grains as periodType (periodType)}
+          <button
+            type="button"
+            onclick={() => setVdtComparisonPeriodType(periodType)}
+            class="px-3 py-1.5 text-xs font-medium border first:rounded-l-md last:rounded-r-md -ml-px first:ml-0 {vdtComparisonPeriodType === periodType
+              ? 'bg-indigo-600 border-indigo-600 text-white z-10'
+              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-white/5 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/10'}"
+          >
+            {periodType}
+          </button>
+        {/each}
+      </div>
+    </div>
     {#if vdtComparisonMode === "vs This Year"}
-      <PeriodSelect label="Period A" periods={vdtYearMonths} bind:value={vdtPeriodA} />
+      <PeriodSelect label="Period A" periods={vdtPeriods} bind:value={vdtPeriodA} />
       <span class="text-gray-400 dark:text-gray-500">vs</span>
-      <PeriodSelect label="Period B" periods={vdtYearMonths} bind:value={vdtPeriodB} />
+      <PeriodSelect label="Period B" periods={vdtPeriods} bind:value={vdtPeriodB} />
     {:else if vdtComparisonMode === "vs Last Year"}
-      <PeriodSelect label="Period" periods={vdtYearMonths} bind:value={vdtPeriodA} />
+      <PeriodSelect label="Period" periods={vdtPeriods} bind:value={vdtPeriodA} />
     {/if}
   {:else if showComparisonChip}
     <ChipSelect
@@ -231,7 +272,7 @@
   <button
     type="button"
     onclick={applyPending}
-    disabled={!scopeDraft.dirty && !periodDraft.dirty}
+    disabled={!scopeDraft.dirty && !periodDraft.dirty && !vdtComparisonDirty}
     class="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-700 dark:disabled:text-gray-400"
   >
     Apply

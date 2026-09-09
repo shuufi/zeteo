@@ -1,0 +1,5 @@
+# VDT Variance Analysis compares same-grain periods
+
+VDT Variance Analysis supports Year, Quarter, and Month comparisons rather than Month alone. The two selected Periods must have the same grain: `vs This Year` compares any two periods of that grain within the current fiscal year, while `vs Last Year` derives the matching period in the previous fiscal year. `vs This Year` is unavailable for Year because a fiscal year has only one Year Period. This preserves meaningful like-for-like variance and retains the screen's existing comparison-mode boundaries. A `Compare by` control exposes Month, Quarter, and Year without using technical grain terminology, and reseeds the newest valid same-type pair on change. Comparison mode, period, type, and YTD are staged with the Context Bar and reload the Cost Bridge and statement only on Apply. The default remains the latest available Month in `vs Last Year` mode with YTD on. Its YTD toggle changes a Quarter from periodic to cumulative-to-quarter-end, but a Year is already cumulative and therefore unchanged.
+
+**Status**: accepted
