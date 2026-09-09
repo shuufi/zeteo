@@ -9,6 +9,7 @@
   import FinancialPerformance from './routes/FinancialPerformance.svelte';
   import FinancialComparison from './routes/FinancialComparison.svelte';
   import VdtVarianceAnalysis from './routes/VdtVarianceAnalysis.svelte';
+  import VdtSensitivity from './routes/VdtSensitivity.svelte';
   import VdtTrends from './routes/VdtTrends.svelte';
   import VdtRanked from './routes/VdtRanked.svelte';
   import VdtTree from './routes/VdtTree.svelte';
@@ -25,6 +26,7 @@
     '/vdt': VdtTrends,
     '/vdt/variance': VdtVarianceAnalysis,
     '/vdt/reconciliation': VdtReconciliation,
+    '/vdt/sensitivity': VdtSensitivity,
     '/vdt/:id': VdtRanked,
     '/vdt-tree': VdtTree,
     '/vdt-tree/:id': VdtTree,

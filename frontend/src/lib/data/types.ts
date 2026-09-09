@@ -78,6 +78,54 @@ export interface Sensitivity {
   mostVariable: string[];
 }
 
+/**
+ * VDT Sensitivity Analysis's elasticity-ranking result — see docs/adr/0043.
+ * Deliberately named distinctly from the unused `Sensitivity` interface above
+ * (that one's a Driver Diagnostic mock — `mostSensitive`/`mostVariable` — and
+ * isn't this feature) so the two never collide.
+ */
+export type SensitivityNaReason = 'baseline-driver-zero' | 'divide-by-zero' | 'baseline-npat-zero';
+
+export interface SensitivityDirection {
+  elasticityPct: number | null;
+  npatImpact: number;
+  polarity: Direction;
+}
+
+export interface SensitivityCandidate {
+  driverCode: string;
+  description: string;
+  unit: OperationalUnit;
+  up: SensitivityDirection;
+  down: SensitivityDirection;
+  rankMagnitude: number | null;
+  na: boolean;
+  naReason: SensitivityNaReason | null;
+}
+
+export interface SensitivityResult {
+  scope: string;
+  scopeNode: string;
+  scopeName: string;
+  scenario: 'actual' | 'budget';
+  currency: string;
+  bumpPct: number;
+  months: string[];
+  monthLabels: string[];
+  windowLabel: string;
+  baselineNpat: number;
+  npatNearZero: boolean;
+  reason: null | 'no-terminal-drivers' | 'all-na';
+  candidateCount: number;
+  ranked: SensitivityCandidate[];
+  candidates: SensitivityCandidate[];
+}
+
+export interface SensitivityProgress {
+  completed: number;
+  total: number;
+}
+
 export interface BenchmarkBar {
   id: string;
   label: string;
