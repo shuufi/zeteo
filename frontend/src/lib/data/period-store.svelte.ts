@@ -38,31 +38,30 @@ export function periodYearOf(code: string): string | undefined {
 }
 
 /**
- * The Month one fiscal year before `code`'s own fiscal year, same month
- * order — the client-side half of "vs Last Year" (see docs/adr/0034): the
- * user picks one Month, this finds its automatic pairing without a second
- * picker. Mirrors backend/gl_tree.py's _prior_year_code, extended down to
- * Month grain rather than stopping at the Year.
+ * The same-grain Period one fiscal year before `code` — the client-side half
+ * of VDT Variance Analysis's "vs Last Year" pairing (see ADR-0042). Years
+ * pair directly; Quarters and Months pair by their fiscal-year-relative order.
  */
 export function priorYearSibling(code: string): string | undefined {
-  const month = periodStore.tree[code];
+  const period = periodStore.tree[code];
   const yearId = periodYearOf(code);
-  if (!month || !yearId) return undefined;
+  if (!period || !yearId) return undefined;
   const year = periodStore.tree[yearId];
   const priorYear = Object.values(periodStore.tree).find((p) => p.periodType === 'Year' && p.order === year.order - 1);
   if (!priorYear) return undefined;
+  if (period.periodType === 'Year') return priorYear.id;
 
-  function findMonth(parentId: string): string | undefined {
+  function findSameGrainPeriod(parentId: string): string | undefined {
     for (const childId of periodStore.tree[parentId]?.childIds ?? []) {
       const child = periodStore.tree[childId];
       if (!child) continue;
-      if (child.periodType === 'Month' && child.order === month.order) return child.id;
-      const found = findMonth(childId);
+      if (child.periodType === period.periodType && child.order === period.order) return child.id;
+      const found = findSameGrainPeriod(childId);
       if (found) return found;
     }
     return undefined;
   }
-  return findMonth(priorYear.id);
+  return findSameGrainPeriod(priorYear.id);
 }
 
 /** Periods are static master data (not scope-dependent) — fetched once, unlike loadScope. */

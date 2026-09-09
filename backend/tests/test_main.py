@@ -84,6 +84,30 @@ def test_vdt_reconciliation_ytd_scopes_both_trees(session):
     assert ytd_vdt == plain_vdt * 2
 
 
+def test_vdt_comparison_accepts_quarter_and_year_pairs(session):
+    codes = fixture_graph(session)
+    client = _client(session)
+
+    for period_a, period_b in (
+        (f"{codes['year']}-Q1", f"{codes['year']}-Q2"),
+        (codes["year"], codes["year"]),
+    ):
+        resp = client.get(
+            "/api/vdt/comparison",
+            params={
+                "scope": codes["company"],
+                "node": codes["act_top"],
+                "periodA": period_a,
+                "periodB": period_b,
+            },
+        )
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["periodA"] == period_a
+        assert body["periodB"] == period_b
+
+
 def test_vdt_reconciliation_rejects_leaf_node(session):
     codes = fixture_graph(session)
     client = _client(session)
