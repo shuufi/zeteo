@@ -39,7 +39,7 @@ from gl_tree import (
     ZERO,
 )
 from models import ActivityNode, GLNode, NodeType, NormalBalance, PeriodType, PostingActivityAccount
-from periods import load_period_hierarchy, month_indices_for, ytd_month_indices_for
+from periods import load_period_hierarchy, month_indices_for, ordered_month_codes_of_year, ytd_month_indices_for
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +53,7 @@ def _compute_posting_activity_account(
     engine: DriverEngine,
     gl_by_code: dict[str, GLNode],
     scope_indices: Optional[set[int]],
+    width: int,
 ) -> dict:
     """A Posting Activity Account is always Driver-Formula-driven — no raw
     fact fallback, unlike a GL leaf (see docs/adr/0033). Sign is derived from
@@ -69,15 +70,15 @@ def _compute_posting_activity_account(
         budget_monthly = engine.target_value(code, "budget")
     else:
         logger.warning("Posting Activity Account %s has no Driver Formula bound to it — seed data gap", code)
-        actual_monthly = [ZERO] * 12
-        budget_monthly = [ZERO] * 12
+        actual_monthly = [ZERO] * width
+        budget_monthly = [ZERO] * width
 
     monthly_actual = [v * sign for v in actual_monthly]
     monthly_budget = [v * sign for v in budget_monthly]
     return {
         "monthlyActual": monthly_actual,
         "monthlyBudget": monthly_budget,
-        "monthlyPriorYear": [ZERO] * 12,
+        "monthlyPriorYear": [ZERO] * width,
         "actual": scoped_sum(monthly_actual, scope_indices),
         "budget": scoped_sum(monthly_budget, scope_indices),
         "priorYear": ZERO,
@@ -85,7 +86,11 @@ def _compute_posting_activity_account(
 
 
 def build_vdt_tree(
-    session: Session, companies: list[str], period_code: Optional[str] = None, ytd: bool = False
+    session: Session,
+    companies: list[str],
+    period_code: Optional[str] = None,
+    ytd: bool = False,
+    month_codes: Optional[list[str]] = None,
 ) -> dict[str, dict]:
     gl_nodes = session.exec(select(GLNode)).all()
     gl_by_code = {n.code: n for n in gl_nodes}
@@ -118,25 +123,44 @@ def build_vdt_tree(
     for n in accounts:
         children_by_parent[n.parent_code].append(n.code)
 
-    # --- period/company scoping (identical to build_tree()) ---
+    # --- period/company scoping (identical to build_tree(), except the
+    # Trailing-mode branch below — see docs/adr/0042) ---
     period_by_code, period_children = load_period_hierarchy(session)
-    years = sorted((p for p in period_by_code.values() if p.period_type == PeriodType.YEAR), key=lambda p: p.order)
-    year_code = _year_of(period_by_code, period_code) if period_code is not None else (years[-1].code if years else None)
-    prior_year_code = _prior_year_code(period_by_code, year_code) if year_code else None
-    scope_indices = (
-        ytd_month_indices_for(period_by_code, period_children, period_code)
-        if ytd
-        else month_indices_for(period_by_code, period_children, period_code)
-    )
+    if month_codes is not None:
+        # Trailing mode: caller already resolved an explicit window (possibly
+        # spanning two fiscal years' sibling Year roots), so none of the
+        # single-Year machinery below applies. No prior-year series (that
+        # concept means "the same window one fiscal year back", which ADR-0042
+        # doesn't define for an arbitrary trailing window) and no sub-window
+        # scope_indices (Trailing mode's Cumulative toggle is computed
+        # client-side from the full monthlyActual array, unlike Financial Year
+        # mode's YTD, which nothing here still calls YTD for VDT Trends itself).
+        window_codes: Optional[list[str]] = month_codes
+        prior_window_codes: Optional[list[str]] = None
+        scope_indices = None
+    else:
+        years = sorted((p for p in period_by_code.values() if p.period_type == PeriodType.YEAR), key=lambda p: p.order)
+        year_code = _year_of(period_by_code, period_code) if period_code is not None else (years[-1].code if years else None)
+        prior_year_code = _prior_year_code(period_by_code, year_code) if year_code else None
+        window_codes = ordered_month_codes_of_year(period_by_code, period_children, year_code) if year_code else None
+        prior_window_codes = (
+            ordered_month_codes_of_year(period_by_code, period_children, prior_year_code) if prior_year_code else None
+        )
+        scope_indices = (
+            ytd_month_indices_for(period_by_code, period_children, period_code)
+            if ytd
+            else month_indices_for(period_by_code, period_children, period_code)
+        )
 
     def scoped_sum_local(monthly_values: list[Decimal]) -> Decimal:
         return scoped_sum(monthly_values, scope_indices)
 
-    monthly = load_monthly(session, companies, period_by_code, period_children, year_code)
-    prior_monthly = load_monthly(session, companies, period_by_code, period_children, prior_year_code)
+    width = len(window_codes) if window_codes else 12
+    monthly = load_monthly(session, companies, window_codes)
+    prior_monthly = load_monthly(session, companies, prior_window_codes)
 
-    period_len = len(scope_indices) if scope_indices is not None else 12
-    engine = DriverEngine(session, companies, year_code)
+    period_len = len(scope_indices) if scope_indices is not None else width
+    engine = DriverEngine(session, companies, window_codes)
 
     computed: dict[str, dict] = {}
 
@@ -145,14 +169,14 @@ def build_vdt_tree(
             return computed[code]
 
         if code in account_by_code:
-            entry = _compute_posting_activity_account(code, account_by_code[code], engine, gl_by_code, scope_indices)
+            entry = _compute_posting_activity_account(code, account_by_code[code], engine, gl_by_code, scope_indices, width)
         elif code in gl_by_code and gl_by_code[code].node_type == NodeType.POSTING_GL_ACCOUNT:
-            entry = compute_gl_leaf(gl_by_code[code], engine, monthly, prior_monthly, scope_indices)
+            entry = compute_gl_leaf(gl_by_code[code], engine, monthly, prior_monthly, scope_indices, width)
         else:
             # GL Reporting Root/Node (unmodified or GL-passthrough) or Activity
             # Node — both are just "sum my children" in this tree.
             child_entries = [compute(c) for c in children_by_parent.get(code, [])]
-            entry = sum_children_entry(child_entries)
+            entry = sum_children_entry(child_entries, width)
 
         computed[code] = entry
         return entry

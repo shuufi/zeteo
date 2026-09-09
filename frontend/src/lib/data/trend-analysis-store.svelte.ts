@@ -62,11 +62,25 @@ export const trendAnalysisStore = {
   },
 };
 
-export async function generateTrendAnalysis(scope: string, year: string, scenario: 'actual' | 'budget'): Promise<void> {
+/**
+ * `window` mirrors the backend's mutually-exclusive `year`/`trailingEnd`
+ * params (see docs/adr/0042) — Financial Year mode passes a Year code,
+ * Trailing mode passes the anchor Month code.
+ */
+export async function generateTrendAnalysis(
+  scope: string,
+  scenario: 'actual' | 'budget',
+  window: { year: string } | { trailingEnd: string },
+): Promise<void> {
   status = 'loading';
   error = '';
   try {
-    const params = new URLSearchParams({ scope, year, scenario });
+    const params = new URLSearchParams({ scope, scenario });
+    if ('trailingEnd' in window) {
+      params.set('trailingEnd', window.trailingEnd);
+    } else {
+      params.set('year', window.year);
+    }
     const res = await fetch(`/api/vdt/trend-analysis?${params}`, { method: 'POST' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));

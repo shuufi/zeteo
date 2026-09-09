@@ -76,8 +76,9 @@ def _round_driver_series(unit: str, series: list[float]) -> list[float]:
 
 def _collect_drivers(tree: dict[str, dict], leaf_id: str, scenario: str) -> list[dict]:
     """Walk the leaf's Driver Formula / Driver descendants, returning each
-    Driver term's 12-month series in the selected scenario (its own unit, not
-    money). Explains WHY the leaf moved — quantity vs rate."""
+    Driver term's monthly series (matching the tree's window length) in the
+    selected scenario (its own unit, not money). Explains WHY the leaf moved
+    — quantity vs rate."""
     out: list[dict] = []
     leaf = tree.get(leaf_id)
     for f_id in (leaf or {}).get("childIds", []):
@@ -116,7 +117,7 @@ def flag_trends(tree: dict[str, dict], root: str, scenario: str) -> list[dict]:
             continue
         series = _series_for(node, scenario)
         months: list[dict] = []
-        for m in range(1, 12):  # Jan (0) has no in-year prior month
+        for m in range(1, len(series)):  # index 0 has no prior month in this series
             prev, cur = series[m - 1], series[m]
             root_total = abs(root_series[m])
             if root_total < EPSILON or abs(cur) <= ROOT_SHARE_THRESHOLD * root_total:

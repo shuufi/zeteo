@@ -18,7 +18,7 @@ from sqlmodel import Session, col, select
 from diagnostic_content import DIAGNOSTIC_CONTENT
 from driver_engine import DriverEngine
 from models import GLFact, GLNode, NodeType, NormalBalance, Period, PeriodType
-from periods import load_period_hierarchy, month_codes_of_year, month_indices_for, ytd_month_indices_for
+from periods import load_period_hierarchy, month_indices_for, ordered_month_codes_of_year, ytd_month_indices_for
 
 
 ZERO = Decimal("0")
@@ -240,28 +240,31 @@ def scoped_sum(monthly_values: list[Decimal], scope_indices: Optional[set[int]])
 def load_monthly(
     session: Session,
     companies: list[str],
-    period_by_code: dict[str, Period],
-    period_children: dict[str, list[str]],
-    target_year_code: Optional[str],
+    month_codes: Optional[list[str]],
 ) -> dict[str, dict[str, list[Decimal]]]:
-    """gl_code -> scenario -> 12-wide monthly array, scoped to one Year and
-    `companies` — see docs/adr/0032 (facts across different fiscal years
-    share month-array indices 0-11, so mixing years here would silently
-    sum e.g. FY24-M01 and FY26-M01 into the same slot).
+    """gl_code -> scenario -> monthly array (one slot per entry in
+    `month_codes`, in that order) for `companies`. `month_codes` is an
+    explicit, already-resolved ordered list — a single Year's 12 Month codes
+    for build_tree()/build_vdt_tree()'s Financial Year path, or a Trailing-
+    mode window that can span two fiscal years' sibling Year roots (see
+    docs/adr/0032, docs/adr/0042). Callers must never pass a `month_codes`
+    that silently mixes two years into the same slot by coincidence — every
+    caller here resolves its own explicit, deliberate window first.
     """
-    result: dict[str, dict[str, list[Decimal]]] = defaultdict(lambda: defaultdict(lambda: [ZERO] * 12))
-    if not companies or target_year_code is None:
+    width = len(month_codes) if month_codes else 12
+    result: dict[str, dict[str, list[Decimal]]] = defaultdict(lambda: defaultdict(lambda: [ZERO] * width))
+    if not companies or not month_codes:
         return result
-    month_codes = month_codes_of_year(period_by_code, period_children, target_year_code)
+    code_to_index = {code: i for i, code in enumerate(month_codes)}
     # Selecting only the needed columns (rather than full GLFact rows)
     # skips ORM row hydration, the dominant cost for ~40k facts per scope.
     facts = session.exec(
         select(GLFact.code, GLFact.scenario, GLFact.period_code, GLFact.amount)
         .where(col(GLFact.company).in_(companies))
-        .where(col(GLFact.period_code).in_(list(month_codes)))
+        .where(col(GLFact.period_code).in_(month_codes))
     ).all()
     for code, scenario, fact_period_code, amount in facts:
-        result[code][scenario.value][month_codes[fact_period_code]] += _decimal(amount)
+        result[code][scenario.value][code_to_index[fact_period_code]] += _decimal(amount)
     return result
 
 
@@ -271,6 +274,7 @@ def compute_gl_leaf(
     monthly: dict[str, dict[str, list[Decimal]]],
     prior_monthly: dict[str, dict[str, list[Decimal]]],
     scope_indices: Optional[set[int]],
+    width: int = 12,
 ) -> dict:
     """A Posting GL Account leaf's computed entry — shared by build_tree() and
     vdt_tree.py's GL-passthrough branches (see docs/adr/0033)."""
@@ -282,12 +286,12 @@ def compute_gl_leaf(
         budget_monthly = engine.target_value(code, "budget")
     else:
         scenarios = monthly.get(code, {})
-        actual_monthly = scenarios.get("actual", [ZERO] * 12)
-        budget_monthly = scenarios.get("budget", [ZERO] * 12)
+        actual_monthly = scenarios.get("actual", [ZERO] * width)
+        budget_monthly = scenarios.get("budget", [ZERO] * width)
     # Real prior-year comparison is just that year's own actuals, not
     # a separate stored scenario (see docs/adr/0032) — zero for the
     # earliest seeded year, where there's no year before it.
-    prior_actual_monthly = prior_monthly.get(code, {}).get("actual", [ZERO] * 12)
+    prior_actual_monthly = prior_monthly.get(code, {}).get("actual", [ZERO] * width)
     sign = 1 if node.normal_balance == NormalBalance.CREDIT else -1
     monthly_actual = [v * sign for v in actual_monthly]
     monthly_budget = [v * sign for v in budget_monthly]
@@ -302,14 +306,16 @@ def compute_gl_leaf(
     }
 
 
-def sum_children_entry(child_entries: list[dict]) -> dict:
+def sum_children_entry(child_entries: list[dict], width: int = 12) -> dict:
     """An internal (non-leaf) node's computed entry — the bottom-up sum of
     its children's entries. Shared by build_tree() (Reporting Node) and
     vdt_tree.py (Activity Node) — summing children is summing children
-    regardless of which table the parent/children rows live in."""
-    monthly_actual = [sum((e["monthlyActual"][i] for e in child_entries), ZERO) for i in range(12)]
-    monthly_budget = [sum((e["monthlyBudget"][i] for e in child_entries), ZERO) for i in range(12)]
-    monthly_prior = [sum((e["monthlyPriorYear"][i] for e in child_entries), ZERO) for i in range(12)]
+    regardless of which table the parent/children rows live in. `width` must
+    match the monthly-array width every child_entries member already carries
+    (12 for Financial Year mode, the resolved window length for Trailing)."""
+    monthly_actual = [sum((e["monthlyActual"][i] for e in child_entries), ZERO) for i in range(width)]
+    monthly_budget = [sum((e["monthlyBudget"][i] for e in child_entries), ZERO) for i in range(width)]
+    monthly_prior = [sum((e["monthlyPriorYear"][i] for e in child_entries), ZERO) for i in range(width)]
     return {
         "monthlyActual": monthly_actual,
         "monthlyBudget": monthly_budget,
@@ -345,14 +351,19 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
     def scoped_sum_local(monthly_values: list[Decimal]) -> Decimal:
         return scoped_sum(monthly_values, scope_indices)
 
-    monthly = load_monthly(session, companies, period_by_code, period_children, year_code)
+    month_codes = ordered_month_codes_of_year(period_by_code, period_children, year_code) if year_code else None
+    prior_month_codes = (
+        ordered_month_codes_of_year(period_by_code, period_children, prior_year_code) if prior_year_code else None
+    )
+    width = len(month_codes) if month_codes else 12
+    monthly = load_monthly(session, companies, month_codes)
     # A real prior-year comparison is just that year's own actuals, not a
     # separate stored scenario (see docs/adr/0032) — absent for the earliest
     # seeded year, where prior_monthly stays all-zero.
-    prior_monthly = load_monthly(session, companies, period_by_code, period_children, prior_year_code)
+    prior_monthly = load_monthly(session, companies, prior_month_codes)
 
-    period_len = len(scope_indices) if scope_indices is not None else 12
-    engine = DriverEngine(session, companies, year_code)
+    period_len = len(scope_indices) if scope_indices is not None else width
+    engine = DriverEngine(session, companies, month_codes)
 
     computed: dict[str, dict] = {}
 
@@ -362,10 +373,10 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
         node = node_by_code[code]
 
         if node.node_type == NodeType.POSTING_GL_ACCOUNT:
-            entry = compute_gl_leaf(node, engine, monthly, prior_monthly, scope_indices)
+            entry = compute_gl_leaf(node, engine, monthly, prior_monthly, scope_indices, width)
         else:
             child_entries = [compute(c) for c in children_by_parent.get(code, [])]
-            entry = sum_children_entry(child_entries)
+            entry = sum_children_entry(child_entries, width)
 
         computed[code] = entry
         return entry

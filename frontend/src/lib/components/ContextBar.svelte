@@ -53,9 +53,13 @@
     currentLabel = "",
     refreshedAt = "",
     showYtd = false,
+    ytdLabel = "YTD",
     showPeriod = true,
     periodYearOnly = false,
     ytd = $bindable(false),
+    showTrendsMode = false,
+    trendsMode = $bindable<"financial-year" | "trailing">("financial-year"),
+    trailingAnchor = $bindable<string | undefined>(undefined),
     showScenario = false,
     scenario = $bindable<"actual" | "budget">("actual"),
     showComparison = false,
@@ -77,12 +81,24 @@
     currentLabel?: string;
     refreshedAt?: string;
     showYtd?: boolean;
+    /** Label for the cumulative-sum toggle — "YTD" everywhere except VDT
+     * Trends' Trailing mode, where "Cumulative" is the mode-agnostic term
+     * (see docs/adr/0042; the toggle mechanism itself is unchanged, only
+     * what it's labelled). */
+    ytdLabel?: string;
     showPeriod?: boolean;
     /** Restricts the Period picker to Year-level nodes only, no Quarter/Month
      * drill-down — for screens whose whole point is a full fiscal year at
      * once (see docs/adr/0039). */
     periodYearOnly?: boolean;
     ytd?: boolean;
+    /** VDT Trends' Financial Year / Trailing mode selector (see
+     * docs/adr/0042) — Financial Year reuses the existing Year-only Period
+     * picker; Trailing replaces it with an anchor-Month picker. Both apply
+     * live, no Apply-button staging (unlike Business/Period). */
+    showTrendsMode?: boolean;
+    trendsMode?: "financial-year" | "trailing";
+    trailingAnchor?: string;
     /** The Actual/Budget data-selection chip (see docs/adr/0039) — distinct
      * from the vs Budget/Last Year/This Year comparison chip below. */
     showScenario?: boolean;
@@ -125,6 +141,18 @@
       .sort((a, b) => a.order - b.order),
   );
 
+  // Trailing mode's anchor picker (see docs/adr/0042) lists every Month
+  // across every fiscal year sibling root, chronological order — unlike
+  // vdtYearMonths above, it deliberately isn't restricted to one fiscal year.
+  const allMonthsChronological = $derived(
+    Object.values(periodStore.tree)
+      .filter((p) => p.periodType === "Month")
+      .sort((a, b) => {
+        const yearOrderOf = (code: string) => periodStore.tree[periodYearOf(code) ?? ""]?.order ?? 0;
+        return yearOrderOf(a.id) - yearOrderOf(b.id) || a.order - b.order;
+      }),
+  );
+
   const grains: PeriodType[] = ["Month", "Quarter", "Year"];
 
   const periodsForGrain = $derived({
@@ -153,8 +181,19 @@
   class="flex items-center gap-2.5 pb-4 text-xs flex-wrap border-b border-gray-200 dark:border-gray-700"
 >
   <BusinessPicker />
-  {#if showPeriod}
+  {#if showTrendsMode}
+    <ChipSelect
+      id="trends-mode-select"
+      options={["financial-year", "trailing"]}
+      labels={["Financial Year", "Trailing"]}
+      bind:selected={trendsMode}
+    />
+  {/if}
+  {#if showPeriod && (!showTrendsMode || trendsMode === "financial-year")}
     <PeriodPicker yearOnly={periodYearOnly} />
+  {/if}
+  {#if showTrendsMode && trendsMode === "trailing"}
+    <PeriodSelect label="Ending" periods={allMonthsChronological} bind:value={trailingAnchor} />
   {/if}
   {#if showScenario}
     <ChipSelect
@@ -225,7 +264,7 @@
         bind:checked={ytd}
         class="accent-indigo-600 dark:accent-indigo-400"
       />
-      YTD
+      {ytdLabel}
     </label>
   {/if}
   <button

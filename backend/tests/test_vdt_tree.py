@@ -14,6 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from periods import load_period_hierarchy, ordered_month_codes_of_year  # noqa: E402
 from vdt_tree import build_vdt_tree  # noqa: E402
 
 from conftest import fixture_graph  # noqa: E402
@@ -89,3 +90,39 @@ def test_rollup_through_activity_nodes(session):
     root = tree[codes["root"]]
     assert root["actual"] == 960.0  # 1200 (Revenue, unaffected) - 240 (VDT Cost of Revenue)
     assert root["budget"] == 840.0
+
+
+def test_month_codes_param_matches_equivalent_year_derived_tree(session):
+    """Trailing mode's month_codes path (docs/adr/0042) must compute exactly
+    the same figures as the Financial Year path when given the same 12
+    months in the same order — the generalization from a single year_code to
+    an explicit month-code list must be behavior-preserving."""
+    codes = fixture_graph(session)
+    period_by_code, period_children = load_period_hierarchy(session)
+    all_months = ordered_month_codes_of_year(period_by_code, period_children, codes["year"])
+
+    year_tree = build_vdt_tree(session, [codes["company"]], codes["year"])
+    window_tree = build_vdt_tree(session, [codes["company"]], month_codes=all_months)
+
+    for node_id in (codes["rev"], codes["cor"], codes["act_top"], codes["va_driven"], codes["root"]):
+        assert window_tree[node_id]["actual"] == year_tree[node_id]["actual"], node_id
+        assert window_tree[node_id]["budget"] == year_tree[node_id]["budget"], node_id
+        assert window_tree[node_id]["monthlyActual"] == year_tree[node_id]["monthlyActual"], node_id
+
+
+def test_month_codes_param_supports_partial_window(session):
+    """A Trailing-mode window shorter than 12 months (docs/adr/0042's "no
+    enforced minimum" decision) must scale sums and Driver Formula evaluation
+    to its own width, not silently assume 12."""
+    codes = fixture_graph(session)
+    period_by_code, period_children = load_period_hierarchy(session)
+    first_six_months = ordered_month_codes_of_year(period_by_code, period_children, codes["year"])[:6]
+
+    tree = build_vdt_tree(session, [codes["company"]], month_codes=first_six_months)
+
+    assert len(tree[codes["rev"]]["monthlyActual"]) == 6
+    assert tree[codes["gl_leaf_rev"]]["actual"] == 600.0  # 100/month * 6, not 12
+
+    # va_driven: Headcount(10) x Rate(2) = 20/month, 6 months, DEBIT anchor flips sign.
+    assert tree[codes["va_driven"]]["actual"] == -120.0
+    assert len(tree[codes["va_driven"]]["monthlyActual"]) == 6

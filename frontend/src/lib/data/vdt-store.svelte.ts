@@ -34,11 +34,20 @@ export const vdtStore = {
   },
 };
 
-export async function loadVdtScope(scope: string, periodCode?: string): Promise<void> {
+/**
+ * `trailingEnd` (an anchor Month code) is VDT Trends' Trailing mode (see
+ * docs/adr/0042) — mutually exclusive with `periodCode` in practice, and
+ * wins if both are somehow given, since it's the more specific request.
+ */
+export async function loadVdtScope(scope: string, periodCode?: string, trailingEnd?: string): Promise<void> {
   status = 'loading';
   try {
     const params = new URLSearchParams({ scope });
-    if (periodCode) params.set('period', periodCode);
+    if (trailingEnd) {
+      params.set('trailingEnd', trailingEnd);
+    } else if (periodCode) {
+      params.set('period', periodCode);
+    }
     const res = await fetch(`/api/vdt/tree?${params}`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     const data = await res.json();

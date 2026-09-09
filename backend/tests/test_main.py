@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from fastapi.testclient import TestClient  # noqa: E402
 
+import main  # noqa: E402
 from db import get_session  # noqa: E402
 from main import app  # noqa: E402
 
@@ -106,6 +107,73 @@ def test_vdt_tree_rejects_unknown_scope(session):
 
     resp = client.get("/api/vdt/tree", params={"scope": "NOT-REAL"})
     assert resp.status_code == 404
+
+
+def test_vdt_tree_endpoint_trailing_end(session):
+    # fixture_graph only seeds one fiscal year (FY24), so an anchor mid-year
+    # necessarily produces a partial window — no FY23 exists to reach back
+    # into. That's the deliberate docs/adr/0042 behavior, not a limitation
+    # of this test.
+    codes = fixture_graph(session)
+    client = _client(session)
+
+    resp = client.get("/api/vdt/tree", params={"scope": codes["company"], "trailingEnd": f"{codes['year']}-M06"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["months"] == [f"{codes['year']}-M{i:02d}" for i in range(1, 7)]
+    assert body["period"] is None
+    assert codes["gl_leaf_rev"] in body["nodes"]
+    assert body["nodes"][codes["gl_leaf_rev"]]["actual"] == 600.0  # 100/month * 6 months, not 12
+
+
+def test_vdt_tree_endpoint_trailing_end_rejects_unknown_period(session):
+    codes = fixture_graph(session)
+    client = _client(session)
+
+    resp = client.get("/api/vdt/tree", params={"scope": codes["company"], "trailingEnd": "NOT-REAL"})
+    assert resp.status_code == 404
+
+
+def test_vdt_tree_endpoint_trailing_end_rejects_non_month_anchor(session):
+    codes = fixture_graph(session)
+    client = _client(session)
+
+    resp = client.get("/api/vdt/tree", params={"scope": codes["company"], "trailingEnd": f"{codes['year']}-Q2"})
+    assert resp.status_code == 400
+
+
+def test_trend_analysis_endpoint_requires_exactly_one_of_year_or_trailing_end(session):
+    codes = fixture_graph(session)
+    client = _client(session)
+
+    resp = client.post("/api/vdt/trend-analysis", params={"scope": codes["company"]})
+    assert resp.status_code == 400
+
+    resp = client.post(
+        "/api/vdt/trend-analysis",
+        params={"scope": codes["company"], "year": codes["year"], "trailingEnd": f"{codes['year']}-M06"},
+    )
+    assert resp.status_code == 400
+
+
+def test_trend_analysis_endpoint_trailing_end_quiet_window(session, monkeypatch):
+    # fixture_graph's facts are uniform month-to-month, so no MoM movement is
+    # ever flagged — the endpoint returns the deterministic "quiet window"
+    # result without ever calling OpenAI, so this needs no API key. The fixed
+    # pilot anchor (V201000000) isn't part of this fixture's graph, so it's
+    # monkeypatched to a code the fixture does seed — anchor-selection itself
+    # is unrelated to what this test covers.
+    codes = fixture_graph(session)
+    monkeypatch.setattr(main, "VDT_TRENDS_ANCHOR", codes["act_top"])
+    client = _client(session)
+
+    resp = client.post(
+        "/api/vdt/trend-analysis", params={"scope": codes["company"], "trailingEnd": f"{codes['year']}-M06"}
+    )
+    assert resp.status_code == 200
+    body = resp.json()["trendAnalysis"]
+    assert body["bullets"] == []
+    assert "trailing 6 months" in body["headline"]
 
 
 def test_monetary_endpoints_reject_group_and_business_unit_scopes(session):
