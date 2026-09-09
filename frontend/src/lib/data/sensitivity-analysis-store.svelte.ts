@@ -1,4 +1,4 @@
-import type { SensitivityProgress, SensitivityResult } from './types';
+import type { SensitivityCandidate, SensitivityProgress, SensitivityResult } from './types';
 
 type Status = 'idle' | 'streaming' | 'ready' | 'error';
 
@@ -6,6 +6,12 @@ let status = $state<Status>('idle');
 let progress = $state<SensitivityProgress | null>(null);
 let result = $state<SensitivityResult | null>(null);
 let error = $state('');
+// Candidates as their own results land mid-run, in arrival order — not
+// ranked/truncated (rank order isn't stable until every candidate's in,
+// see vdt_sensitivity.py's compute_sensitivity docstring). The route derives
+// a provisional top-N from this for a progressively-filling tornado chart;
+// once `result` lands, that authoritative ranked/candidates list takes over.
+let liveCandidates = $state<SensitivityCandidate[]>([]);
 
 // Held module-level (not component-local) so a second startSensitivity()
 // call — or a route navigation away mid-run — can abort whatever's still
@@ -32,6 +38,9 @@ export const sensitivityStore = {
   get error() {
     return error;
   },
+  get liveCandidates() {
+    return liveCandidates;
+  },
   reset(): void {
     controller?.abort();
     controller = null;
@@ -39,6 +48,7 @@ export const sensitivityStore = {
     progress = null;
     result = null;
     error = '';
+    liveCandidates = [];
   },
 };
 
@@ -62,6 +72,7 @@ export async function startSensitivity(req: {
   progress = { completed: 0, total: 0 };
   result = null;
   error = '';
+  liveCandidates = [];
 
   const payload = {
     scope: req.scope,
@@ -101,6 +112,8 @@ export async function startSensitivity(req: {
         const event = JSON.parse(line.slice('data: '.length));
         if (event.type === 'progress') {
           progress = { completed: event.completed, total: event.total };
+        } else if (event.type === 'candidate') {
+          liveCandidates = [...liveCandidates, event.candidate as SensitivityCandidate];
         } else if (event.type === 'result') {
           result = event as SensitivityResult;
           status = 'ready';

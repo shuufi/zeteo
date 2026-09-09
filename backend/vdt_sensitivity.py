@@ -245,8 +245,14 @@ def compute_sensitivity(
     "Progress reporting" decision. Yields `{"type": "progress", ...}` after
     EACH per-driver-direction rerun (all months in the window batched into
     one `compute_npat_with_overrides` call — see module docstring's
-    `SENSITIVITY_MAX_CYCLES` note), then exactly one `{"type": "result", ...}`
-    at the end. A plain (sync) generator so main.py's SSE loop can check
+    `SENSITIVITY_MAX_CYCLES` note), `{"type": "candidate", "candidate": ...}`
+    once a candidate's own result is final (both directions done, or
+    immediately for a skip-compute N/A) so the frontend can render the
+    tornado chart progressively rather than waiting for the whole run, and
+    finally exactly one `{"type": "result", ...}` carrying the authoritative
+    ranked/candidates lists (rank order isn't stable until every candidate's
+    in, so the live progressive view is provisional — see docs/adr/0043).
+    A plain (sync) generator so main.py's SSE loop can check
     `request.is_disconnected()` between `next()` calls and simply stop
     consuming it early — nothing further gets computed once the caller
     abandons the loop (generators are lazy).
@@ -304,6 +310,7 @@ def compute_sensitivity(
                     na_reason=na_reason,
                 )
             )
+            yield {"type": "candidate", "candidate": candidate_results[-1].to_dict()}
             continue
 
         # Baseline-NPAT-near-zero candidates still get bumped for real $
@@ -350,6 +357,7 @@ def compute_sensitivity(
                 na_reason=na_reason,
             )
         )
+        yield {"type": "candidate", "candidate": candidate_results[-1].to_dict()}
 
     ranked = sorted(
         (c for c in candidate_results if not c.na),

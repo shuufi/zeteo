@@ -113,6 +113,21 @@
     (sensitivityStore.result?.candidates ?? []).flatMap((c) => [c.up.npatImpact, c.down.npatImpact]),
   );
   const resolvedMoneyScale = $derived(resolveMoneyScale(moneyScale, moneyValues));
+
+  // Provisional top-10 among whatever's streamed in so far, re-derived as
+  // each `candidate` event lands — rank order isn't stable until the run
+  // finishes (see the store's liveCandidates doc comment), so this is a
+  // preview, not the authoritative list `result.ranked` replaces it with.
+  const liveRanked = $derived(
+    [...sensitivityStore.liveCandidates]
+      .filter((c) => !c.na)
+      .sort((a, b) => (b.rankMagnitude ?? -1) - (a.rankMagnitude ?? -1))
+      .slice(0, 10),
+  );
+  const liveMoneyValues = $derived(
+    sensitivityStore.liveCandidates.flatMap((c) => [c.up.npatImpact, c.down.npatImpact]),
+  );
+  const liveMoneyScale = $derived(resolveMoneyScale(moneyScale, liveMoneyValues));
 </script>
 
 <PageHeader title="VDT Sensitivity Analysis" />
@@ -175,6 +190,20 @@
         <Card>
           <SensitivityProgress progress={sensitivityStore.progress} />
         </Card>
+        {#if liveRanked.length}
+          <div class="flex flex-col gap-4 min-w-0 lg:flex-row">
+            <div class="flex-1 min-w-0">
+              <Card title="Top 10 Drivers by Elasticity to NPAT (running…)">
+                <TornadoChart candidates={liveRanked} {currency} moneyScale={liveMoneyScale} />
+              </Card>
+            </div>
+            <div class="flex-1 min-w-0">
+              <Card title="Elasticity Detail (running…)">
+                <SensitivityTable candidates={liveRanked} {currency} moneyScale={liveMoneyScale} {bumpPct} />
+              </Card>
+            </div>
+          </div>
+        {/if}
       {:else if sensitivityStore.status === "error"}
         <Card>
           <div class="text-xs text-red-600 dark:text-red-400">

@@ -212,6 +212,40 @@ def test_elasticity_both_directions_kept_and_cost_driver_bump_is_adverse(session
     assert magnitudes == sorted(magnitudes, reverse=True)
 
 
+def test_candidate_events_stream_in_order_and_match_final_candidates(session):
+    """Progressive-tornado-chart support: a `candidate` event fires once per
+    candidate (after both its directions are done), interleaved with the
+    `progress` ticks, in the same order `terminal_driver_candidates` returned
+    them — and each one's payload is identical to its final `result.candidates`
+    entry (the live view isn't a different computation, just an earlier look
+    at the same one)."""
+    codes = fixture_graph(session)
+    window = _window(session, codes, 2)
+    engine = DriverEngine(session, [codes["company"]], window)
+    vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
+    candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
+    total = len(candidates) * 2
+
+    events = list(
+        compute_sensitivity(session, codes["company"], "actual", window, codes["root"], candidates, 10.0, engine, total)
+    )
+    candidate_events = [e for e in events if e["type"] == "candidate"]
+    result = next(e for e in events if e["type"] == "result")
+
+    assert [e["candidate"]["driverCode"] for e in candidate_events] == candidates
+    assert [e["candidate"] for e in candidate_events] == result["candidates"]
+
+    # Each candidate event lands only after both its directions' progress
+    # ticks — never mid-candidate (e.g. after only the "up" rerun).
+    event_types = [e["type"] for e in events]
+    for i, driver_code in enumerate(candidates):
+        candidate_idx = next(
+            j for j, e in enumerate(events) if e["type"] == "candidate" and e["candidate"]["driverCode"] == driver_code
+        )
+        progress_before = event_types[: candidate_idx + 1].count("progress")
+        assert progress_before == (i + 1) * 2
+
+
 def test_shared_driver_outside_scope_measured_to_npat_in_full(session):
     codes = fixture_graph(session)
     window = _window(session, codes, 2)
@@ -367,6 +401,39 @@ def test_baseline_driver_zero_flags_na(session):
     # Base rate is unaffected — only headcount is zeroed.
     base_rate = next(c for c in result["candidates"] if c["driverCode"] == codes["driver_base_rate"])
     assert base_rate["na"] is False
+
+
+def test_skip_compute_na_candidate_still_yields_candidate_event(session):
+    """A skip-compute N/A (baseline-driver-zero/divide-by-zero) never enters
+    the direction loop, so it consumes zero progress ticks — but it must
+    still stream its own `candidate` event immediately, so a live tornado
+    chart can show the N/A row without waiting for the whole run."""
+    codes = fixture_graph(session)
+    window = _window(session, codes, 2)
+
+    for row in session.exec(select(DriverFact)).all():
+        if row.code == codes["driver_headcount"]:
+            row.amount = Decimal("0")
+            session.add(row)
+    session.commit()
+
+    engine = DriverEngine(session, [codes["company"]], window)
+    vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
+    candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
+    total = len(candidates) * 2
+
+    events = list(
+        compute_sensitivity(session, codes["company"], "actual", window, codes["root"], candidates, 10.0, engine, total)
+    )
+    headcount_event = next(
+        e for e in events if e["type"] == "candidate" and e["candidate"]["driverCode"] == codes["driver_headcount"]
+    )
+    assert headcount_event["candidate"]["na"] is True
+    assert headcount_event["candidate"]["naReason"] == "baseline-driver-zero"
+
+    # No progress tick was spent computing it — only base_rate's 2 ticks exist.
+    progress = [e for e in events if e["type"] == "progress"]
+    assert len(progress) == 2
 
 
 def test_divide_by_zero_site_flags_candidate_feeding_it(session):
