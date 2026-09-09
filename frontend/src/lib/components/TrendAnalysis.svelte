@@ -15,6 +15,8 @@
     currency,
     moneyScale,
     months,
+    idleText = 'Scan the full fiscal year for month-over-month movements worth flagging.',
+    quietText = 'Quiet year — nothing crossed the threshold.',
   }: {
     status: Status;
     analysis?: TrendAnalysisData | null;
@@ -22,7 +24,13 @@
     onGenerate: () => void;
     currency: string;
     moneyScale: MoneyScale;
+    /** Labels for each series index — the fixed Jan..Dec array for Financial
+     * Year mode, or Trailing mode's calendar-style labels matching its own
+     * (possibly shorter, possibly cross-fiscal-year) window (see
+     * docs/adr/0042). */
     months: string[];
+    idleText?: string;
+    quietText?: string;
   } = $props();
 
   function directionAt(bullet: TrendAnalysisData['bullets'][number]): string {
@@ -45,7 +53,7 @@
 
   {#if status === 'idle'}
     <div class="text-xs text-gray-500 dark:text-gray-400">
-      Scan the full fiscal year for month-over-month movements worth flagging.
+      {idleText}
     </div>
   {:else if status === 'loading'}
     <div class="flex flex-col items-center justify-center gap-2 py-2">
@@ -59,7 +67,7 @@
   {:else if status === 'ready' && analysis}
     <p class="text-gray-900 dark:text-gray-50">{analysis.headline}</p>
     {#if analysis.bullets.length === 0}
-      <div class="text-xs text-gray-500 dark:text-gray-400">Quiet year — nothing crossed the threshold.</div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">{quietText}</div>
     {:else}
       <ul class="flex flex-col gap-3">
         {#each analysis.bullets as bullet (bullet.nodeId)}

@@ -20,6 +20,8 @@
     periodStore,
     loadPeriods,
     periodYearOf,
+    trailingWindowMonths,
+    calendarMonthLabel,
   } from "../lib/data/period-store.svelte";
   import { periodState } from "../lib/state/period.svelte";
   import { scopeState } from "../lib/state/scope.svelte";
@@ -45,30 +47,79 @@
   let scenario = $state<"actual" | "budget">("actual");
   let showGlCode = $state(false);
 
+  // Financial Year (existing, default) vs Trailing (new) — see docs/adr/0042.
+  let trendsMode = $state<"financial-year" | "trailing">("financial-year");
+  let trailingAnchor = $state<string | undefined>(undefined);
+
   onMount(loadPeriods);
 
-  // vdtStore isn't populated by App.svelte's app-wide onMount (that's
-  // glStore/Accounting only) — this is the VDT hierarchy's own landing page,
-  // so it lazily triggers its own fetch, same pattern Comparison/Reconciliation use.
-  onMount(() => {
-    if (vdtStore.status !== "ready")
-      loadVdtScope(scopeState.code, periodState.code);
+  // Trailing mode's default anchor is the latest month of the latest fiscal
+  // year (see docs/adr/0042) — set once periods load, and only if the user
+  // hasn't already picked one, so this never overwrites a live selection.
+  const latestYearId = $derived(
+    Object.values(periodStore.tree)
+      .filter((p) => p.periodType === "Year")
+      .sort((a, b) => b.order - a.order)[0]?.id,
+  );
+  const latestYearLastMonth = $derived(
+    latestYearId
+      ? Object.values(periodStore.tree)
+          .filter((p) => p.periodType === "Month" && p.id.startsWith(`${latestYearId}-M`))
+          .sort((a, b) => b.order - a.order)[0]?.id
+      : undefined,
+  );
+  $effect(() => {
+    if (!trailingAnchor && latestYearLastMonth) trailingAnchor = latestYearLastMonth;
   });
 
   const currentYearId = $derived(periodYearOf(periodState.code));
   const monthPeriodCodes = $derived(
-    Object.values(periodStore.tree)
-      .filter(
-        (p) =>
-          p.periodType === "Month" && p.id.startsWith(`${currentYearId}-M`),
-      )
-      .sort((a, b) => a.order - b.order)
-      .map((p) => p.id),
+    trendsMode === "trailing"
+      ? trailingAnchor
+        ? trailingWindowMonths(trailingAnchor)
+        : []
+      : Object.values(periodStore.tree)
+          .filter(
+            (p) =>
+              p.periodType === "Month" && p.id.startsWith(`${currentYearId}-M`),
+          )
+          .sort((a, b) => a.order - b.order)
+          .map((p) => p.id),
   );
 
   const columns = $derived<StatementColumn[]>(
-    monthPeriodCodes.map((code, i) => ({ key: code, label: months[i] })),
+    trendsMode === "trailing"
+      ? monthPeriodCodes.map((code) => ({ key: code, label: calendarMonthLabel(code) }))
+      : monthPeriodCodes.map((code, i) => ({ key: code, label: months[i] })),
   );
+
+  // vdtStore isn't populated by App.svelte's app-wide onMount (that's
+  // glStore/Accounting only) — this is the VDT hierarchy's own landing page,
+  // so it owns its own fetch, reactively keyed on whatever currently
+  // determines the window (Company + mode + Financial Year/Trailing anchor).
+  // Trailing mode's anchor applies live (no Apply-button staging, unlike
+  // Business/Period — see docs/adr/0042), so this effect is this screen's
+  // sole source of truth for when to refetch, replacing the old
+  // mount-only/status-guarded fetch.
+  let lastFetchKey = "";
+  $effect(() => {
+    const anchor = trendsMode === "trailing" ? trailingAnchor : currentYearId;
+    if (!anchor) return;
+    const key = `${scopeState.code}:${trendsMode}:${anchor}`;
+    if (key === lastFetchKey) return;
+    const isFirstRun = lastFetchKey === "";
+    lastFetchKey = key;
+    // On mount, skip the fetch if vdtStore already holds data (e.g. arriving
+    // from another VDT route within the same session) — mirrors the
+    // previous onMount status guard, avoiding an unconditional refetch/
+    // loading flicker on every visit. Any later change always refetches.
+    if (isFirstRun && vdtStore.status === "ready") return;
+    if (trendsMode === "trailing") {
+      loadVdtScope(scopeState.code, undefined, anchor);
+    } else {
+      loadVdtScope(scopeState.code, anchor);
+    }
+  });
 
   const pnlRows = $derived(buildDisplayRows(vdtStore.tree, SOC_CREW_COST));
 
@@ -103,9 +154,10 @@
   ): { href: string; title: string } | undefined {
     const periodCode = monthPeriodCodes[index];
     if (!periodCode) return undefined;
+    const label = trendsMode === "trailing" ? calendarMonthLabel(periodCode) : months[index];
     return {
       href: `/vdt/${row.nodeId}?period=${periodCode}`,
-      title: `Explore ${months[index]}`,
+      title: `Explore ${label}`,
     };
   }
 
@@ -114,16 +166,23 @@
   }
 
   function handleAnalyseTrends(): void {
-    if (!currentYearId) return;
-    generateTrendAnalysis(scopeState.code, currentYearId, scenario);
+    if (trendsMode === "trailing") {
+      if (!trailingAnchor) return;
+      generateTrendAnalysis(scopeState.code, scenario, { trailingEnd: trailingAnchor });
+    } else {
+      if (!currentYearId) return;
+      generateTrendAnalysis(scopeState.code, scenario, { year: currentYearId });
+    }
   }
 
   // Reset when the underlying data Trend Analysis reads changes: Company,
-  // Year, or Actual/Budget. GL-code toggle, Monetary scale, and YTD do NOT
-  // reset — none change the monthly series (docs/adr/0040).
+  // window (Year, or Trailing mode + anchor), or Actual/Budget. GL-code
+  // toggle, Monetary scale, and Cumulative do NOT reset — none change the
+  // monthly series (docs/adr/0040, docs/adr/0042).
   let lastTrendKey = "";
   $effect(() => {
-    const key = `${scopeState.code}:${currentYearId}:${scenario}`;
+    const anchor = trendsMode === "trailing" ? trailingAnchor : currentYearId;
+    const key = `${scopeState.code}:${trendsMode}:${anchor}:${scenario}`;
     if (lastTrendKey && key !== lastTrendKey) trendAnalysisStore.reset();
     lastTrendKey = key;
   });
@@ -134,9 +193,13 @@
   <ContextBar
     showPeriod
     periodYearOnly
+    showTrendsMode
+    bind:trendsMode
+    bind:trailingAnchor
     showScenario
     bind:scenario
     showYtd
+    ytdLabel="Cumulative"
     bind:ytd={ytdView}
     showComparisonChip={false}
     showMoneyScale
@@ -168,7 +231,13 @@
             onGenerate={handleAnalyseTrends}
             {currency}
             moneyScale={resolvedMoneyScale}
-            {months}
+            months={trendsMode === "trailing" ? monthPeriodCodes.map(calendarMonthLabel) : months}
+            idleText={trendsMode === "trailing"
+              ? "Scan the trailing window for month-over-month movements worth flagging."
+              : "Scan the full fiscal year for month-over-month movements worth flagging."}
+            quietText={trendsMode === "trailing"
+              ? "Quiet window — nothing crossed the threshold."
+              : "Quiet year — nothing crossed the threshold."}
           />
         </Card>
       </div>

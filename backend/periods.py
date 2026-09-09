@@ -80,23 +80,99 @@ def ytd_month_indices_for(
     return set(range(period.order))
 
 
-def month_codes_of_year(
+def ordered_month_codes_of_year(
     period_by_code: dict[str, Period],
     children_by_parent: dict[str, list[str]],
     year_code: str,
-) -> dict[str, int]:
-    """One Year's Month period codes -> their 0-based month-array index.
-
-    Shared by gl_tree.py's load_monthly() and driver_engine.py's DriverEngine —
-    both need to restrict fact-loading to one fiscal year's 12 Month codes to
-    avoid silently summing e.g. FY24-M01 and FY26-M01 into the same slot (see
-    docs/adr/0032).
+) -> list[str]:
+    """One Year's 12 Month codes, chronological (Jan..Dec) order — shared by
+    gl_tree.py's load_monthly()/build_tree() and vdt_tree.py's
+    build_vdt_tree(), both of which need an explicit ordered window to
+    restrict fact-loading to one fiscal year's months and avoid silently
+    summing e.g. FY24-M01 and FY26-M01 into the same slot (see docs/adr/0032).
     """
-    codes: dict[str, int] = {}
-    for quarter_code in children_by_parent.get(year_code, []):
-        for month_code in children_by_parent.get(quarter_code, []):
-            codes[month_code] = period_by_code[month_code].order - 1
+    codes = [
+        month_code
+        for quarter_code in children_by_parent.get(year_code, [])
+        for month_code in children_by_parent.get(quarter_code, [])
+    ]
+    codes.sort(key=lambda c: period_by_code[c].order)
     return codes
+
+
+def _year_order_of(period_by_code: dict[str, Period], code: str) -> int:
+    node = period_by_code[code]
+    while node.period_type != PeriodType.YEAR:
+        node = period_by_code[node.parent_code]
+    return node.order
+
+
+def trailing_month_codes(
+    period_by_code: dict[str, Period],
+    children_by_parent: dict[str, list[str]],
+    anchor_month_code: str,
+    window_length: int = 12,
+) -> list[str]:
+    """Up to `window_length` Month codes ending at (and including)
+    `anchor_month_code`, walking backward across fiscal-year sibling roots —
+    the VDT Trends Trailing mode window (see docs/adr/0042). Chronological
+    (oldest first) order, same as ordered_month_codes_of_year().
+
+    Returns fewer than `window_length` codes if history runs out before the
+    window is full (e.g. an anchor near the earliest seeded fiscal year) —
+    a partial window is a deliberate, expected result here, not an error
+    (see the ADR's "no enforced minimum" decision), mirroring how production
+    will genuinely start with less than a year of operational history.
+    """
+    anchor = period_by_code.get(anchor_month_code)
+    if anchor is None:
+        raise UnknownPeriod(anchor_month_code)
+    if anchor.period_type != PeriodType.MONTH:
+        raise UnknownPeriod(anchor_month_code)
+
+    years_by_order = {
+        p.order: p for p in period_by_code.values() if p.period_type == PeriodType.YEAR
+    }
+
+    months_cache: dict[int, list[str]] = {}
+
+    def months_of(year_order: int) -> list[str]:
+        if year_order not in months_cache:
+            year = years_by_order.get(year_order)
+            months_cache[year_order] = (
+                ordered_month_codes_of_year(period_by_code, children_by_parent, year.code) if year else []
+            )
+        return months_cache[year_order]
+
+    result: list[str] = []
+    year_order = _year_order_of(period_by_code, anchor_month_code)
+    month_order = anchor.order
+    while len(result) < window_length and year_order >= 1:
+        months = months_of(year_order)
+        if not months:
+            break
+        result.append(months[month_order - 1])
+        month_order -= 1
+        if month_order < 1:
+            year_order -= 1
+            month_order = 12
+
+    result.reverse()
+    return result
+
+
+def calendar_month_label(period: Period) -> str:
+    """A Month period's label reformatted calendar-style, e.g. "Sep FY25" ->
+    "Sep '25" — used by Trailing mode's column headers, where the plain
+    "Sep FY25" fiscal-year-qualified label would be needlessly verbose next
+    to Financial Year mode's bare month names, and a bare month name alone
+    would be ambiguous once a window can repeat a month name across two
+    fiscal years (see docs/adr/0042). Fiscal years are calendar-aligned
+    (Jan start — see seed.py's FISCAL_YEARS comment), so this is a pure
+    reformat, not a real calendar conversion.
+    """
+    month_name, fiscal_year = period.label.rsplit(" ", 1)
+    return f"{month_name} '{fiscal_year[-2:]}"
 
 
 def build_period_tree(session: Session) -> dict[str, dict]:

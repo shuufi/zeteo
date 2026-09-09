@@ -42,7 +42,8 @@ def test_formula_money_target_rounds_half_up_per_company_month(session):
     session.add(january_rate)
     session.commit()
 
-    engine = DriverEngine(session, [codes["company"]], codes["year"])
+    month_codes = [f"{codes['year']}-M{i:02d}" for i in range(1, 13)]
+    engine = DriverEngine(session, [codes["company"]], month_codes)
     monthly = engine.target_value(codes["va_driven"], "actual")
 
     # Headcount 10 × rate 0.0005 = 0.005, rounded at the final monetary

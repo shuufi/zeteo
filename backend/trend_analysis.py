@@ -16,7 +16,6 @@ from trend_flagging import flag_trends
 
 _cache: dict[tuple, dict[str, Any]] = {}
 
-MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 MAX_BULLETS = 6
 
 
@@ -24,19 +23,19 @@ class TrendAnalysisUnavailable(Exception):
     pass
 
 
-def _render_flagged(flagged: list[dict]) -> str:
+def _render_flagged(flagged: list[dict], month_labels: list[str]) -> str:
     lines: list[str] = []
     for node in flagged:
         lines.append(
             f"- [{node['nodeId']}] {node['nodeName']} ({node['nodeType']}), "
             f"parent: {node.get('parentName') or 'n/a'}, "
-            f"12-month series ({', '.join(MONTHS)}): {node['series']}"
+            f"{len(node['series'])}-month series ({', '.join(month_labels)}): {node['series']}"
         )
         for month in node["flaggedMonths"]:
             m = month["monthIndex"]
             pct_text = f"{month['momPct']}%" if month["momPct"] is not None else "from ~0"
             lines.append(
-                f"    {MONTHS[m - 1]} -> {MONTHS[m]}: {month['prevValue']} -> {month['currValue']}, "
+                f"    {month_labels[m - 1]} -> {month_labels[m]}: {month['prevValue']} -> {month['currValue']}, "
                 f"MoM change {pct_text}, magnitude {month['direction']}, "
                 f"{month['sharePct']}% of {node['rootName']}'s total that month"
             )
@@ -50,25 +49,25 @@ def _render_flagged(flagged: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def build_trend_prompt(root_name: str, year_label: str, scenario: str, flagged: list[dict]) -> str:
-    flagged_text = _render_flagged(flagged)
+def build_trend_prompt(root_name: str, window_label: str, scenario: str, flagged: list[dict], month_labels: list[str]) -> str:
+    flagged_text = _render_flagged(flagged, month_labels)
     return (
         "You are a financial analyst writing a short analytical-review narrative "
         f"identifying the notable month-over-month (MoM) trends in {root_name} across "
-        f"fiscal year {year_label} ({scenario} scenario).\n\n"
+        f"{window_label} ({scenario} scenario).\n\n"
         "Use ONLY the numbers and structure given below — never invent, recompute, or "
         "restate a figure differently than given. The backend has already flagged which "
         "nodes and months are material; your job is only to explain WHY each flagged "
         "movement happened, not to decide what's material. Each flagged node lists its "
-        "full 12-month series for context, then the specific month(s) that were flagged, "
-        "then — where available — its Driver Formula terms' own 12-month series (e.g. "
+        "full series for context, then the specific month(s) that were flagged, "
+        "then — where available — its Driver Formula terms' own series (e.g. "
         "crew headcount, travel/crew-movement counts, salary or accommodation rates). "
         "Always explain a flagged movement via its driver terms (quantity vs rate) when "
         "given, not just the dollar figure — that operational cause is the point of this "
         "narrative, not the financial outcome number.\n\n"
         "Return JSON only, with this exact shape: "
         '{"headline":"...","bullets":[{"nodeId":"...","text":"..."}]}. '
-        f"Write one short headline summarising the year's notable trends, then up to "
+        f"Write one short headline summarising the window's notable trends, then up to "
         f"{MAX_BULLETS} bullets — one per flagged node you choose to cover, fewer if "
         "fewer nodes were flagged. Do not manufacture a bullet for a node that wasn't "
         "flagged, and do not pad bullets to reach the cap. Each flagged node line below "
@@ -152,7 +151,8 @@ def generate_trend_analysis(
     tree: dict[str, dict],
     root: str,
     scenario: str,
-    year_label: str,
+    window_label: str,
+    month_labels: list[str],
 ) -> dict[str, Any]:
     if cache_key in _cache:
         return _cache[cache_key]
@@ -163,7 +163,7 @@ def generate_trend_analysis(
 
     if not flagged:
         result = {
-            "headline": f"No material month-over-month movements in {root_name} for {year_label}.",
+            "headline": f"No material month-over-month movements in {root_name} for {window_label}.",
             "scenario": scenario,
             "bullets": [],
         }
@@ -180,7 +180,7 @@ def generate_trend_analysis(
         raise TrendAnalysisUnavailable("openai package not installed") from exc
 
     model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-    prompt = build_trend_prompt(root_name, year_label, scenario, flagged)
+    prompt = build_trend_prompt(root_name, window_label, scenario, flagged, month_labels)
 
     try:
         client = OpenAI(api_key=api_key)

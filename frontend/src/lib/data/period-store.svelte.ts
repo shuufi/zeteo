@@ -64,6 +64,80 @@ export function priorYearSibling(code: string): string | undefined {
   return findSameGrainPeriod(priorYear.id);
 }
 
+function orderedMonthCodesOfYear(yearId: string): string[] {
+  const year = periodStore.tree[yearId];
+  if (!year) return [];
+  const months: PeriodNode[] = [];
+  for (const quarterId of year.childIds) {
+    for (const monthId of periodStore.tree[quarterId]?.childIds ?? []) {
+      const month = periodStore.tree[monthId];
+      if (month) months.push(month);
+    }
+  }
+  months.sort((a, b) => a.order - b.order);
+  return months.map((m) => m.id);
+}
+
+/**
+ * Up to `windowLength` Month codes ending at (and including) `anchorCode`,
+ * walking backward across fiscal-year sibling roots — the frontend mirror of
+ * backend/periods.py's trailing_month_codes(), used by VDT Trends' Trailing
+ * mode (see docs/adr/0042). Returns fewer than `windowLength` codes if
+ * history runs out before the window is full (e.g. an anchor near the
+ * earliest seeded fiscal year) — a partial window is a deliberate, expected
+ * result here, not an error.
+ */
+export function trailingWindowMonths(anchorCode: string, windowLength = 12): string[] {
+  const anchor = periodStore.tree[anchorCode];
+  if (!anchor || anchor.periodType !== 'Month') return [];
+  const yearId = periodYearOf(anchorCode);
+  if (!yearId) return [];
+
+  const years = Object.values(periodStore.tree).filter((p) => p.periodType === 'Year');
+  const yearByOrder = new Map(years.map((y) => [y.order, y]));
+  const monthsCache = new Map<number, string[]>();
+  function monthsOf(yearOrder: number): string[] {
+    if (!monthsCache.has(yearOrder)) {
+      const year = yearByOrder.get(yearOrder);
+      monthsCache.set(yearOrder, year ? orderedMonthCodesOfYear(year.id) : []);
+    }
+    return monthsCache.get(yearOrder) ?? [];
+  }
+
+  const result: string[] = [];
+  let yearOrder = periodStore.tree[yearId].order;
+  let monthOrder = anchor.order;
+  while (result.length < windowLength && yearOrder >= 1) {
+    const months = monthsOf(yearOrder);
+    if (months.length === 0) break;
+    result.push(months[monthOrder - 1]);
+    monthOrder -= 1;
+    if (monthOrder < 1) {
+      yearOrder -= 1;
+      monthOrder = 12;
+    }
+  }
+  result.reverse();
+  return result;
+}
+
+/**
+ * A Month period's label reformatted calendar-style, e.g. "Sep FY25" ->
+ * "Sep '25" — mirrors backend/periods.py's calendar_month_label(), used by
+ * VDT Trends' Trailing mode column headers, where the plain fiscal label
+ * would be needlessly verbose and a bare month name would be ambiguous once
+ * a window can repeat a month name across two fiscal years (see
+ * docs/adr/0042).
+ */
+export function calendarMonthLabel(code: string): string {
+  const label = periodLabel(code);
+  const lastSpace = label.lastIndexOf(' ');
+  if (lastSpace === -1) return label;
+  const monthName = label.slice(0, lastSpace);
+  const fiscalYear = label.slice(lastSpace + 1);
+  return `${monthName} '${fiscalYear.slice(-2)}`;
+}
+
 /** Periods are static master data (not scope-dependent) — fetched once, unlike loadScope. */
 export async function loadPeriods(): Promise<void> {
   status = 'loading';

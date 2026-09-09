@@ -14,14 +14,14 @@ def _leaf(name: str, actual: list[float], budget: list[float] | None = None, par
         "name": name,
         "nodeType": "Posting GL Account",
         "monthlyActual": actual,
-        "monthlyBudget": budget if budget is not None else [0.0] * 12,
+        "monthlyBudget": budget if budget is not None else [0.0] * len(actual),
         "childIds": [],
         "parentId": parent,
     }
 
 
-def _tree(**leaves: dict) -> dict[str, dict]:
-    root_series = [1000.0] * 12
+def _tree(width: int = 12, **leaves: dict) -> dict[str, dict]:
+    root_series = [1000.0] * width
     tree = {
         "ROOT": {
             "name": "Root",
@@ -164,3 +164,33 @@ def test_drivers_are_collected_from_driver_formula_children():
     assert drivers[0]["name"] == "Headcount"
     assert drivers[0]["unit"] == "count"
     assert drivers[0]["series"] == [10] * 5 + [20] * 7
+
+
+def test_partial_window_shorter_than_twelve_still_flags():
+    # A Trailing-mode window shorter than 12 (docs/adr/0042's "no enforced
+    # minimum" decision) must still scan every index past the first.
+    tree = _tree(width=4, BIG=_leaf("Big Line", [100, 100, 100, 300]))
+
+    flags = flag_trends(tree, "ROOT", "actual")
+
+    assert len(flags) == 1
+    month_indices = {m["monthIndex"] for m in flags[0]["flaggedMonths"]}
+    assert month_indices == {3}
+
+
+def test_partial_window_first_index_is_never_flagged():
+    tree = _tree(width=3, SPIKE=_leaf("Spike", [900, 100, 100]))
+
+    flags = flag_trends(tree, "ROOT", "actual")
+
+    assert len(flags) == 1
+    month_indices = {m["monthIndex"] for m in flags[0]["flaggedMonths"]}
+    assert 0 not in month_indices
+    assert 1 in month_indices
+
+
+def test_single_month_window_never_flags():
+    # No prior month exists at all — range(1, 1) is empty, not an error.
+    tree = _tree(width=1, ONLY=_leaf("Only Month", [900]))
+
+    assert flag_trends(tree, "ROOT", "actual") == []

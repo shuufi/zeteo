@@ -13,8 +13,11 @@ reduce across companies by summing (matching gl_fact's convention); Driver
 values (rates/counts/ratios, never additive the way money is) reduce by
 averaging — same reasoning gl_tree.py already applies across months.
 
-Monthly arrays throughout are 12-wide (Jan..Dec), matching gl_tree.py's
-convention.
+Monthly arrays throughout are `self.width`-wide — 12 (Jan..Dec of one fiscal
+year) for build_tree()/build_vdt_tree()'s Financial Year path, or a Trailing-
+mode window's resolved length (up to 12, possibly spanning two fiscal years)
+for VDT Trends' Trailing mode — matching gl_tree.py's convention (see
+docs/adr/0042).
 """
 
 from collections import defaultdict
@@ -24,7 +27,6 @@ from typing import Optional
 from sqlmodel import Session, col, select
 
 from models import Driver, DriverFact, DriverFormula, DriverFormulaTerm, FormulaOperator
-from periods import load_period_hierarchy, month_codes_of_year
 
 
 class DriverCycleError(Exception):
@@ -36,16 +38,19 @@ MONEY_QUANTUM = Decimal("0.01")
 
 
 class DriverEngine:
-    def __init__(self, session: Session, companies: list[str], year_code: Optional[str]):
-        """`year_code` restricts DriverFact loading to one fiscal year's 12
-        Month codes — without it, facts across different fiscal years would
-        silently sum into the same 12-wide month-array slot (the same
-        cross-year hazard docs/adr/0032 already fixed for GLFact/load_monthly;
-        DriverEngine just never had live multi-year Driver data to expose it
-        until now — see docs/adr/0033). `year_code=None` (e.g. no Year periods
-        seeded at all yet) means no facts load, same as `companies=[]` today.
+    def __init__(self, session: Session, companies: list[str], month_codes: Optional[list[str]]):
+        """`month_codes` restricts DriverFact loading to an explicit, already-
+        resolved, ordered list of Month codes — without it, facts across
+        different fiscal years would silently sum into the same month-array
+        slot (the same cross-year hazard docs/adr/0032 already fixed for
+        GLFact/load_monthly; DriverEngine just never had live multi-year
+        Driver data to expose it until now — see docs/adr/0033).
+        `month_codes=None` or empty (e.g. no Year periods seeded at all yet)
+        means no facts load, same as `companies=[]` today; the array width
+        then defaults to 12 since there's no window to size it from.
         """
         self.companies = companies
+        self.width = len(month_codes) if month_codes else 12
         self.driver_by_code = {d.code: d for d in session.exec(select(Driver)).all()}
         self.formula_by_code = {f.code: f for f in session.exec(select(DriverFormula)).all()}
 
@@ -60,21 +65,21 @@ class DriverEngine:
             code: sorted(terms, key=lambda t: (t.term_index, t.operand_index)) for code, terms in terms_by_formula.items()
         }
 
-        # facts[code][company][scenario] = [12 Decimals] — kept per-company so
-        # formula products are computed within one company (see module docstring).
+        # facts[code][company][scenario] = [width Decimals] — kept per-company
+        # so formula products are computed within one company (see module docstring).
+        width = self.width
         facts: dict[str, dict[str, dict[str, list[Decimal]]]] = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(lambda: [ZERO] * 12))
+            lambda: defaultdict(lambda: defaultdict(lambda: [ZERO] * width))
         )
-        if companies and year_code is not None:
-            period_by_code, period_children = load_period_hierarchy(session)
-            month_codes = month_codes_of_year(period_by_code, period_children, year_code)
+        if companies and month_codes:
+            code_to_index = {code: i for i, code in enumerate(month_codes)}
             rows = session.exec(
                 select(DriverFact.code, DriverFact.company, DriverFact.scenario, DriverFact.period_code, DriverFact.amount)
                 .where(col(DriverFact.company).in_(companies))
-                .where(col(DriverFact.period_code).in_(list(month_codes)))
+                .where(col(DriverFact.period_code).in_(month_codes))
             ).all()
             for code, company, scenario, period_code, amount in rows:
-                month_index = month_codes[period_code]
+                month_index = code_to_index[period_code]
                 facts[code][company][scenario.value][month_index] += Decimal(str(amount))
         self.facts = facts
 
@@ -95,12 +100,12 @@ class DriverEngine:
         if driver_code in self.formulas_by_target:
             value = self._target_value_for_company(driver_code, scenario, company, visiting | {driver_code})
         else:
-            value = list(self.facts.get(driver_code, {}).get(company, {}).get(scenario, [ZERO] * 12))
+            value = list(self.facts.get(driver_code, {}).get(company, {}).get(scenario, [ZERO] * self.width))
         self._cache[cache_key] = value
         return value
 
     def _target_value_for_company(self, target_code: str, scenario: str, company: str, visiting: frozenset) -> list[Decimal]:
-        total = [ZERO] * 12
+        total = [ZERO] * self.width
         for formula in self.formulas_by_target.get(target_code, []):
             formula_value = self._formula_value_for_company(formula, scenario, company, visiting)
             total = [a + formula.sign * b for a, b in zip(total, formula_value)]
@@ -113,7 +118,7 @@ class DriverEngine:
         for term in self.terms_by_formula.get(formula.code, []):
             by_term[term.term_index].append(term)
 
-        total = [ZERO] * 12
+        total = [ZERO] * self.width
         for term_ops in by_term.values():
             term_value: Optional[list[Decimal]] = None
             for op in term_ops:
@@ -124,11 +129,11 @@ class DriverEngine:
                     term_value = [a / b if b else ZERO for a, b in zip(term_value, operand)]
                 else:
                     term_value = [a * b for a, b in zip(term_value, operand)]
-            total = [a + b for a, b in zip(total, term_value or [ZERO] * 12)]
+            total = [a + b for a, b in zip(total, term_value or [ZERO] * self.width)]
         return total
 
     def _reduce(self, per_company: list[list[Decimal]], average: bool) -> list[Decimal]:
-        total = [ZERO] * 12
+        total = [ZERO] * self.width
         for monthly in per_company:
             total = [a + b for a, b in zip(total, monthly)]
         if average and per_company:
@@ -137,12 +142,12 @@ class DriverEngine:
         return total
 
     def target_value(self, target_code: str, scenario: str) -> list[Decimal]:
-        """Monthly values (12-wide), summed across companies — for money targets (GL leaves)."""
+        """Monthly values (self.width-wide), summed across companies — for money targets (GL leaves)."""
         per_company = [self._target_value_for_company(target_code, scenario, c, frozenset()) for c in self.companies]
         return self._reduce(per_company, average=False)
 
     def driver_value(self, driver_code: str, scenario: str) -> list[Decimal]:
-        """Monthly values (12-wide), averaged across companies — a rate/count/ratio isn't additive like money."""
+        """Monthly values (self.width-wide), averaged across companies — a rate/count/ratio isn't additive like money."""
         per_company = [self._driver_value_for_company(driver_code, scenario, c, frozenset()) for c in self.companies]
         return self._reduce(per_company, average=True)
 

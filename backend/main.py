@@ -11,7 +11,14 @@ from db import get_session
 from gl_tree import build_tree, diff_subtree, subtree
 from models import GLNode, PeriodType
 from variance_analysis import VarianceAnalysisUnavailable, generate_variance_analysis
-from periods import UnknownPeriod, build_period_tree, load_period_hierarchy
+from periods import (
+    UnknownPeriod,
+    build_period_tree,
+    calendar_month_label,
+    load_period_hierarchy,
+    ordered_month_codes_of_year,
+    trailing_month_codes,
+)
 from trend_analysis import TrendAnalysisUnavailable, generate_trend_analysis
 from vdt_tree import build_vdt_tree
 
@@ -121,8 +128,38 @@ def get_gl_comparison(
     }
 
 
+def _resolve_trailing_window(
+    period_by_code: dict, period_children: dict, trailing_end: str
+) -> list[str]:
+    """Validates `trailing_end` is a known Month code and resolves its
+    Trailing-mode window — shared by GET /api/vdt/tree and POST
+    /api/vdt/trend-analysis (see docs/adr/0042), both of which need the same
+    404 (unknown period) vs 400 (not a Month) distinction that
+    trailing_month_codes() alone can't give (it only raises UnknownPeriod for
+    both cases)."""
+    anchor_row = period_by_code.get(trailing_end)
+    if anchor_row is None:
+        raise HTTPException(404, f"Unknown period: {trailing_end}")
+    if anchor_row.period_type != PeriodType.MONTH:
+        raise HTTPException(400, f"{trailing_end} is not a Month period")
+    return trailing_month_codes(period_by_code, period_children, trailing_end)
+
+
 @app.get("/api/vdt/tree")
-def get_vdt_tree(scope: str, period: Optional[str] = None, session: Session = Depends(get_session)):
+def get_vdt_tree(
+    scope: str,
+    period: Optional[str] = None,
+    trailing_end: Optional[str] = Query(default=None, alias="trailingEnd"),
+    session: Session = Depends(get_session),
+):
+    """`period` (a Year/Quarter/Month code) is Financial Year mode, unchanged.
+    `trailingEnd` (a Month code) is Trailing mode — see docs/adr/0042: the
+    response's `months` field carries the resolved window (which can be
+    shorter than 12 if the anchor is close to the earliest seeded data), so
+    the frontend never has to re-derive it. The two are mutually exclusive in
+    practice (the frontend never sends both), but `trailingEnd` simply wins
+    if it somehow did, since Trailing mode is the more specific request.
+    """
     if not session.exec(select(GLNode).limit(1)).first():
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
@@ -130,6 +167,19 @@ def get_vdt_tree(scope: str, period: Optional[str] = None, session: Session = De
 
     if resolved.get("notYetModelled"):
         return {"scope": scope, **_scope_meta(resolved), "notYetModelled": True, "nodes": {}}
+
+    if trailing_end is not None:
+        period_by_code, period_children = load_period_hierarchy(session)
+        window_codes = _resolve_trailing_window(period_by_code, period_children, trailing_end)
+        nodes = build_vdt_tree(session, resolved["companies"], month_codes=window_codes)
+        return {
+            "scope": scope,
+            **_scope_meta(resolved),
+            "notYetModelled": False,
+            "period": None,
+            "months": window_codes,
+            "nodes": nodes,
+        }
 
     try:
         nodes = build_vdt_tree(session, resolved["companies"], period)
@@ -232,18 +282,23 @@ def post_vdt_variance_analysis(
 @app.post("/api/vdt/trend-analysis")
 def post_vdt_trend_analysis(
     scope: str,
-    year: str,
+    year: Optional[str] = None,
+    trailing_end: Optional[str] = Query(default=None, alias="trailingEnd"),
     scenario: str = "actual",
     session: Session = Depends(get_session),
 ):
-    """Whole-year MoM Trend Analysis narrative for VDT Trends — see
-    docs/adr/0040. Always reads the fixed pilot anchor (SOC Crew Cost) and the
-    underlying non-cumulative monthly series, regardless of the screen's YTD
-    toggle — flagging needs monthly deltas, which a cumulative series would
-    make meaningless.
+    """Whole-window MoM Trend Analysis narrative for VDT Trends — see
+    docs/adr/0040 and docs/adr/0042. Always reads the fixed pilot anchor (SOC
+    Crew Cost) and the underlying non-cumulative monthly series, regardless of
+    the screen's Cumulative toggle — flagging needs monthly deltas, which a
+    cumulative series would make meaningless. Exactly one of `year`
+    (Financial Year mode) or `trailingEnd` (Trailing mode, a Month code
+    anchor) must be given.
     """
     if scenario not in ("actual", "budget"):
         raise HTTPException(400, "scenario must be 'actual' or 'budget'")
+    if (year is None) == (trailing_end is None):
+        raise HTTPException(400, "exactly one of year or trailingEnd must be provided")
 
     if not session.exec(select(GLNode).limit(1)).first():
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
@@ -252,20 +307,35 @@ def post_vdt_trend_analysis(
     if resolved.get("notYetModelled"):
         raise HTTPException(404, "No VDT data modelled for the selected company yet")
 
-    period_by_code, _ = load_period_hierarchy(session)
-    year_row = period_by_code.get(year)
-    if year_row is None:
-        raise HTTPException(404, f"Unknown period: {year}")
-    if year_row.period_type != PeriodType.YEAR:
-        raise HTTPException(400, f"{year} is not a fiscal-year period")
+    period_by_code, period_children = load_period_hierarchy(session)
 
-    tree = build_vdt_tree(session, resolved["companies"], year)
+    if trailing_end is not None:
+        window_codes = _resolve_trailing_window(period_by_code, period_children, trailing_end)
+        tree = build_vdt_tree(session, resolved["companies"], month_codes=window_codes)
+        month_labels = [calendar_month_label(period_by_code[c]) for c in window_codes]
+        window_label = f"the trailing {len(window_codes)} months ending {month_labels[-1]}"
+    else:
+        year_row = period_by_code.get(year)
+        if year_row is None:
+            raise HTTPException(404, f"Unknown period: {year}")
+        if year_row.period_type != PeriodType.YEAR:
+            raise HTTPException(400, f"{year} is not a fiscal-year period")
+        window_codes = ordered_month_codes_of_year(period_by_code, period_children, year)
+        tree = build_vdt_tree(session, resolved["companies"], year)
+        month_labels = [period_by_code[c].label.split(" ")[0] for c in window_codes]
+        window_label = f"fiscal year {year}"
+
+    # Keyed on the resolved window, not the request's own year/trailingEnd
+    # identifier — a Financial Year request and a Trailing request that
+    # happen to resolve to the same months share one cache entry (see
+    # docs/adr/0042).
+    cache_key = (scope, tuple(window_codes), scenario)
+
     if VDT_TRENDS_ANCHOR not in tree:
         raise HTTPException(404, f"Anchor {VDT_TRENDS_ANCHOR} missing from VDT tree")
 
-    cache_key = (scope, year, scenario)
     try:
-        result = generate_trend_analysis(cache_key, tree, VDT_TRENDS_ANCHOR, scenario, year_label=year)
+        result = generate_trend_analysis(cache_key, tree, VDT_TRENDS_ANCHOR, scenario, window_label, month_labels)
     except TrendAnalysisUnavailable as exc:
         raise HTTPException(503, str(exc))
     return {"trendAnalysis": result}
