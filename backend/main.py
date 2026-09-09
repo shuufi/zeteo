@@ -1,13 +1,17 @@
-from typing import Optional
+import json
+from typing import AsyncIterator, Optional
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from sqlmodel import Session, select
 
 load_dotenv()
 
 from company_tree import InvalidMonetaryScope, MissingCompanyCurrency, UnknownScope, build_company_tree, resolve_scope
 from db import get_session
+from driver_engine import DriverEngine
 from gl_tree import build_tree, diff_subtree, subtree
 from models import GLNode, PeriodType
 from variance_analysis import VarianceAnalysisUnavailable, generate_variance_analysis
@@ -20,6 +24,7 @@ from periods import (
     trailing_month_codes,
 )
 from trend_analysis import TrendAnalysisUnavailable, generate_trend_analysis
+from vdt_sensitivity import SENSITIVITY_MAX_CYCLES, compute_sensitivity, terminal_driver_candidates
 from vdt_tree import build_vdt_tree
 
 VDT_COMPARISON_ROOT_TYPES = ("Reporting Root", "Reporting Node", "Activity Node")
@@ -402,3 +407,116 @@ def get_vdt_reconciliation(
         "accounting": {"nodes": accounting_nodes},
         "vdt": {"nodes": vdt_nodes},
     }
+
+
+async def _sensitivity_event_stream(events, request: Request, augment_result) -> AsyncIterator[bytes]:
+    """Drives `compute_sensitivity()`'s generator, checking
+    `request.is_disconnected()` after each yielded event (an "each per-month
+    rerun", per docs/adr/0043) so an abandoned run performs no further
+    compute — `events` is a lazy generator, so simply ending this loop
+    (never calling `next()` again) is enough to stop it early. Module-level
+    (not a nested closure) so it's directly unit-testable with a fake
+    `request` whose `is_disconnected()` always returns True, without needing
+    a live TestClient connection to actually sever — see
+    test_vdt_sensitivity.py.
+    """
+    try:
+        for event in events:
+            if await request.is_disconnected():
+                break
+            yield f"data: {json.dumps(augment_result(event))}\n\n".encode()
+    except Exception as exc:
+        yield f"data: {json.dumps({'type': 'error', 'detail': str(exc)})}\n\n".encode()
+
+
+class SensitivityRequest(BaseModel):
+    scope: str  # Company code
+    scopeNode: str  # VDT node code (frontend sends the resolved code; whole-book default = the Reporting Root)
+    bumpPct: float  # 1..20 inclusive
+    scenario: str = "actual"  # 'actual' | 'budget'
+    year: Optional[str] = None  # Financial Year mode (Year code)
+    trailingEnd: Optional[str] = None  # Trailing mode (anchor Month code)
+
+
+@app.post("/api/vdt/sensitivity")
+def post_vdt_sensitivity(payload: SensitivityRequest, request: Request, session: Session = Depends(get_session)):
+    """VDT Sensitivity Analysis — see docs/adr/0043. First streaming-response
+    endpoint in this codebase: validation happens as ordinary HTTP errors
+    before the SSE stream ever opens (so a client never has to parse an error
+    out of an event frame), then the elasticity run streams `progress` events
+    followed by exactly one `result` event.
+    """
+    if not (1.0 <= payload.bumpPct <= 20.0):
+        raise HTTPException(422, "bump percent must be between 1 and 20")
+    if payload.scenario not in ("actual", "budget"):
+        raise HTTPException(400, "scenario must be 'actual' or 'budget'")
+    if (payload.year is None) == (payload.trailingEnd is None):
+        raise HTTPException(400, "exactly one of year or trailingEnd must be provided")
+
+    if not session.exec(select(GLNode).limit(1)).first():
+        raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
+
+    resolved = _resolve_monetary_scope(session, payload.scope)
+    if resolved.get("notYetModelled"):
+        raise HTTPException(404, "No VDT data modelled for the selected company yet")
+
+    period_by_code, period_children = load_period_hierarchy(session)
+
+    if payload.trailingEnd is not None:
+        window_codes = _resolve_trailing_window(period_by_code, period_children, payload.trailingEnd)
+        month_labels = [calendar_month_label(period_by_code[c]) for c in window_codes]
+        window_label = f"trailing {len(window_codes)} months ending {month_labels[-1]}" if month_labels else "trailing window"
+        vdt_nodes = build_vdt_tree(session, resolved["companies"], month_codes=window_codes)
+    else:
+        year_row = period_by_code.get(payload.year)
+        if year_row is None:
+            raise HTTPException(404, f"Unknown period: {payload.year}")
+        if year_row.period_type != PeriodType.YEAR:
+            raise HTTPException(400, f"{payload.year} is not a fiscal-year period")
+        window_codes = ordered_month_codes_of_year(period_by_code, period_children, payload.year)
+        month_labels = [period_by_code[c].label.split(" ")[0] for c in window_codes]
+        window_label = f"fiscal year {payload.year}"
+        vdt_nodes = build_vdt_tree(session, resolved["companies"], payload.year)
+
+    scope_node = vdt_nodes.get(payload.scopeNode)
+    if scope_node is None:
+        raise HTTPException(404, f"Unknown node: {payload.scopeNode}")
+
+    root_code = next((code for code, node in vdt_nodes.items() if node["nodeType"] == "Reporting Root"), None)
+    if root_code is None:
+        raise HTTPException(500, "VDT tree has no Reporting Root")
+
+    company = resolved["companies"][0]
+    # ONE baseline DriverEngine, reused read-only for candidate discovery and
+    # baseline driver values (see docs/adr/0043) — every bumped rerun below
+    # still builds its OWN fresh engine via compute_npat_with_overrides.
+    engine = DriverEngine(session, resolved["companies"], window_codes)
+    candidates = terminal_driver_candidates(engine, payload.scopeNode, vdt_nodes)
+
+    total = len(candidates) * 2 * len(window_codes)
+    if total > SENSITIVITY_MAX_CYCLES:
+        raise HTTPException(422, f"sensitivity run too large: {total} cycles, cap {SENSITIVITY_MAX_CYCLES}")
+
+    generator = compute_sensitivity(
+        session, company, payload.scenario, window_codes, root_code, candidates, payload.bumpPct, engine, total
+    )
+
+    def augment_result(event: dict) -> dict:
+        if event["type"] != "result":
+            return event
+        return {
+            **event,
+            "scope": payload.scope,
+            "scopeNode": payload.scopeNode,
+            "scopeName": scope_node["name"],
+            "currency": resolved["currency"],
+            "bumpPct": payload.bumpPct,
+            "monthLabels": month_labels,
+            "windowLabel": window_label,
+        }
+
+    return StreamingResponse(
+        _sensitivity_event_stream(generator, request, augment_result),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+    )

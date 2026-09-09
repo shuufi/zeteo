@@ -91,7 +91,23 @@ def build_vdt_tree(
     period_code: Optional[str] = None,
     ytd: bool = False,
     month_codes: Optional[list[str]] = None,
+    engine: Optional[DriverEngine] = None,
 ) -> dict[str, dict]:
+    """`engine`, if given, is used in place of constructing a fresh
+    `DriverEngine` internally — the hook `vdt_sensitivity.py`'s override
+    primitive needs (see docs/adr/0043): NPAT is a GL Reporting Root, never
+    itself a `DriverFormula` target, so `DriverEngine.target_value()` alone
+    can't recompute it (it only sums formulas bound to the exact target code
+    asked for) — only this whole-tree rollup walk can, since NPAT's real
+    value is raw GL leaf facts (unaffected by a Driver override) plus
+    Driver-Formula-driven Posting Activity Account leaves (affected) summed
+    bottom-up. Passing a pre-built engine here (with an in-memory `facts`
+    overlay already applied — see `compute_npat_with_overrides`) is what lets
+    that overlay actually reach NPAT, matching the ADR's "re-run DriverEngine
+    up through vdt_tree to NPAT" compute method. `None` (every other caller)
+    preserves today's behaviour exactly — a fresh engine built from
+    `companies`/`month_codes` as before.
+    """
     gl_nodes = session.exec(select(GLNode)).all()
     gl_by_code = {n.code: n for n in gl_nodes}
     activity_nodes = session.exec(select(ActivityNode)).all()
@@ -160,7 +176,8 @@ def build_vdt_tree(
     prior_monthly = load_monthly(session, companies, prior_window_codes)
 
     period_len = len(scope_indices) if scope_indices is not None else width
-    engine = DriverEngine(session, companies, window_codes)
+    if engine is None:
+        engine = DriverEngine(session, companies, window_codes)
 
     computed: dict[str, dict] = {}
 

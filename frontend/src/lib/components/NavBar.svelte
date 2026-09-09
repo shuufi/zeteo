@@ -30,10 +30,11 @@
         {
           href: '/vdt',
           label: 'Trends',
-          activePath: /^\/vdt$|^\/vdt\/(?!reconciliation|variance)|^\/vdt-tree(\/.*)?$|^\/diagnostic(\/.*)?$/,
+          activePath: /^\/vdt$|^\/vdt\/(?!reconciliation|variance|sensitivity)|^\/vdt-tree(\/.*)?$|^\/diagnostic(\/.*)?$/,
         },
         { href: '/vdt/variance', label: 'Variance', activePath: '/vdt/variance' },
         { href: '/vdt/reconciliation', label: 'Reconciliation', activePath: '/vdt/reconciliation' },
+        { href: '/vdt/sensitivity', label: 'Sensitivity', activePath: '/vdt/sensitivity' },
       ],
     },
     { href: '/ask', label: 'Ask Zeteo', activePath: '/ask' },
