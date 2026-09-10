@@ -34,7 +34,7 @@ from models import (
     Period,
     PeriodType,
     PostingActivityAccount,
-    Scenario,
+    Source,
 )
 from seed_vdt import build_crew_mix_seed, build_pending_account_seed, load_activity_hierarchy
 
@@ -302,8 +302,8 @@ def generate_gl_facts(rng: random.Random, leaves: list[GLNode], company: str) ->
             for month in MONTHS:
                 i = month - 1
                 period_code = month_period_code(fiscal_year, month)
-                facts.append(GLFact(code=leaf.code, company=company, period_code=period_code, scenario=Scenario.ACTUAL, amount=monthly_actual[i]))
-                facts.append(GLFact(code=leaf.code, company=company, period_code=period_code, scenario=Scenario.BUDGET, amount=monthly_budget[i]))
+                facts.append(GLFact(code=leaf.code, company=company, period_code=period_code, source=Source.ACTUAL, amount=monthly_actual[i]))
+                facts.append(GLFact(code=leaf.code, company=company, period_code=period_code, source=Source.BUDGET, amount=monthly_budget[i]))
     return facts
 
 

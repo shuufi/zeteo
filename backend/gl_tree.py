@@ -242,7 +242,7 @@ def load_monthly(
     companies: list[str],
     month_codes: Optional[list[str]],
 ) -> dict[str, dict[str, list[Decimal]]]:
-    """gl_code -> scenario -> monthly array (one slot per entry in
+    """gl_code -> source -> monthly array (one slot per entry in
     `month_codes`, in that order) for `companies`. `month_codes` is an
     explicit, already-resolved ordered list — a single Year's 12 Month codes
     for build_tree()/build_vdt_tree()'s Financial Year path, or a Trailing-
@@ -259,12 +259,12 @@ def load_monthly(
     # Selecting only the needed columns (rather than full GLFact rows)
     # skips ORM row hydration, the dominant cost for ~40k facts per scope.
     facts = session.exec(
-        select(GLFact.code, GLFact.scenario, GLFact.period_code, GLFact.amount)
+        select(GLFact.code, GLFact.source, GLFact.period_code, GLFact.amount)
         .where(col(GLFact.company).in_(companies))
         .where(col(GLFact.period_code).in_(month_codes))
     ).all()
-    for code, scenario, fact_period_code, amount in facts:
-        result[code][scenario.value][code_to_index[fact_period_code]] += _decimal(amount)
+    for code, source, fact_period_code, amount in facts:
+        result[code][source.value][code_to_index[fact_period_code]] += _decimal(amount)
     return result
 
 
@@ -285,11 +285,11 @@ def compute_gl_leaf(
         actual_monthly = engine.target_value(code, "actual")
         budget_monthly = engine.target_value(code, "budget")
     else:
-        scenarios = monthly.get(code, {})
-        actual_monthly = scenarios.get("actual", [ZERO] * width)
-        budget_monthly = scenarios.get("budget", [ZERO] * width)
+        sources = monthly.get(code, {})
+        actual_monthly = sources.get("actual", [ZERO] * width)
+        budget_monthly = sources.get("budget", [ZERO] * width)
     # Real prior-year comparison is just that year's own actuals, not
-    # a separate stored scenario (see docs/adr/0032) — zero for the
+    # a separate stored source (see docs/adr/0032) — zero for the
     # earliest seeded year, where there's no year before it.
     prior_actual_monthly = prior_monthly.get(code, {}).get("actual", [ZERO] * width)
     sign = 1 if node.normal_balance == NormalBalance.CREDIT else -1
@@ -358,7 +358,7 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
     width = len(month_codes) if month_codes else 12
     monthly = load_monthly(session, companies, month_codes)
     # A real prior-year comparison is just that year's own actuals, not a
-    # separate stored scenario (see docs/adr/0032) — absent for the earliest
+    # separate stored source (see docs/adr/0032) — absent for the earliest
     # seeded year, where prior_monthly stays all-zero.
     prior_monthly = load_monthly(session, companies, prior_month_codes)
 

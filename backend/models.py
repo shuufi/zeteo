@@ -17,7 +17,7 @@ class NormalBalance(str, Enum):
     CREDIT = "C"
 
 
-class Scenario(str, Enum):
+class Source(str, Enum):
     ACTUAL = "actual"
     BUDGET = "budget"
     PRIOR_YEAR = "prior_year"
@@ -116,7 +116,7 @@ class GLFact(SQLModel, table=True):
     code: str = Field(foreign_key="general_ledger.code", index=True)
     company: str = Field(foreign_key="company.code", index=True)
     period_code: str = Field(foreign_key="period.code", index=True)
-    scenario: Scenario
+    source: Source
     amount: Decimal = Field(sa_column=Column(Numeric(24, 2), nullable=False))
 
 
@@ -153,7 +153,7 @@ class DriverFact(SQLModel, table=True):
     code: str = Field(foreign_key="driver.code", index=True)
     company: str = Field(foreign_key="company.code", index=True)
     period_code: str = Field(foreign_key="period.code", index=True)
-    scenario: Scenario
+    source: Source
     # One column serves both exact two-decimal monetary rates and native-unit
     # operational measures that may need more precision.
     amount: Decimal = Field(sa_column=Column(Numeric(24, 6), nullable=False))

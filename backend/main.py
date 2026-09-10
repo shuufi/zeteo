@@ -289,7 +289,7 @@ def post_vdt_trend_analysis(
     scope: str,
     year: Optional[str] = None,
     trailing_end: Optional[str] = Query(default=None, alias="trailingEnd"),
-    scenario: str = "actual",
+    source: str = "actual",
     session: Session = Depends(get_session),
 ):
     """Whole-window MoM Trend Analysis narrative for VDT Trends — see
@@ -300,8 +300,8 @@ def post_vdt_trend_analysis(
     (Financial Year mode) or `trailingEnd` (Trailing mode, a Month code
     anchor) must be given.
     """
-    if scenario not in ("actual", "budget"):
-        raise HTTPException(400, "scenario must be 'actual' or 'budget'")
+    if source not in ("actual", "budget"):
+        raise HTTPException(400, "source must be 'actual' or 'budget'")
     if (year is None) == (trailing_end is None):
         raise HTTPException(400, "exactly one of year or trailingEnd must be provided")
 
@@ -334,13 +334,13 @@ def post_vdt_trend_analysis(
     # identifier — a Financial Year request and a Trailing request that
     # happen to resolve to the same months share one cache entry (see
     # docs/adr/0042).
-    cache_key = (scope, tuple(window_codes), scenario)
+    cache_key = (scope, tuple(window_codes), source)
 
     if VDT_TRENDS_ANCHOR not in tree:
         raise HTTPException(404, f"Anchor {VDT_TRENDS_ANCHOR} missing from VDT tree")
 
     try:
-        result = generate_trend_analysis(cache_key, tree, VDT_TRENDS_ANCHOR, scenario, window_label, month_labels)
+        result = generate_trend_analysis(cache_key, tree, VDT_TRENDS_ANCHOR, source, window_label, month_labels)
     except TrendAnalysisUnavailable as exc:
         raise HTTPException(503, str(exc))
     return {"trendAnalysis": result}
@@ -435,7 +435,7 @@ class SensitivityRequest(BaseModel):
     scope: str  # Company code
     scopeNode: str  # VDT node code (frontend sends the resolved code; whole-book default = the Reporting Root)
     bumpPct: float  # 1..20 inclusive
-    scenario: str = "actual"  # 'actual' | 'budget'
+    source: str = "actual"  # 'actual' | 'budget'
     year: Optional[str] = None  # Financial Year mode (Year code)
     trailingEnd: Optional[str] = None  # Trailing mode (anchor Month code)
 
@@ -450,8 +450,8 @@ def post_vdt_sensitivity(payload: SensitivityRequest, request: Request, session:
     """
     if not (1.0 <= payload.bumpPct <= 20.0):
         raise HTTPException(422, "bump percent must be between 1 and 20")
-    if payload.scenario not in ("actual", "budget"):
-        raise HTTPException(400, "scenario must be 'actual' or 'budget'")
+    if payload.source not in ("actual", "budget"):
+        raise HTTPException(400, "source must be 'actual' or 'budget'")
     if (payload.year is None) == (payload.trailingEnd is None):
         raise HTTPException(400, "exactly one of year or trailingEnd must be provided")
 
@@ -500,7 +500,7 @@ def post_vdt_sensitivity(payload: SensitivityRequest, request: Request, session:
         raise HTTPException(422, f"sensitivity run too large: {total} cycles, cap {SENSITIVITY_MAX_CYCLES}")
 
     generator = compute_sensitivity(
-        session, company, payload.scenario, window_codes, root_code, candidates, payload.bumpPct, engine, total
+        session, company, payload.source, window_codes, root_code, candidates, payload.bumpPct, engine, total
     )
 
     def augment_result(event: dict) -> dict:

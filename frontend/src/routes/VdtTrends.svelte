@@ -44,7 +44,7 @@
   // No monthlyBudget field exists on HierarchyNode yet — Budget is a real,
   // selectable option, but every cell renders the table's existing
   // "not comparable" dash (see docs/adr/0039) until the backend adds it.
-  let scenario = $state<"actual" | "budget">("actual");
+  let source = $state<"actual" | "budget">("actual");
   let showGlCode = $state(false);
 
   // Financial Year (existing, default) vs Trailing (new) — see docs/adr/0042.
@@ -132,7 +132,7 @@
     _column: StatementColumn,
     index: number,
   ): number | null {
-    if (scenario === "budget") return null;
+    if (source === "budget") return null;
     const monthly = getNode(vdtStore.tree, row.nodeId)?.monthlyActual ?? [];
     if (ytdView && row.kind !== "operational") {
       return cumulative(monthly)[index] ?? 0;
@@ -168,10 +168,10 @@
   function handleAnalyseTrends(): void {
     if (trendsMode === "trailing") {
       if (!trailingAnchor) return;
-      generateTrendAnalysis(scopeState.code, scenario, { trailingEnd: trailingAnchor });
+      generateTrendAnalysis(scopeState.code, source, { trailingEnd: trailingAnchor });
     } else {
       if (!currentYearId) return;
-      generateTrendAnalysis(scopeState.code, scenario, { year: currentYearId });
+      generateTrendAnalysis(scopeState.code, source, { year: currentYearId });
     }
   }
 
@@ -182,7 +182,7 @@
   let lastTrendKey = "";
   $effect(() => {
     const anchor = trendsMode === "trailing" ? trailingAnchor : currentYearId;
-    const key = `${scopeState.code}:${trendsMode}:${anchor}:${scenario}`;
+    const key = `${scopeState.code}:${trendsMode}:${anchor}:${source}`;
     if (lastTrendKey && key !== lastTrendKey) trendAnalysisStore.reset();
     lastTrendKey = key;
   });
@@ -196,8 +196,8 @@
     showTrendsMode
     bind:trendsMode
     bind:trailingAnchor
-    showScenario
-    bind:scenario
+    showSource
+    bind:source
     showYtd
     ytdLabel="Cumulative"
     bind:ytd={ytdView}

@@ -9,7 +9,7 @@ from sqlmodel import select
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from driver_engine import DriverEngine  # noqa: E402
-from models import CompanyNodeType, DriverFact, Scenario  # noqa: E402
+from models import CompanyNodeType, DriverFact, Source  # noqa: E402
 from seed import build_company_nodes  # noqa: E402
 
 from conftest import fixture_graph  # noqa: E402
@@ -35,7 +35,7 @@ def test_formula_money_target_rounds_half_up_per_company_month(session):
         select(DriverFact).where(
             DriverFact.code == codes["driver_base_rate"],
             DriverFact.period_code == f"{codes['year']}-M01",
-            DriverFact.scenario == Scenario.ACTUAL,
+            DriverFact.source == Source.ACTUAL,
         )
     ).one()
     january_rate.amount = Decimal("0.000500")
@@ -47,5 +47,5 @@ def test_formula_money_target_rounds_half_up_per_company_month(session):
     monthly = engine.target_value(codes["va_driven"], "actual")
 
     # Headcount 10 × rate 0.0005 = 0.005, rounded at the final monetary
-    # Company × Month × Scenario target boundary using ROUND_HALF_UP.
+    # Company × Month × Source target boundary using ROUND_HALF_UP.
     assert monthly[0] == Decimal("0.01")

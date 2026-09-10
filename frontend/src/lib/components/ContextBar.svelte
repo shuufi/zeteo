@@ -64,8 +64,8 @@
     showTrendsMode = false,
     trendsMode = $bindable<"financial-year" | "trailing">("financial-year"),
     trailingAnchor = $bindable<string | undefined>(undefined),
-    showScenario = false,
-    scenario = $bindable<"actual" | "budget">("actual"),
+    showSource = false,
+    source = $bindable<"actual" | "budget">("actual"),
     showComparison = false,
     comparisonNode = $bindable<string | undefined>(undefined),
     grain = $bindable<PeriodType>("Month"),
@@ -108,8 +108,8 @@
     trailingAnchor?: string;
     /** The Actual/Budget data-selection chip (see docs/adr/0039) — distinct
      * from the vs Budget/Last Year/This Year comparison chip below. */
-    showScenario?: boolean;
-    scenario?: "actual" | "budget";
+    showSource?: boolean;
+    source?: "actual" | "budget";
     showComparison?: boolean;
     comparisonNode?: string;
     grain?: PeriodType;
@@ -220,12 +220,12 @@
   {#if showTrendsMode && trendsMode === "trailing"}
     <PeriodSelect label="Ending" periods={allMonthsChronological} bind:value={trailingAnchor} />
   {/if}
-  {#if showScenario}
+  {#if showSource}
     <ChipSelect
-      id="scenario-select"
+      id="source-select"
       options={["actual", "budget"]}
       labels={["Actual", "Budget"]}
-      bind:selected={scenario}
+      bind:selected={source}
     />
   {/if}
   {#if showComparison}

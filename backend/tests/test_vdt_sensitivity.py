@@ -34,7 +34,7 @@ from models import (  # noqa: E402
     FormulaOperator,
     OperationalUnit,
     PostingActivityAccount,
-    Scenario,
+    Source,
 )
 from periods import load_period_hierarchy, ordered_month_codes_of_year  # noqa: E402
 from vdt_sensitivity import (  # noqa: E402
@@ -66,7 +66,7 @@ def test_override_primitive_recomputes_npat_and_never_mutates_driver_fact(sessio
     codes = fixture_graph(session)
     window = _window(session, codes, 12)
 
-    before = sorted((r.code, r.period_code, r.scenario, r.amount) for r in session.exec(select(DriverFact)).all())
+    before = sorted((r.code, r.period_code, r.source, r.amount) for r in session.exec(select(DriverFact)).all())
 
     result = compute_npat_with_overrides(
         session,
@@ -77,7 +77,7 @@ def test_override_primitive_recomputes_npat_and_never_mutates_driver_fact(sessio
         codes["root"],
     )
 
-    after = sorted((r.code, r.period_code, r.scenario, r.amount) for r in session.exec(select(DriverFact)).all())
+    after = sorted((r.code, r.period_code, r.source, r.amount) for r in session.exec(select(DriverFact)).all())
     assert before == after  # overrides never leak into the persisted row
 
     # Overriding headcount to 99 must move NPAT away from the un-overridden baseline.
@@ -344,7 +344,7 @@ def test_baseline_npat_near_zero_flags_all_na_but_keeps_dollar_impact(session):
     from models import GLFact
 
     for row in session.exec(select(GLFact)).all():
-        if row.code == codes["gl_leaf_rev"] and row.scenario == Scenario.ACTUAL:
+        if row.code == codes["gl_leaf_rev"] and row.source == Source.ACTUAL:
             row.amount = Decimal("20.00")
             session.add(row)
     session.commit()
@@ -454,7 +454,7 @@ def test_divide_by_zero_site_flags_candidate_feeding_it(session):
     facts = []
     for i, month_code in enumerate(window):
         amount = Decimal("0") if i == 5 else Decimal("5")
-        facts.append(DriverFact(code="DRV-ZERO-DIVISOR", company=codes["company"], period_code=month_code, scenario=Scenario.ACTUAL, amount=amount))
+        facts.append(DriverFact(code="DRV-ZERO-DIVISOR", company=codes["company"], period_code=month_code, source=Source.ACTUAL, amount=amount))
     session.add_all(facts)
     session.commit()
 
@@ -547,7 +547,7 @@ def test_sensitivity_endpoint_streams_progress_then_result(session):
     with client.stream(
         "POST",
         "/api/vdt/sensitivity",
-        json={"scope": codes["company"], "scopeNode": codes["act_top"], "bumpPct": 10.0, "scenario": "actual", "year": codes["year"]},
+        json={"scope": codes["company"], "scopeNode": codes["act_top"], "bumpPct": 10.0, "source": "actual", "year": codes["year"]},
     ) as resp:
         assert resp.status_code == 200
         assert resp.headers["content-type"].startswith("text/event-stream")
@@ -600,7 +600,7 @@ def test_sensitivity_endpoint_trailing_window_resolves_and_streams(session):
         "/api/vdt/sensitivity",
         json={
             "scope": codes["company"], "scopeNode": codes["root"], "bumpPct": 10.0,
-            "scenario": "actual", "trailingEnd": f"{codes['year']}-M06",
+            "source": "actual", "trailingEnd": f"{codes['year']}-M06",
         },
     ) as resp:
         assert resp.status_code == 200
@@ -615,13 +615,13 @@ def test_sensitivity_endpoint_trailing_window_resolves_and_streams(session):
     assert result["windowLabel"] == "trailing 6 months ending Jun '24"
 
 
-def test_sensitivity_endpoint_rejects_bad_scenario(session):
+def test_sensitivity_endpoint_rejects_bad_source(session):
     codes = fixture_graph(session)
     client = _client(session)
 
     resp = client.post(
         "/api/vdt/sensitivity",
-        json={"scope": codes["company"], "scopeNode": codes["root"], "bumpPct": 10.0, "scenario": "nope", "year": codes["year"]},
+        json={"scope": codes["company"], "scopeNode": codes["root"], "bumpPct": 10.0, "source": "nope", "year": codes["year"]},
     )
     assert resp.status_code == 400
 

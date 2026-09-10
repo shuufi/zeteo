@@ -49,12 +49,12 @@ def _render_flagged(flagged: list[dict], month_labels: list[str]) -> str:
     return "\n".join(lines)
 
 
-def build_trend_prompt(root_name: str, window_label: str, scenario: str, flagged: list[dict], month_labels: list[str]) -> str:
+def build_trend_prompt(root_name: str, window_label: str, source: str, flagged: list[dict], month_labels: list[str]) -> str:
     flagged_text = _render_flagged(flagged, month_labels)
     return (
         "You are a financial analyst writing a short analytical-review narrative "
         f"identifying the notable month-over-month (MoM) trends in {root_name} across "
-        f"{window_label} ({scenario} scenario).\n\n"
+        f"{window_label} ({source} source).\n\n"
         "Use ONLY the numbers and structure given below — never invent, recompute, or "
         "restate a figure differently than given. The backend has already flagged which "
         "nodes and months are material; your job is only to explain WHY each flagged "
@@ -150,21 +150,21 @@ def generate_trend_analysis(
     cache_key: tuple,
     tree: dict[str, dict],
     root: str,
-    scenario: str,
+    source: str,
     window_label: str,
     month_labels: list[str],
 ) -> dict[str, Any]:
     if cache_key in _cache:
         return _cache[cache_key]
 
-    flagged = flag_trends(tree, root, scenario)
+    flagged = flag_trends(tree, root, source)
     root_node = tree[root]
     root_name = root_node["name"]
 
     if not flagged:
         result = {
             "headline": f"No material month-over-month movements in {root_name} for {window_label}.",
-            "scenario": scenario,
+            "source": source,
             "bullets": [],
         }
         _cache[cache_key] = result
@@ -180,7 +180,7 @@ def generate_trend_analysis(
         raise TrendAnalysisUnavailable("openai package not installed") from exc
 
     model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-    prompt = build_trend_prompt(root_name, window_label, scenario, flagged, month_labels)
+    prompt = build_trend_prompt(root_name, window_label, source, flagged, month_labels)
 
     try:
         client = OpenAI(api_key=api_key)
@@ -197,6 +197,6 @@ def generate_trend_analysis(
         raise TrendAnalysisUnavailable("OpenAI returned an empty response")
 
     result = _parse_trend(text, {f["nodeId"]: f for f in flagged})
-    result["scenario"] = scenario
+    result["source"] = source
     _cache[cache_key] = result
     return result

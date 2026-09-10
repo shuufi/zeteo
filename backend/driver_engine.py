@@ -65,7 +65,7 @@ class DriverEngine:
             code: sorted(terms, key=lambda t: (t.term_index, t.operand_index)) for code, terms in terms_by_formula.items()
         }
 
-        # facts[code][company][scenario] = [width Decimals] — kept per-company
+        # facts[code][company][source] = [width Decimals] — kept per-company
         # so formula products are computed within one company (see module docstring).
         width = self.width
         facts: dict[str, dict[str, dict[str, list[Decimal]]]] = defaultdict(
@@ -74,13 +74,13 @@ class DriverEngine:
         if companies and month_codes:
             code_to_index = {code: i for i, code in enumerate(month_codes)}
             rows = session.exec(
-                select(DriverFact.code, DriverFact.company, DriverFact.scenario, DriverFact.period_code, DriverFact.amount)
+                select(DriverFact.code, DriverFact.company, DriverFact.source, DriverFact.period_code, DriverFact.amount)
                 .where(col(DriverFact.company).in_(companies))
                 .where(col(DriverFact.period_code).in_(month_codes))
             ).all()
-            for code, company, scenario, period_code, amount in rows:
+            for code, company, source, period_code, amount in rows:
                 month_index = code_to_index[period_code]
-                facts[code][company][scenario.value][month_index] += Decimal(str(amount))
+                facts[code][company][source.value][month_index] += Decimal(str(amount))
         self.facts = facts
 
         self._cache: dict[tuple[str, str, str], list[Decimal]] = {}
@@ -91,29 +91,29 @@ class DriverEngine:
     def formulas_for(self, target_code: str) -> list[DriverFormula]:
         return self.formulas_by_target.get(target_code, [])
 
-    def _driver_value_for_company(self, driver_code: str, scenario: str, company: str, visiting: frozenset) -> list[Decimal]:
-        cache_key = (driver_code, scenario, company)
+    def _driver_value_for_company(self, driver_code: str, source: str, company: str, visiting: frozenset) -> list[Decimal]:
+        cache_key = (driver_code, source, company)
         if cache_key in self._cache:
             return self._cache[cache_key]
         if driver_code in visiting:
             raise DriverCycleError(f"Cycle detected evaluating driver {driver_code}")
         if driver_code in self.formulas_by_target:
-            value = self._target_value_for_company(driver_code, scenario, company, visiting | {driver_code})
+            value = self._target_value_for_company(driver_code, source, company, visiting | {driver_code})
         else:
-            value = list(self.facts.get(driver_code, {}).get(company, {}).get(scenario, [ZERO] * self.width))
+            value = list(self.facts.get(driver_code, {}).get(company, {}).get(source, [ZERO] * self.width))
         self._cache[cache_key] = value
         return value
 
-    def _target_value_for_company(self, target_code: str, scenario: str, company: str, visiting: frozenset) -> list[Decimal]:
+    def _target_value_for_company(self, target_code: str, source: str, company: str, visiting: frozenset) -> list[Decimal]:
         total = [ZERO] * self.width
         for formula in self.formulas_by_target.get(target_code, []):
-            formula_value = self._formula_value_for_company(formula, scenario, company, visiting)
+            formula_value = self._formula_value_for_company(formula, source, company, visiting)
             total = [a + formula.sign * b for a, b in zip(total, formula_value)]
         if target_code not in self.driver_by_code:
             total = [value.quantize(MONEY_QUANTUM, rounding=ROUND_HALF_UP) for value in total]
         return total
 
-    def _formula_value_for_company(self, formula: DriverFormula, scenario: str, company: str, visiting: frozenset) -> list[Decimal]:
+    def _formula_value_for_company(self, formula: DriverFormula, source: str, company: str, visiting: frozenset) -> list[Decimal]:
         by_term: dict[int, list[DriverFormulaTerm]] = defaultdict(list)
         for term in self.terms_by_formula.get(formula.code, []):
             by_term[term.term_index].append(term)
@@ -122,7 +122,7 @@ class DriverEngine:
         for term_ops in by_term.values():
             term_value: Optional[list[Decimal]] = None
             for op in term_ops:
-                operand = self._driver_value_for_company(op.driver_code, scenario, company, visiting)
+                operand = self._driver_value_for_company(op.driver_code, source, company, visiting)
                 if term_value is None:
                     term_value = operand
                 elif op.operator == FormulaOperator.DIVIDE:
@@ -141,19 +141,19 @@ class DriverEngine:
             return [v / divisor for v in total]
         return total
 
-    def target_value(self, target_code: str, scenario: str) -> list[Decimal]:
+    def target_value(self, target_code: str, source: str) -> list[Decimal]:
         """Monthly values (self.width-wide), summed across companies — for money targets (GL leaves)."""
-        per_company = [self._target_value_for_company(target_code, scenario, c, frozenset()) for c in self.companies]
+        per_company = [self._target_value_for_company(target_code, source, c, frozenset()) for c in self.companies]
         return self._reduce(per_company, average=False)
 
-    def driver_value(self, driver_code: str, scenario: str) -> list[Decimal]:
+    def driver_value(self, driver_code: str, source: str) -> list[Decimal]:
         """Monthly values (self.width-wide), averaged across companies — a rate/count/ratio isn't additive like money."""
-        per_company = [self._driver_value_for_company(driver_code, scenario, c, frozenset()) for c in self.companies]
+        per_company = [self._driver_value_for_company(driver_code, source, c, frozenset()) for c in self.companies]
         return self._reduce(per_company, average=True)
 
-    def formula_value(self, formula: DriverFormula, scenario: str, average: bool) -> list[Decimal]:
+    def formula_value(self, formula: DriverFormula, source: str, average: bool) -> list[Decimal]:
         """A single Formula's own monthly value — averaged if it targets a Driver, summed if a GL leaf."""
-        per_company = [self._formula_value_for_company(formula, scenario, c, frozenset()) for c in self.companies]
+        per_company = [self._formula_value_for_company(formula, source, c, frozenset()) for c in self.companies]
         return self._reduce(per_company, average=average)
 
     def expression_text(self, formula_code: str) -> str:

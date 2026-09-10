@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from models import DriverFact, GLFact, Period, PeriodType, Scenario  # noqa: E402
+from models import DriverFact, GLFact, Period, PeriodType, Source  # noqa: E402
 from periods import load_period_hierarchy, ordered_month_codes_of_year, trailing_month_codes  # noqa: E402
 from vdt_tree import build_vdt_tree  # noqa: E402
 
@@ -56,12 +56,12 @@ def _seed_second_fiscal_year(session, codes: dict[str, str]) -> None:
     driver_facts = []
     for month in range(1, 13):
         period_code = f"{SECOND_YEAR}-M{month:02d}"
-        facts.append(GLFact(code=codes["gl_leaf_rev"], company=codes["company"], period_code=period_code, scenario=Scenario.ACTUAL, amount=200.0))
+        facts.append(GLFact(code=codes["gl_leaf_rev"], company=codes["company"], period_code=period_code, source=Source.ACTUAL, amount=200.0))
         driver_facts.append(
-            DriverFact(code=codes["driver_headcount"], company=codes["company"], period_code=period_code, scenario=Scenario.ACTUAL, amount=20.0)
+            DriverFact(code=codes["driver_headcount"], company=codes["company"], period_code=period_code, source=Source.ACTUAL, amount=20.0)
         )
         driver_facts.append(
-            DriverFact(code=codes["driver_base_rate"], company=codes["company"], period_code=period_code, scenario=Scenario.ACTUAL, amount=3.0)
+            DriverFact(code=codes["driver_base_rate"], company=codes["company"], period_code=period_code, source=Source.ACTUAL, amount=3.0)
         )
     session.add_all(facts)
     session.add_all(driver_facts)

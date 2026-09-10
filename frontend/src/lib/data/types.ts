@@ -107,7 +107,7 @@ export interface SensitivityResult {
   scope: string;
   scopeNode: string;
   scopeName: string;
-  scenario: 'actual' | 'budget';
+  source: 'actual' | 'budget';
   currency: string;
   bumpPct: number;
   months: string[];

@@ -124,7 +124,7 @@
 
   // Trailing 24 months for the KPI card bar charts — prior year's monthly
   // figures followed by the current year's, in chronological order (see
-  // gl_tree.py's monthlyPriorYear, sourced from the prior_year GLFact scenario).
+  // gl_tree.py's monthlyPriorYear, populated from the prior_year GLFact source).
   function trailing24(
     node: { monthlyActual: number[]; monthlyPriorYear: number[] },
     abs = false,

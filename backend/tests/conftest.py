@@ -43,7 +43,7 @@ from models import (  # noqa: E402
     Period,
     PeriodType,
     PostingActivityAccount,
-    Scenario,
+    Source,
 )
 
 YEAR = "FY24"
@@ -192,17 +192,17 @@ def fixture_graph(session: Session) -> dict[str, str]:
     driver_facts = []
     for month in range(1, 13):
         period_code = f"{YEAR}-M{month:02d}"
-        gl_facts.append(GLFact(code=codes["gl_leaf_rev"], company=COMPANY, period_code=period_code, scenario=Scenario.ACTUAL, amount=100.0))
-        gl_facts.append(GLFact(code=codes["gl_leaf_rev"], company=COMPANY, period_code=period_code, scenario=Scenario.BUDGET, amount=90.0))
-        gl_facts.append(GLFact(code=codes["gl_old_leaf"], company=COMPANY, period_code=period_code, scenario=Scenario.ACTUAL, amount=50.0))
-        gl_facts.append(GLFact(code=codes["gl_old_leaf"], company=COMPANY, period_code=period_code, scenario=Scenario.BUDGET, amount=45.0))
-        gl_facts.append(GLFact(code=codes["gl_anchor_leaf"], company=COMPANY, period_code=period_code, scenario=Scenario.ACTUAL, amount=30.0))
-        gl_facts.append(GLFact(code=codes["gl_anchor_leaf"], company=COMPANY, period_code=period_code, scenario=Scenario.BUDGET, amount=28.0))
+        gl_facts.append(GLFact(code=codes["gl_leaf_rev"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=100.0))
+        gl_facts.append(GLFact(code=codes["gl_leaf_rev"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=90.0))
+        gl_facts.append(GLFact(code=codes["gl_old_leaf"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=50.0))
+        gl_facts.append(GLFact(code=codes["gl_old_leaf"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=45.0))
+        gl_facts.append(GLFact(code=codes["gl_anchor_leaf"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=30.0))
+        gl_facts.append(GLFact(code=codes["gl_anchor_leaf"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=28.0))
 
-        driver_facts.append(DriverFact(code=codes["driver_headcount"], company=COMPANY, period_code=period_code, scenario=Scenario.ACTUAL, amount=10.0))
-        driver_facts.append(DriverFact(code=codes["driver_headcount"], company=COMPANY, period_code=period_code, scenario=Scenario.BUDGET, amount=10.0))
-        driver_facts.append(DriverFact(code=codes["driver_base_rate"], company=COMPANY, period_code=period_code, scenario=Scenario.ACTUAL, amount=2.0))
-        driver_facts.append(DriverFact(code=codes["driver_base_rate"], company=COMPANY, period_code=period_code, scenario=Scenario.BUDGET, amount=2.0))
+        driver_facts.append(DriverFact(code=codes["driver_headcount"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=10.0))
+        driver_facts.append(DriverFact(code=codes["driver_headcount"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=10.0))
+        driver_facts.append(DriverFact(code=codes["driver_base_rate"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=2.0))
+        driver_facts.append(DriverFact(code=codes["driver_base_rate"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=2.0))
 
     session.add_all(gl_nodes)
     session.add_all(activity_nodes)
