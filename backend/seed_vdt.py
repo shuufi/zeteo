@@ -31,7 +31,7 @@ from models import (
     FormulaOperator,
     OperationalUnit,
     PostingActivityAccount,
-    Scenario,
+    Source,
 )
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -123,7 +123,7 @@ _MONTHLY_RATE_GROWTH = 0.015
 # Deliberate one-off operational anomalies for VDT Trends' Trend Analysis
 # narrative (docs/adr/0040) to have something to narrate — without these, the
 # smooth compounding drift above never crosses Trend Analysis's 15% MoM /
-# 5%-of-root thresholds in any seeded year. Actual scenario only, so Budget
+# 5%-of-root thresholds in any seeded year. Actual source only, so Budget
 # stays on the smooth baseline (the spike also reads as an Actual-vs-Budget
 # variance, not just an MoM swing). Each entry bumps exactly one month; the
 # following month's plain baseline then reads as a matching drop back down —
@@ -182,7 +182,7 @@ def build_crew_mix_seed(
                         code=hc_code,
                         company=focus_company,
                         period_code=period_code,
-                        scenario=Scenario.ACTUAL,
+                        source=Source.ACTUAL,
                         amount=_decimal(hc_month_actual * rng.uniform(0.995, 1.005), "0.001"),
                     )
                 )
@@ -191,7 +191,7 @@ def build_crew_mix_seed(
                         code=hc_code,
                         company=focus_company,
                         period_code=period_code,
-                        scenario=Scenario.BUDGET,
+                        source=Source.BUDGET,
                         amount=_decimal(hc_month * rng.uniform(0.995, 1.005), "0.001"),
                     )
                 )
@@ -200,7 +200,7 @@ def build_crew_mix_seed(
                         code=rate_code,
                         company=focus_company,
                         period_code=period_code,
-                        scenario=Scenario.ACTUAL,
+                        source=Source.ACTUAL,
                         amount=_decimal(rate_month * rng.uniform(0.997, 1.003), "0.01"),
                     )
                 )
@@ -209,7 +209,7 @@ def build_crew_mix_seed(
                         code=rate_code,
                         company=focus_company,
                         period_code=period_code,
-                        scenario=Scenario.BUDGET,
+                        source=Source.BUDGET,
                         amount=_decimal(rate_month * rng.uniform(0.997, 1.003), "0.01"),
                     )
                 )
@@ -422,16 +422,16 @@ def build_pending_account_seed(
             for month in range(1, 13):
                 period_code = f"{fiscal_year}-M{month:02d}"
                 month_value = annual * ((1 + monthly_growth) ** (month - 6.5))
-                for scenario in (Scenario.ACTUAL, Scenario.BUDGET):
+                for source in (Source.ACTUAL, Source.BUDGET):
                     value = month_value
-                    if scenario == Scenario.ACTUAL:
+                    if source == Source.ACTUAL:
                         value = _apply_anomaly(driver_code, fiscal_year, month, value)
                     facts.append(
                         DriverFact(
                             code=driver_code,
                             company=focus_company,
                             period_code=period_code,
-                            scenario=scenario,
+                            source=source,
                             amount=_decimal(value * rng.uniform(*noise_range), places),
                         )
                     )

@@ -99,7 +99,7 @@ def test_cap_at_max_flagged_nodes():
     assert len(flags) == MAX_FLAGGED_NODES
 
 
-def test_budget_scenario_reads_monthly_budget_series():
+def test_budget_source_reads_monthly_budget_series():
     tree = _tree(BUDGETMOVE=_leaf("Budget Mover", actual=[100] * 12, budget=[100] * 5 + [200] * 7))
 
     actual_flags = flag_trends(tree, "ROOT", "actual")

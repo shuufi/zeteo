@@ -15,8 +15,8 @@ LEAF_MONEY_NODE_TYPES = {"Posting GL Account", "Posting Activity Account"}
 EPSILON = 1e-9
 
 
-def _series_for(node: dict, scenario: str) -> list[float]:
-    return node["monthlyBudget"] if scenario == "budget" else node["monthlyActual"]
+def _series_for(node: dict, source: str) -> list[float]:
+    return node["monthlyBudget"] if source == "budget" else node["monthlyActual"]
 
 
 def _movement_label(prev: float, cur: float) -> str:
@@ -74,10 +74,10 @@ def _round_driver_series(unit: str, series: list[float]) -> list[float]:
     return [round(v, places) for v in series]
 
 
-def _collect_drivers(tree: dict[str, dict], leaf_id: str, scenario: str) -> list[dict]:
+def _collect_drivers(tree: dict[str, dict], leaf_id: str, source: str) -> list[dict]:
     """Walk the leaf's Driver Formula / Driver descendants, returning each
     Driver term's monthly series (matching the tree's window length) in the
-    selected scenario (its own unit, not money). Explains WHY the leaf moved
+    selected source (its own unit, not money). Explains WHY the leaf moved
     — quantity vs rate."""
     out: list[dict] = []
     leaf = tree.get(leaf_id)
@@ -93,21 +93,21 @@ def _collect_drivers(tree: dict[str, dict], leaf_id: str, scenario: str) -> list
                 {
                     "name": driver["name"],
                     "unit": driver["unit"],
-                    "series": _round_driver_series(driver["unit"], _series_for(driver, scenario)),
+                    "series": _round_driver_series(driver["unit"], _series_for(driver, source)),
                     "expression": formula.get("expression"),
                 }
             )
     return out
 
 
-def flag_trends(tree: dict[str, dict], root: str, scenario: str) -> list[dict]:
+def flag_trends(tree: dict[str, dict], root: str, source: str) -> list[dict]:
     """Returns flagged leaf nodes, ranked by peak dollar-impact, capped at
     MAX_FLAGGED_NODES. Empty list == a quiet year (caller must NOT manufacture
     bullets)."""
     root_node = tree.get(root)
     if root_node is None:
         return []
-    root_series = _series_for(root_node, scenario)
+    root_series = _series_for(root_node, source)
     in_scope = _descendant_codes(tree, root)
 
     flagged: list[dict] = []
@@ -115,7 +115,7 @@ def flag_trends(tree: dict[str, dict], root: str, scenario: str) -> list[dict]:
         node = tree[node_id]
         if node.get("nodeType") not in LEAF_MONEY_NODE_TYPES:
             continue
-        series = _series_for(node, scenario)
+        series = _series_for(node, source)
         months: list[dict] = []
         for m in range(1, len(series)):  # index 0 has no prior month in this series
             prev, cur = series[m - 1], series[m]
@@ -159,7 +159,7 @@ def flag_trends(tree: dict[str, dict], root: str, scenario: str) -> list[dict]:
                 "peakMonthIndex": peak["monthIndex"],
                 "peakImpact": peak["impact"],
                 "amount": peak["currValue"] - peak["prevValue"],
-                "drivers": _collect_drivers(tree, node_id, scenario),
+                "drivers": _collect_drivers(tree, node_id, source),
             }
         )
 

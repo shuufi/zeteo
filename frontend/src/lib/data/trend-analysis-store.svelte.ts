@@ -31,7 +31,7 @@ export interface TrendBullet {
 
 export interface TrendAnalysisData {
   headline: string;
-  scenario: 'actual' | 'budget';
+  source: 'actual' | 'budget';
   bullets: TrendBullet[];
 }
 
@@ -69,13 +69,13 @@ export const trendAnalysisStore = {
  */
 export async function generateTrendAnalysis(
   scope: string,
-  scenario: 'actual' | 'budget',
+  source: 'actual' | 'budget',
   window: { year: string } | { trailingEnd: string },
 ): Promise<void> {
   status = 'loading';
   error = '';
   try {
-    const params = new URLSearchParams({ scope, scenario });
+    const params = new URLSearchParams({ scope, source });
     if ('trailingEnd' in window) {
       params.set('trailingEnd', window.trailingEnd);
     } else {

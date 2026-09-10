@@ -61,7 +61,7 @@ export async function startSensitivity(req: {
   scope: string;
   scopeNode: string;
   bumpPct: number;
-  scenario: 'actual' | 'budget';
+  source: 'actual' | 'budget';
   window: { year: string } | { trailingEnd: string };
 }): Promise<void> {
   controller?.abort();
@@ -78,7 +78,7 @@ export async function startSensitivity(req: {
     scope: req.scope,
     scopeNode: req.scopeNode,
     bumpPct: req.bumpPct,
-    scenario: req.scenario,
+    source: req.source,
     ...('trailingEnd' in req.window ? { trailingEnd: req.window.trailingEnd } : { year: req.window.year }),
   };
 

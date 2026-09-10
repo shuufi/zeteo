@@ -28,7 +28,7 @@
   let scopeNode = $state<string | undefined>(undefined);
   let bumpPct = $state(10);
   let moneyScale = $state<MoneyScaleChoice>("auto");
-  let scenario = $state<"actual" | "budget">("actual");
+  let source = $state<"actual" | "budget">("actual");
 
   // Financial Year (default) vs Trailing — same picker VDT Trends uses (see
   // docs/adr/0042/0043).
@@ -94,16 +94,16 @@
 
   function handleRun(): void {
     if (!scopeNode || !window) return;
-    startSensitivity({ scope: scopeState.code, scopeNode, bumpPct, scenario, window });
+    startSensitivity({ scope: scopeState.code, scopeNode, bumpPct, source, window });
   }
 
-  // Reset a stale result when the underlying window/scope/bump/scenario
+  // Reset a stale result when the underlying window/scope/bump/source
   // changes, so a stale chart never lingers after the inputs move — mirrors
   // Trends/Variance Analysis's reset-on-key-change pattern.
   let lastRunKey = "";
   $effect(() => {
     const anchor = trendsMode === "trailing" ? trailingAnchor : currentYearId;
-    const key = `${scopeState.code}:${trendsMode}:${anchor}:${scenario}:${scopeNode ?? ""}:${bumpPct}`;
+    const key = `${scopeState.code}:${trendsMode}:${anchor}:${source}:${scopeNode ?? ""}:${bumpPct}`;
     if (lastRunKey && key !== lastRunKey) sensitivityStore.reset();
     lastRunKey = key;
   });
@@ -138,8 +138,8 @@
     bind:trailingAnchor
     showPeriod
     periodYearOnly
-    showScenario
-    bind:scenario
+    showSource
+    bind:source
     showComparisonChip={false}
     showMoneyScale
     {currency}

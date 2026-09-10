@@ -60,7 +60,7 @@ class DriverOverride:
 def compute_npat_with_overrides(
     session: Session,
     company: str,
-    scenario: str,
+    source: str,
     month_codes: list[str],
     overrides: list[DriverOverride],
     target_code: str,
@@ -85,11 +85,11 @@ def compute_npat_with_overrides(
     for override in overrides:
         # `facts` is a defaultdict — a driver with no baseline fact still
         # overlays cleanly, no pre-seeding required.
-        engine.facts[override.driver_code][company][scenario] = list(override.monthly_values)
+        engine.facts[override.driver_code][company][source] = list(override.monthly_values)
 
     nodes = build_vdt_tree(session, [company], month_codes=month_codes, engine=engine)
     entry = nodes.get(target_code)
-    field = "monthlyActual" if scenario == "actual" else "monthlyBudget"
+    field = "monthlyActual" if source == "actual" else "monthlyBudget"
     npat = [Decimal(str(v)) for v in entry[field]] if entry is not None else [ZERO] * len(month_codes)
     return {"npat": npat, "subtree": nodes if include_subtree else None}
 
@@ -209,7 +209,7 @@ def _reachable_chain(start: str, consumed_by: dict[str, set[str]], visiting: fro
     return result
 
 
-def _zero_divisor_drivers(engine: DriverEngine, scenario: str) -> set[str]:
+def _zero_divisor_drivers(engine: DriverEngine, source: str) -> set[str]:
     """Driver codes that are EVER used as a DIVIDE operand's divisor whose
     own baseline monthly value hits exactly zero in some month — an exact
     per-month `== ZERO` check (not a relative one), since this is about the
@@ -224,7 +224,7 @@ def _zero_divisor_drivers(engine: DriverEngine, scenario: str) -> set[str]:
         for term in engine.terms_by_formula.get(formula.code, []):
             if term.operand_index == 0 or term.operator != FormulaOperator.DIVIDE:
                 continue  # first operand seeds the running product/quotient — operator ignored there
-            values = engine.driver_value(term.driver_code, scenario)
+            values = engine.driver_value(term.driver_code, source)
             if any(v == ZERO for v in values):
                 tainted.add(term.driver_code)
     return tainted
@@ -233,7 +233,7 @@ def _zero_divisor_drivers(engine: DriverEngine, scenario: str) -> set[str]:
 def compute_sensitivity(
     session: Session,
     company: str,
-    scenario: str,
+    source: str,
     month_codes: list[str],
     root_code: str,
     candidates: list[str],
@@ -266,14 +266,14 @@ def compute_sensitivity(
     """
     bump_frac = Decimal(str(bump_pct)) / Decimal("100")
 
-    baseline = compute_npat_with_overrides(session, company, scenario, month_codes, [], root_code)
+    baseline = compute_npat_with_overrides(session, company, source, month_codes, [], root_code)
     baseline_npat = baseline["npat"]
     baseline_sum = sum(baseline_npat, ZERO)
     npat_near_zero = _is_near_zero(baseline_npat, NPAT_REL_EPSILON)
 
-    baseline_driver = {code: engine.driver_value(code, scenario) for code in candidates}
+    baseline_driver = {code: engine.driver_value(code, source) for code in candidates}
 
-    zero_divisors = _zero_divisor_drivers(engine, scenario)
+    zero_divisors = _zero_divisor_drivers(engine, source)
     consumed_by = _consumed_by_map(engine)
     divide_tainted = {code for code in candidates if _reachable_chain(code, consumed_by) & zero_divisors}
 
@@ -325,7 +325,7 @@ def compute_sensitivity(
             # for that walk M times over for no reason (see SENSITIVITY_MAX_CYCLES).
             bumped_values = [v * (Decimal("1") + sign * bump_frac) for v in baseline_driver[code]]
             rerun = compute_npat_with_overrides(
-                session, company, scenario, month_codes, [DriverOverride(code, bumped_values)], root_code
+                session, company, source, month_codes, [DriverOverride(code, bumped_values)], root_code
             )
             bumped_sum = sum(rerun["npat"], ZERO)
             completed += 1
@@ -374,7 +374,7 @@ def compute_sensitivity(
 
     yield {
         "type": "result",
-        "scenario": scenario,
+        "source": source,
         "months": month_codes,
         "baselineNpat": float(baseline_sum),
         "npatNearZero": npat_near_zero,
