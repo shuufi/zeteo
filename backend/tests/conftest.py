@@ -28,8 +28,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from models import (  # noqa: E402
     ActivityNode,
+    CompanyHierarchy,
     CompanyNode,
-    CompanyNodeType,
     Driver,
     DriverFact,
     DriverFormula,
@@ -37,6 +37,7 @@ from models import (  # noqa: E402
     FormulaOperator,
     GLFact,
     GLNode,
+    HierarchyKind,
     NodeType,
     NormalBalance,
     OperationalUnit,
@@ -168,20 +169,21 @@ def fixture_graph(session: Session) -> dict[str, str]:
     ]
 
     periods = _build_periods()
-    company_nodes = [
-        CompanyNode(code=codes["group"], label="Group One", parent_code=None, node_type=CompanyNodeType.GROUP, order=1),
-        CompanyNode(
+    company_hierarchy_nodes = [
+        CompanyHierarchy(code=codes["group"], label="Group One", parent_code=None, hierarchy_kind=HierarchyKind.BU, order=1),
+        CompanyHierarchy(
             code=codes["business_unit"],
             label="Business Unit One",
             parent_code=codes["group"],
-            node_type=CompanyNodeType.BUSINESS_UNIT,
+            hierarchy_kind=HierarchyKind.BU,
             order=1,
         ),
+    ]
+    company_nodes = [
         CompanyNode(
             code=COMPANY,
             label="Company One",
-            parent_code=codes["business_unit"],
-            node_type=CompanyNodeType.COMPANY,
+            bu_node_code=codes["business_unit"],
             order=1,
             is_sampled=True,
             currency="MYR",
@@ -211,6 +213,7 @@ def fixture_graph(session: Session) -> dict[str, str]:
     session.add_all(formulas)
     session.add_all(formula_terms)
     session.add_all(periods)
+    session.add_all(company_hierarchy_nodes)
     session.add_all(company_nodes)
     session.commit()
     session.add_all(gl_facts)

@@ -213,6 +213,20 @@ def test_gl_master_tree_endpoint_shape(session):
     assert body[codes["gl_leaf_rev"]]["normalBalance"] == "C"
 
 
+def test_company_hierarchy_endpoint_shape(session):
+    codes = fixture_graph(session)
+    client = _client(session)
+
+    resp = client.get("/api/company-hierarchy", params={"kind": "BU"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body[codes["group"]]["parentId"] is None
+    assert body[codes["business_unit"]]["parentId"] == codes["group"]
+    assert body[codes["company"]]["childIds"] == []
+    assert body[codes["company"]]["isCompany"] is True
+    assert body[codes["business_unit"]]["isCompany"] is False
+
+
 def test_monetary_endpoints_reject_group_and_business_unit_scopes(session):
     codes = fixture_graph(session)
     client = _client(session)

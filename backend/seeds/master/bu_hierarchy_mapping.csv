@@ -1,0 +1,11 @@
+code,label,parent_code,hierarchy_kind
+MISC_GROUP,MISC Group,,BU
+MISC_MARINE,MISC Marine,MISC_GROUP,BU
+AET,AET,MISC_GROUP,BU
+ALAM,ALAM,MISC_GROUP,BU
+GAS,Gas Business Unit,MISC_GROUP,BU
+MHB,Malaysia Marine and Heavy Engineering,MISC_GROUP,BU
+MISC,MISC,MISC_GROUP,BU
+MISCM,MISC Ship Management,MISC_MARINE,BU
+MMS,MISC Maritime Services,MISC_MARINE,BU
+OBU,Offshore Business Unit,MISC_GROUP,BU

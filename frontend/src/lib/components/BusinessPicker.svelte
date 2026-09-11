@@ -67,9 +67,7 @@
   $effect(() => {
     if (defaulted || companyStore.status !== 'ready' || !group) return;
     defaulted = true;
-    const fallback =
-      companyStore.tree[scopeState.code] ??
-      Object.values(companyStore.tree).find((node) => node.companyType === 'Company');
+    const fallback = companyStore.tree[scopeState.code] ?? Object.values(companyStore.tree).find((node) => node.isCompany);
     if (fallback && (fallback.id !== scopeState.code || fallback.label !== scopeState.label)) {
       const scopeChanged = fallback.id !== scopeState.code;
       scopeState.set(fallback.id, fallback.label);
@@ -80,7 +78,7 @@
   // Stages the pick as a draft only — ContextBar's Apply button is what
   // actually commits it to scopeState and refetches (see docs/adr/0027).
   function select(node: CompanyNode): void {
-    if (node.companyType !== 'Company') {
+    if (!node.isCompany) {
       const next = new Set(expanded);
       if (next.has(node.id)) next.delete(node.id);
       else next.add(node.id);
@@ -116,10 +114,10 @@
       type="button"
       onclick={() => select(node)}
       aria-expanded={children.length ? isExpanded(node) : undefined}
-      title={node.companyType !== 'Company' ? 'Expand grouping — currency conversion is not available' : undefined}
+      title={!node.isCompany ? 'Expand grouping — currency conversion is not available' : undefined}
       style="padding-left: {depth * 14 + 12}px"
-      class="flex w-full items-center gap-1.5 py-1.5 pr-3 text-left text-sm select-none {node.companyType !== 'Company' ? 'font-semibold' : ''} {node.id ===
-      scopeDraft.code && node.companyType === 'Company'
+      class="flex w-full items-center gap-1.5 py-1.5 pr-3 text-left text-sm select-none {!node.isCompany ? 'font-semibold' : ''} {node.id ===
+      scopeDraft.code && node.isCompany
         ? 'bg-indigo-600 text-white'
         : 'text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}"
     >
@@ -141,7 +139,7 @@
       {:else}
         <span class="inline-block size-4 shrink-0"></span>
       {/if}
-      <span class="truncate">{node.companyType === 'Company' ? `${node.id} ${node.label}` : node.label}</span>
+      <span class="truncate">{node.isCompany ? `${node.id} ${node.label}` : node.label}</span>
     </button>
     {#if isExpanded(node)}
       {#each children as child (child.id)}

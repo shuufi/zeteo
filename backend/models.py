@@ -2,7 +2,7 @@ from enum import Enum
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import Column, Numeric
+from sqlalchemy import Column, ForeignKeyConstraint, Numeric, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 
@@ -29,10 +29,9 @@ class PeriodType(str, Enum):
     MONTH = "Month"
 
 
-class CompanyNodeType(str, Enum):
-    GROUP = "Group"
-    BUSINESS_UNIT = "Business Unit"
-    COMPANY = "Company"
+class HierarchyKind(str, Enum):
+    BU = "BU"
+    LEGAL = "LEGAL"
 
 
 class OperationalUnit(str, Enum):
@@ -84,27 +83,51 @@ class Period(SQLModel, table=True):
     order: int
 
 
-class CompanyNode(SQLModel, table=True):
-    """A position in the MISC Group -> Business Unit -> Company hierarchy — see docs/adr/0028.
+class CompanyHierarchy(SQLModel, table=True):
+    """A position in a company-adjacent classification hierarchy — BU today,
+    Legal planned — see docs/adr/0045 (supersedes docs/adr/0028's Group/BU
+    tiers inside `company`). One polymorphic self-referencing table across
+    `hierarchy_kind` values rather than a table per kind. Depth is
+    intentionally unconstrained (no `level` column): real BU branches reach
+    MISC Group at different depths, and Legal's shape isn't yet known. The
+    composite `(parent_code, hierarchy_kind)` FK keeps a node's parent within
+    the same hierarchy_kind, never crossing into a different hierarchy.
+    """
 
-    Mirrors GLNode/Period's adjacency-list shape. Only Company rows are ever
-    referenced by gl_fact.company; `is_sampled` marks which Companies carry
-    real fake fact data (see docs/adr/0024) — Group and Business Unit rows
-    are pure rollup groupings, the same relationship Year/Quarter have to
-    Month in the period hierarchy. `order` is 1-based position among
-    siblings, for stable display ordering.
+    __tablename__ = "company_hierarchy"
+    __table_args__ = (
+        UniqueConstraint("code", "hierarchy_kind"),
+        ForeignKeyConstraint(
+            ["parent_code", "hierarchy_kind"],
+            ["company_hierarchy.code", "company_hierarchy.hierarchy_kind"],
+        ),
+    )
+
+    code: str = Field(primary_key=True)
+    label: str
+    parent_code: Optional[str] = None
+    hierarchy_kind: HierarchyKind
+    order: int
+
+
+class CompanyNode(SQLModel, table=True):
+    """A Company leaf — see docs/adr/0045 (supersedes docs/adr/0028's
+    Group/BU/Company shape). BU/Group grouping now lives in
+    CompanyHierarchy; every row here is a real Company, the only level ever
+    referenced by gl_fact.company. `is_sampled` marks which Companies carry
+    real fake fact data (see docs/adr/0024). `bu_node_code` is required —
+    BU membership was always mandatory before this change. `order` is
+    1-based position among siblings, for stable display ordering.
     """
 
     __tablename__ = "company"
 
     code: str = Field(primary_key=True)
     label: str
-    parent_code: Optional[str] = Field(default=None, foreign_key="company.code")
-    node_type: CompanyNodeType
+    bu_node_code: str = Field(foreign_key="company_hierarchy.code")
     order: int
     is_sampled: bool = False
-    # Required for Company leaves; null for the Group/BU grouping rows.
-    currency: Optional[str] = None
+    currency: str
 
 
 class GLFact(SQLModel, table=True):

@@ -9,24 +9,28 @@ from sqlmodel import select
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from driver_engine import DriverEngine  # noqa: E402
-from models import CompanyNodeType, DriverFact, Source  # noqa: E402
-from seed import build_company_nodes  # noqa: E402
+from models import DriverFact, HierarchyKind, Source  # noqa: E402
+from seed import build_company_hierarchy, build_company_nodes  # noqa: E402
 
 from conftest import fixture_graph  # noqa: E402
 
 
 def test_company_master_is_loaded_from_csv_with_iso_currency():
-    companies = build_company_nodes()
+    hierarchy = build_company_hierarchy()
+    bu_node_codes = {n.code for n in hierarchy if n.hierarchy_kind == HierarchyKind.BU}
+    companies = build_company_nodes(bu_node_codes)
     company_0190 = next(node for node in companies if node.code == "0190")
     company_0007 = next(node for node in companies if node.code == "0007")
 
-    assert company_0190.node_type == CompanyNodeType.COMPANY
     assert company_0190.label == "MISC Ship Management SB"
     assert company_0190.currency == "MYR"
+    assert company_0190.bu_node_code == "MISCM"
     assert company_0007.currency == "USD"
     assert len({node.code for node in companies}) == len(companies)
-    assert next(node for node in companies if node.code == "MISC").node_type == CompanyNodeType.GROUP
-    assert next(node for node in companies if node.code == "CORP").node_type == CompanyNodeType.BUSINESS_UNIT
+
+    root = next(n for n in hierarchy if n.parent_code is None)
+    assert root.code == "MISC_GROUP"
+    assert next(n for n in hierarchy if n.code == "MISC").parent_code == "MISC_GROUP"
 
 
 def test_formula_money_target_rounds_half_up_per_company_month(session):

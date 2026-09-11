@@ -21,14 +21,15 @@ from sqlmodel import Session, SQLModel
 from db import engine, init_db
 from models import (
     ActivityNode,
+    CompanyHierarchy,
     CompanyNode,
-    CompanyNodeType,
     Driver,
     DriverFact,
     DriverFormula,
     DriverFormulaTerm,
     GLFact,
     GLNode,
+    HierarchyKind,
     NodeType,
     NormalBalance,
     Period,
@@ -41,31 +42,10 @@ from seed_vdt import build_crew_mix_seed, build_pending_account_seed, load_activ
 REPO_ROOT = Path(__file__).parent.parent
 CSV_PATH = REPO_ROOT / "docs" / "anaplan_is_master_data.csv"
 COMPANIES_CSV_PATH = REPO_ROOT / "docs" / "misc_companies.csv"
+BU_HIERARCHY_CSV_PATH = REPO_ROOT / "backend" / "seeds" / "master" / "bu_hierarchy_mapping.csv"
 
 SEED = 42
 MONTHS = range(1, 13)
-
-# Root of the Business chip's hierarchy — see docs/adr/0028. Not itself in
-# the source CSV (which holds the real BU/Company data); synthesised here the
-# same way build_periods() synthesises each year's Year row.
-GROUP_CODE = "MISC"
-GROUP_LABEL = "MISC Group"
-
-BUSINESS_UNIT_LABELS = {
-    "AET": "AET",
-    "ALAM": "ALAM",
-    "GAS": "Gas Business Unit",
-    "MHB": "Malaysia Marine and Heavy Engineering",
-    "CORP": "MISC",
-    "MMS": "MISC Maritime Services",
-    "MISCM": "MISC Ship Management",
-    "OBU": "Offshore Business Unit",
-}
-
-# The source's corporate BU is coded MISC, which would collide with the
-# synthetic MISC Group root in CompanyNode's shared adjacency-list namespace.
-# Preserve the existing application-facing CORP identifier used for that BU.
-BUSINESS_UNIT_CODES = {"MISC": "CORP"}
 
 # Three real fiscal years, calendar-aligned (Jan start) — see docs/adr/0032,
 # which replaced the single-FY26-only model. Chronological order matters:
@@ -112,7 +92,31 @@ def build_periods() -> list[Period]:
 FOCUS_COMPANY_CODE = "0190"
 
 
-def build_company_nodes() -> list[CompanyNode]:
+def build_company_hierarchy() -> list[CompanyHierarchy]:
+    """The BU grouping hierarchy above Company — see docs/adr/0045.
+    Adjacency-list rows straight from `backend/seeds/master/bu_hierarchy_mapping.csv`
+    (`code,label,parent_code,hierarchy_kind`); depth is whatever the CSV
+    encodes, not a fixed number of tiers.
+    """
+    rows = list(csv.DictReader(BU_HIERARCHY_CSV_PATH.open(encoding="utf-8-sig")))
+    order_by_parent: dict[str, int] = {}
+    nodes = []
+    for row in rows:
+        parent_code = row["parent_code"].strip() or None
+        order_by_parent[parent_code] = order_by_parent.get(parent_code, 0) + 1
+        nodes.append(
+            CompanyHierarchy(
+                code=row["code"].strip(),
+                label=row["label"].strip(),
+                parent_code=parent_code,
+                hierarchy_kind=HierarchyKind(row["hierarchy_kind"].strip()),
+                order=order_by_parent[parent_code],
+            )
+        )
+    return nodes
+
+
+def build_company_nodes(bu_node_codes: set[str]) -> list[CompanyNode]:
     rows = list(csv.DictReader(COMPANIES_CSV_PATH.open(encoding="utf-8-sig")))
     rows_by_bu: dict[str, list[dict[str, str]]] = {}
     seen_codes: set[str] = set()
@@ -123,31 +127,22 @@ def build_company_nodes() -> list[CompanyNode]:
         currency = row["Currency"].strip().upper()
         if not bu_code or not company_code or not company_name or len(currency) != 3 or not currency.isalpha():
             raise ValueError(f"Invalid Company master-data row: {row}")
+        if bu_code not in bu_node_codes:
+            raise ValueError(f"Unknown BU code {bu_code!r} in {COMPANIES_CSV_PATH}: not in {BU_HIERARCHY_CSV_PATH}")
         if company_code in seen_codes:
             raise ValueError(f"Duplicate Company Code in {COMPANIES_CSV_PATH}: {company_code}")
         seen_codes.add(company_code)
         rows_by_bu.setdefault(bu_code, []).append({**row, "Currency": currency})
 
-    nodes = [CompanyNode(code=GROUP_CODE, label=GROUP_LABEL, parent_code=None, node_type=CompanyNodeType.GROUP, order=1)]
-    for bu_order, (source_bu_code, companies) in enumerate(rows_by_bu.items(), start=1):
-        bu_code = BUSINESS_UNIT_CODES.get(source_bu_code, source_bu_code)
-        nodes.append(
-            CompanyNode(
-                code=bu_code,
-                label=BUSINESS_UNIT_LABELS.get(bu_code, bu_code),
-                parent_code=GROUP_CODE,
-                node_type=CompanyNodeType.BUSINESS_UNIT,
-                order=bu_order,
-            )
-        )
+    nodes = []
+    for bu_code, companies in rows_by_bu.items():
         for company_order, company in enumerate(companies, start=1):
             company_code = company["Company Code"].strip()
             nodes.append(
                 CompanyNode(
                     code=company_code,
                     label=company["Company Name"].strip(),
-                    parent_code=bu_code,
-                    node_type=CompanyNodeType.COMPANY,
+                    bu_node_code=bu_code,
                     order=company_order,
                     is_sampled=company_code == FOCUS_COMPANY_CODE,
                     currency=company["Currency"],
@@ -157,7 +152,7 @@ def build_company_nodes() -> list[CompanyNode]:
 
 
 def sampled_company_codes(company_nodes: list[CompanyNode]) -> list[str]:
-    return [n.code for n in company_nodes if n.node_type == CompanyNodeType.COMPANY and n.is_sampled]
+    return [n.code for n in company_nodes if n.is_sampled]
 
 
 # First digit of a Posting GL Account code -> normal balance, derived from the
@@ -312,7 +307,9 @@ def main() -> None:
 
     hierarchy = load_hierarchy_nodes()
     periods = build_periods()
-    company_nodes = build_company_nodes()
+    company_hierarchy = build_company_hierarchy()
+    bu_node_codes = {n.code for n in company_hierarchy if n.hierarchy_kind == HierarchyKind.BU}
+    company_nodes = build_company_nodes(bu_node_codes)
 
     leaves = [n for n in hierarchy if n.node_type == NodeType.POSTING_GL_ACCOUNT]
     facts = generate_gl_facts(rng, leaves, FOCUS_COMPANY_CODE)
@@ -344,6 +341,7 @@ def main() -> None:
         # that risk doesn't apply here.
         session.add_all(hierarchy)
         session.add_all(periods)
+        session.add_all(company_hierarchy)
         session.add_all(company_nodes)
         session.add_all(activity_nodes)
         session.add_all(accounts)
@@ -358,7 +356,7 @@ def main() -> None:
 
     print(f"Seeded {len(hierarchy)} GL/FSI nodes")
     print(f"Seeded {len(periods)} periods across {len(FISCAL_YEARS)} fiscal years ({', '.join(FISCAL_YEARS)})")
-    print(f"Seeded {len(company_nodes)} company nodes ({GROUP_LABEL} + BUs + companies, 1 sampled: {FOCUS_COMPANY_CODE})")
+    print(f"Seeded {len(company_hierarchy)} BU hierarchy nodes and {len(company_nodes)} companies (1 sampled: {FOCUS_COMPANY_CODE})")
     print(f"Seeded {len(facts)} GL facts for {FOCUS_COMPANY_CODE} across {len(FISCAL_YEARS)} years")
     print(f"Seeded {len(activity_nodes)} Activity Nodes and {len(accounts)} Posting Activity Accounts (VDT hierarchy pilot — docs/adr/0033)")
     print(f"Seeded {len(vdt_drivers)} Drivers / {len(vdt_formulas)} Driver Formulas for {len(accounts)} Posting Activity Accounts")
