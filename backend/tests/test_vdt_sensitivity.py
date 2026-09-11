@@ -341,9 +341,9 @@ def test_baseline_npat_near_zero_flags_all_na_but_keeps_dollar_impact(session):
     # anchor flips sign) — NPAT lands at exactly 0 every month in the window.
     for row in session.exec(select(DriverFact)).all():
         pass
-    from models import GLFact
+    from models import Financial
 
-    for row in session.exec(select(GLFact)).all():
+    for row in session.exec(select(Financial)).all():
         if row.code == codes["gl_leaf_rev"] and row.source == Source.ACTUAL:
             row.amount = Decimal("20.00")
             session.add(row)

@@ -21,13 +21,13 @@ from sqlmodel import Session, SQLModel
 from db import engine, init_db
 from models import (
     ActivityNode,
+    Company,
     CompanyHierarchy,
-    CompanyNode,
     Driver,
     DriverFact,
     DriverFormula,
     DriverFormulaTerm,
-    GLFact,
+    Financial,
     GLNode,
     HierarchyKind,
     NodeType,
@@ -116,7 +116,7 @@ def build_company_hierarchy() -> list[CompanyHierarchy]:
     return nodes
 
 
-def build_company_nodes(bu_node_codes: set[str]) -> list[CompanyNode]:
+def build_company_nodes(bu_node_codes: set[str]) -> list[Company]:
     rows = list(csv.DictReader(COMPANIES_CSV_PATH.open(encoding="utf-8-sig")))
     rows_by_bu: dict[str, list[dict[str, str]]] = {}
     seen_codes: set[str] = set()
@@ -139,7 +139,7 @@ def build_company_nodes(bu_node_codes: set[str]) -> list[CompanyNode]:
         for company_order, company in enumerate(companies, start=1):
             company_code = company["Company Code"].strip()
             nodes.append(
-                CompanyNode(
+                Company(
                     code=company_code,
                     label=company["Company Name"].strip(),
                     bu_node_code=bu_code,
@@ -151,7 +151,7 @@ def build_company_nodes(bu_node_codes: set[str]) -> list[CompanyNode]:
     return nodes
 
 
-def sampled_company_codes(company_nodes: list[CompanyNode]) -> list[str]:
+def sampled_company_codes(company_nodes: list[Company]) -> list[str]:
     return [n.code for n in company_nodes if n.is_sampled]
 
 
@@ -278,7 +278,7 @@ def prorate(monthly_actual: list[Decimal], scaled_total: float) -> list[Decimal]
     return values
 
 
-def generate_gl_facts(rng: random.Random, leaves: list[GLNode], company: str) -> list[GLFact]:
+def generate_gl_facts(rng: random.Random, leaves: list[GLNode], company: str) -> list[Financial]:
     leaf_count_by_prefix = {prefix: sum(1 for leaf in leaves if leaf.code[0] == prefix) for prefix in CATEGORY_ANNUAL_TARGET_FY24}
     leaf_mean_by_prefix = {prefix: CATEGORY_ANNUAL_TARGET_FY24[prefix] / count for prefix, count in leaf_count_by_prefix.items()}
     # Drawn once per leaf so its share of the category stays stable across
@@ -297,8 +297,8 @@ def generate_gl_facts(rng: random.Random, leaves: list[GLNode], company: str) ->
             for month in MONTHS:
                 i = month - 1
                 period_code = month_period_code(fiscal_year, month)
-                facts.append(GLFact(code=leaf.code, company=company, period_code=period_code, source=Source.ACTUAL, amount=monthly_actual[i]))
-                facts.append(GLFact(code=leaf.code, company=company, period_code=period_code, source=Source.BUDGET, amount=monthly_budget[i]))
+                facts.append(Financial(code=leaf.code, company=company, period_code=period_code, source=Source.ACTUAL, amount=monthly_actual[i]))
+                facts.append(Financial(code=leaf.code, company=company, period_code=period_code, source=Source.BUDGET, amount=monthly_budget[i]))
     return facts
 
 
@@ -336,7 +336,7 @@ def main() -> None:
         # Driver/DriverFormula data (docs/adr/0030) previously stayed dropped
         # after ADR-0032 (an orphaned Formula binding with no DriverFact data
         # would compute as zero and silently override a leaf's real fabricated
-        # GLFact value) — now actually repopulated, targeting the new VDT
+        # Financial value) — now actually repopulated, targeting the new VDT
         # hierarchy's Posting Activity Accounts rather than GL leaves, so
         # that risk doesn't apply here.
         session.add_all(hierarchy)

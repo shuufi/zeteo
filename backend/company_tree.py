@@ -11,7 +11,7 @@ from collections import defaultdict
 
 from sqlmodel import Session, select
 
-from models import CompanyHierarchy, CompanyNode, HierarchyKind
+from models import Company, CompanyHierarchy, HierarchyKind
 
 
 class UnknownScope(Exception):
@@ -26,8 +26,8 @@ class MissingCompanyCurrency(Exception):
     pass
 
 
-def load_companies(session: Session) -> dict[str, CompanyNode]:
-    return {c.code: c for c in session.exec(select(CompanyNode)).all()}
+def load_companies(session: Session) -> dict[str, Company]:
+    return {c.code: c for c in session.exec(select(Company)).all()}
 
 
 def load_company_hierarchy(

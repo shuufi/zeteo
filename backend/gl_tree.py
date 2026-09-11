@@ -17,7 +17,7 @@ from sqlmodel import Session, col, select
 
 from diagnostic_content import DIAGNOSTIC_CONTENT
 from driver_engine import DriverEngine
-from models import GLFact, GLNode, NodeType, NormalBalance, Period, PeriodType
+from models import Financial, GLNode, NodeType, NormalBalance, Period, PeriodType
 from periods import load_period_hierarchy, month_indices_for, ordered_month_codes_of_year, ytd_month_indices_for
 
 
@@ -256,12 +256,12 @@ def load_monthly(
     if not companies or not month_codes:
         return result
     code_to_index = {code: i for i, code in enumerate(month_codes)}
-    # Selecting only the needed columns (rather than full GLFact rows)
+    # Selecting only the needed columns (rather than full Financial rows)
     # skips ORM row hydration, the dominant cost for ~40k facts per scope.
     facts = session.exec(
-        select(GLFact.code, GLFact.source, GLFact.period_code, GLFact.amount)
-        .where(col(GLFact.company).in_(companies))
-        .where(col(GLFact.period_code).in_(month_codes))
+        select(Financial.code, Financial.source, Financial.period_code, Financial.amount)
+        .where(col(Financial.company).in_(companies))
+        .where(col(Financial.period_code).in_(month_codes))
     ).all()
     for code, source, fact_period_code, amount in facts:
         result[code][source.value][code_to_index[fact_period_code]] += _decimal(amount)

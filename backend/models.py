@@ -110,14 +110,15 @@ class CompanyHierarchy(SQLModel, table=True):
     order: int
 
 
-class CompanyNode(SQLModel, table=True):
+class Company(SQLModel, table=True):
     """A Company leaf — see docs/adr/0045 (supersedes docs/adr/0028's
     Group/BU/Company shape). BU/Group grouping now lives in
     CompanyHierarchy; every row here is a real Company, the only level ever
     referenced by gl_fact.company. `is_sampled` marks which Companies carry
     real fake fact data (see docs/adr/0024). `bu_node_code` is required —
     BU membership was always mandatory before this change. `order` is
-    1-based position among siblings, for stable display ordering.
+    1-based position among siblings, for stable display ordering. Renamed
+    from `CompanyNode` — see docs/adr/0046.
     """
 
     __tablename__ = "company"
@@ -130,8 +131,10 @@ class CompanyNode(SQLModel, table=True):
     currency: str
 
 
-class GLFact(SQLModel, table=True):
-    """An actual/budget/prior-year amount for one node, company and Month period."""
+class Financial(SQLModel, table=True):
+    """An actual/budget/prior-year amount for one node, company and Month period.
+    Renamed from `GLFact` — see docs/adr/0046.
+    """
 
     __tablename__ = "financial"
 
@@ -253,7 +256,7 @@ class PostingActivityAccount(SQLModel, table=True):
     free), never a stored raw fact. `fa_gl_code` is a display/reconciliation
     anchor to the real GL account it's conceptually explaining — many-to-one
     allowed, and deliberately NOT required to reconcile to that account's
-    real GLFact total; the gap between them is what the Reconciliation report
+    real Financial total; the gap between them is what the Reconciliation report
     surfaces, not an error to close.
     """
 

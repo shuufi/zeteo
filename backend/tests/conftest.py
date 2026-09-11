@@ -28,14 +28,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from models import (  # noqa: E402
     ActivityNode,
+    Company,
     CompanyHierarchy,
-    CompanyNode,
     Driver,
     DriverFact,
     DriverFormula,
     DriverFormulaTerm,
+    Financial,
     FormulaOperator,
-    GLFact,
     GLNode,
     HierarchyKind,
     NodeType,
@@ -180,7 +180,7 @@ def fixture_graph(session: Session) -> dict[str, str]:
         ),
     ]
     company_nodes = [
-        CompanyNode(
+        Company(
             code=COMPANY,
             label="Company One",
             bu_node_code=codes["business_unit"],
@@ -194,12 +194,12 @@ def fixture_graph(session: Session) -> dict[str, str]:
     driver_facts = []
     for month in range(1, 13):
         period_code = f"{YEAR}-M{month:02d}"
-        gl_facts.append(GLFact(code=codes["gl_leaf_rev"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=100.0))
-        gl_facts.append(GLFact(code=codes["gl_leaf_rev"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=90.0))
-        gl_facts.append(GLFact(code=codes["gl_old_leaf"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=50.0))
-        gl_facts.append(GLFact(code=codes["gl_old_leaf"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=45.0))
-        gl_facts.append(GLFact(code=codes["gl_anchor_leaf"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=30.0))
-        gl_facts.append(GLFact(code=codes["gl_anchor_leaf"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=28.0))
+        gl_facts.append(Financial(code=codes["gl_leaf_rev"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=100.0))
+        gl_facts.append(Financial(code=codes["gl_leaf_rev"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=90.0))
+        gl_facts.append(Financial(code=codes["gl_old_leaf"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=50.0))
+        gl_facts.append(Financial(code=codes["gl_old_leaf"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=45.0))
+        gl_facts.append(Financial(code=codes["gl_anchor_leaf"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=30.0))
+        gl_facts.append(Financial(code=codes["gl_anchor_leaf"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=28.0))
 
         driver_facts.append(DriverFact(code=codes["driver_headcount"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=10.0))
         driver_facts.append(DriverFact(code=codes["driver_headcount"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=10.0))

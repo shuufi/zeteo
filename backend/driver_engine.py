@@ -43,7 +43,7 @@ class DriverEngine:
         resolved, ordered list of Month codes — without it, facts across
         different fiscal years would silently sum into the same month-array
         slot (the same cross-year hazard docs/adr/0032 already fixed for
-        GLFact/load_monthly; DriverEngine just never had live multi-year
+        Financial/load_monthly; DriverEngine just never had live multi-year
         Driver data to expose it until now — see docs/adr/0033).
         `month_codes=None` or empty (e.g. no Year periods seeded at all yet)
         means no facts load, same as `companies=[]` today; the array width
