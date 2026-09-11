@@ -8,7 +8,7 @@
   import ChipRow from '../lib/components/ChipRow.svelte';
   import NotYetModelled from '../lib/components/NotYetModelled.svelte';
   import { vdtStore, loadVdtScope } from '../lib/data/vdt-store.svelte';
-  import { getNode, getAncestors, rankChildren } from '../lib/data/gl-client';
+  import { getNode, getAncestors, rankChildren } from '../lib/data/financial-client';
   import { periodState, DEFAULT_PERIOD_CODE } from '../lib/state/period.svelte';
   import { periodStore, periodLabel } from '../lib/data/period-store.svelte';
   import { scopeState } from '../lib/state/scope.svelte';
@@ -50,7 +50,7 @@
   });
 
   // vdtStore isn't populated by App.svelte's app-wide onMount (that's
-  // glStore/Accounting only) — a deep-link straight into /vdt/:id needs its
+  // financialStore/Accounting only) — a deep-link straight into /vdt/:id needs its
   // own lazy trigger, same pattern VdtTree.svelte already uses.
   onMount(() => {
     if (vdtStore.status !== 'ready') loadVdtScope(scopeState.code, periodState.code);
@@ -61,7 +61,7 @@
     node ? getAncestors(vdtStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}${periodQuery}` })) : []
   );
   // Real GL/FSI nodes carry no curated rank — every child ranks live by
-  // contribution magnitude instead (see gl-client.ts rankChildren).
+  // contribution magnitude instead (see financial-client.ts rankChildren).
   const rankedChildren = $derived(node ? rankChildren(vdtStore.tree, node) : []);
   let moneyScale = $state<MoneyScaleChoice>('auto');
   const moneyValues = $derived(node ? hierarchyMoneyValues(vdtStore.tree, node.id) : []);

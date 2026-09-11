@@ -67,7 +67,7 @@ The full-P&L overview screen at `/financial`, reached via the Financial nav item
 _Avoid_: "Financial Performance" (retired term — this screen is just "Trends" now, "Financial" is the nav item one level up); implying it shares tree data with VDT Explorer — since ADR-0033 they're two different hierarchies over the same leaves, not one shared tree.
 
 **Comparison**:
-The screen at `/financial/compare`, reached via the Financial nav item's dropdown, for comparing a single **comparison node**'s value between two same-grain periods (both Month, both Quarter, or both Year — never mixed). Renders a delta profit bridge (one waterfall from Period A's total to Period B's total, one bar per direct GL child showing its change, colored favourable/adverse by polarity) and a 3-column table (Period A / Period B / Delta) for the comparison node's full subtree. Backed by `GET /api/gl/comparison`, which diffs server-side and returns only the comparison node's subtree. See `docs/adr/0031-financial-comparison-page.md`.
+The screen at `/financial/compare`, reached via the Financial nav item's dropdown, for comparing a single **comparison node**'s value between two same-grain periods (both Month, both Quarter, or both Year — never mixed). Renders a delta profit bridge (one waterfall from Period A's total to Period B's total, one bar per direct GL child showing its change, colored favourable/adverse by polarity) and a 3-column table (Period A / Period B / Delta) for the comparison node's full subtree. Backed by `GET /api/financial/comparison`, which diffs server-side and returns only the comparison node's subtree. See `docs/adr/0031-financial-comparison-page.md`.
 _Avoid_: "diff view", "delta page" — the screen is "Comparison".
 
 **Comparison node**:

@@ -4,7 +4,7 @@
 
   // VDT-hierarchy scope selection reading vdtStore, defaulting to whole-book
   // NPAT root — a new component rather than generalizing NodePicker (which is
-  // hardcoded to glStore/Accounting and only Reporting Root/Node candidates),
+  // hardcoded to financialStore/Accounting and only Reporting Root/Node candidates),
   // to avoid regressing Comparison's picker (see docs/adr/0043 §8a).
   let {
     value = $bindable<string | undefined>(undefined),

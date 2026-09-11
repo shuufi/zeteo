@@ -11,8 +11,8 @@
   import StatementTable, {
     type StatementColumn,
   } from "../lib/components/StatementTable.svelte";
-  import { glStore } from "../lib/data/gl-store.svelte";
-  import { getNode, buildDisplayRows } from "../lib/data/gl-client";
+  import { financialStore } from "../lib/data/financial-store.svelte";
+  import { getNode, buildDisplayRows } from "../lib/data/financial-client";
   import { periodStore, loadPeriods, periodYearOf } from "../lib/data/period-store.svelte";
   import { periodState } from "../lib/state/period.svelte";
   import {
@@ -28,14 +28,14 @@
 
   let ytdView = $state(false);
   let moneyScale = $state<MoneyScaleChoice>("auto");
-  const moneyValues = $derived(hierarchyMoneyValues(glStore.tree, "NPAT"));
+  const moneyValues = $derived(hierarchyMoneyValues(financialStore.tree, "NPAT"));
   const resolvedMoneyScale = $derived(resolveMoneyScale(moneyScale, moneyValues));
-  const currency = $derived(glStore.meta?.currency ?? "");
+  const currency = $derived(financialStore.meta?.currency ?? "");
 
   onMount(loadPeriods);
 
   // Three fiscal years coexist as sibling Year roots now (see docs/adr/0032)
-  // — glStore.tree was fetched scoped to whichever year periodState.code
+  // — financialStore.tree was fetched scoped to whichever year periodState.code
   // belongs to (Financial ignores the chip's own month/quarter granularity,
   // per docs/adr/0026, but not which year the rest of the app is looking
   // at), so that's the one year's 12 months to show here.
@@ -62,7 +62,7 @@
     return showGlCode ? `${row.nodeId} ${row.label}` : row.label;
   }
 
-  const pnlRows = $derived(buildDisplayRows(glStore.tree));
+  const pnlRows = $derived(buildDisplayRows(financialStore.tree));
 
   // Statement table columns are the fiscal year's 12 months — column key is
   // the real period code when periods have loaded (needed for the drill-down
@@ -76,7 +76,7 @@
   );
 
   function monthlyValuesFor(nodeId: string): number[] {
-    const monthlyActual = getNode(glStore.tree, nodeId)?.monthlyActual ?? [];
+    const monthlyActual = getNode(financialStore.tree, nodeId)?.monthlyActual ?? [];
     return visibleMonthIndices.map((i) => monthlyActual[i] ?? 0);
   }
 
@@ -91,7 +91,7 @@
   }
 
   function rowExists(row: DisplayRow): boolean {
-    return row.kind === "operational" || getNode(glStore.tree, row.nodeId) !== undefined;
+    return row.kind === "operational" || getNode(financialStore.tree, row.nodeId) !== undefined;
   }
 
   function cellHref(
@@ -109,14 +109,14 @@
   }
 
   // Level-1 children of NPAT in the real GL/FSI hierarchy — see docs/adr/0022.
-  const revenue = $derived(getNode(glStore.tree, "PNL-0002"));
-  const costOfRevenue = $derived(getNode(glStore.tree, "PNL-0011"));
-  const grossProfit = $derived(getNode(glStore.tree, "PNL-0001"));
-  const gaExpenses = $derived(getNode(glStore.tree, "PNL-0030"));
-  const otherIncomeExpenses = $derived(getNode(glStore.tree, "PNL-0054"));
-  const secondaryCost = $derived(getNode(glStore.tree, "PNL-0086"));
-  const taxation = $derived(getNode(glStore.tree, "PNL-0087"));
-  const npat = $derived(getNode(glStore.tree, "NPAT"));
+  const revenue = $derived(getNode(financialStore.tree, "PNL-0002"));
+  const costOfRevenue = $derived(getNode(financialStore.tree, "PNL-0011"));
+  const grossProfit = $derived(getNode(financialStore.tree, "PNL-0001"));
+  const gaExpenses = $derived(getNode(financialStore.tree, "PNL-0030"));
+  const otherIncomeExpenses = $derived(getNode(financialStore.tree, "PNL-0054"));
+  const secondaryCost = $derived(getNode(financialStore.tree, "PNL-0086"));
+  const taxation = $derived(getNode(financialStore.tree, "PNL-0087"));
+  const npat = $derived(getNode(financialStore.tree, "NPAT"));
 
   function scoped(monthlyActual: number[]): number[] {
     return visibleMonthIndices.map((i) => monthlyActual[i] ?? 0);
@@ -257,9 +257,9 @@
 <PageBody>
   <ContextBar showYtd showPeriod={false} bind:ytd={ytdView} showMoneyScale {currency} {moneyValues} bind:moneyScale />
 
-  {#if glStore.status === "loading"}
+  {#if financialStore.status === "loading"}
     <div class="pt-4 flex-1 min-w-0 flex items-center justify-center">Loading…</div>
-  {:else if glStore.status === "not-yet-modelled"}
+  {:else if financialStore.status === "not-yet-modelled"}
     <div class="pt-4 flex-1 min-w-0 flex">
       <NotYetModelled
         label="No GL data modelled for the selected company yet."

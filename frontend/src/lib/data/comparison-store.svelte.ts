@@ -34,7 +34,7 @@ export async function loadComparison(scope: string, node: string, periodA: strin
   status = 'loading';
   try {
     const params = new URLSearchParams({ scope, node, periodA, periodB });
-    const res = await fetch(`/api/gl/comparison?${params}`);
+    const res = await fetch(`/api/financial/comparison?${params}`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     const data = await res.json();
     if (data.notYetModelled) {

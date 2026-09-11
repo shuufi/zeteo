@@ -15,7 +15,7 @@
     generateTrendAnalysis,
   } from "../lib/data/trend-analysis-store.svelte";
   import { vdtStore, loadVdtScope } from "../lib/data/vdt-store.svelte";
-  import { getNode, buildDisplayRows } from "../lib/data/gl-client";
+  import { getNode, buildDisplayRows } from "../lib/data/financial-client";
   import {
     periodStore,
     loadPeriods,
@@ -94,7 +94,7 @@
   );
 
   // vdtStore isn't populated by App.svelte's app-wide onMount (that's
-  // glStore/Accounting only) — this is the VDT hierarchy's own landing page,
+  // financialStore/Accounting only) — this is the VDT hierarchy's own landing page,
   // so it owns its own fetch, reactively keyed on whatever currently
   // determines the window (Company + mode + Financial Year/Trailing anchor).
   // Trailing mode's anchor applies live (no Apply-button staging, unlike

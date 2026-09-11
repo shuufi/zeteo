@@ -28,7 +28,7 @@ export function getAncestors(tree: Record<string, HierarchyNode>, id: string): H
  * units (rate/%/days, or a formula's own money value that would double-count its
  * leaf) aren't comparable to a financial variance the way sibling GL nodes
  * are. Nodes already reflect whatever period was requested from GET
- * /api/gl/tree (see docs/adr/0025) — no client-side re-scoping needed here.
+ * /api/financial/tree (see docs/adr/0025) — no client-side re-scoping needed here.
  */
 export function rankChildren(tree: Record<string, HierarchyNode>, node: HierarchyNode): RankedNode[] {
   const children = getChildren(tree, node).filter(
@@ -67,7 +67,7 @@ function stripRedundantRevenueWord(name: string): string {
 }
 
 /**
- * Flattens a hierarchy tree (Accounting via GET /api/gl/tree, or VDT via
+ * Flattens a hierarchy tree (Accounting via GET /api/financial/tree, or VDT via
  * GET /api/vdt/tree — see docs/adr/0033) into Financial's statement rows,
  * walking all the way down to leaves (see docs/adr/0029) — each Reporting
  * Node/Root, Activity Node, and leaf is collapsible. Driver Formula / Driver
