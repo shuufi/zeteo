@@ -200,11 +200,24 @@ def test_trend_analysis_endpoint_trailing_end_quiet_window(session, monkeypatch)
     assert "trailing 6 months" in body["headline"]
 
 
+def test_gl_master_tree_endpoint_shape(session):
+    codes = fixture_graph(session)
+    client = _client(session)
+
+    resp = client.get("/api/gl")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert codes["root"] in body
+    assert body[codes["root"]]["nodeType"] == "Reporting Root"
+    assert "actual" not in body[codes["root"]]
+    assert body[codes["gl_leaf_rev"]]["normalBalance"] == "C"
+
+
 def test_monetary_endpoints_reject_group_and_business_unit_scopes(session):
     codes = fixture_graph(session)
     client = _client(session)
 
     for scope in (codes["group"], codes["business_unit"]):
-        resp = client.get("/api/gl/tree", params={"scope": scope, "period": codes["year"]})
+        resp = client.get("/api/financial/tree", params={"scope": scope, "period": codes["year"]})
         assert resp.status_code == 422
         assert resp.json()["detail"] == f"Company scope required: {scope}"

@@ -326,13 +326,38 @@ def sum_children_entry(child_entries: list[dict], width: int = 12) -> dict:
     }
 
 
-def build_tree(session: Session, companies: list[str], period_code: Optional[str] = None, ytd: bool = False) -> dict[str, dict]:
+def _load_gl_hierarchy(session: Session) -> tuple[dict[str, GLNode], dict[str, list[str]]]:
     nodes = session.exec(select(GLNode)).all()
     node_by_code = {n.code: n for n in nodes}
     children_by_parent: dict[str, list[str]] = defaultdict(list)
     for n in nodes:
         if n.parent_code:
             children_by_parent[n.parent_code].append(n.code)
+    return node_by_code, children_by_parent
+
+
+def build_gl_master_tree(session: Session) -> dict[str, dict]:
+    """The raw GL/FSI chart-of-accounts hierarchy — master data, no financial
+    figures (see docs/adr/0044). Mirrors build_company_tree()/build_period_tree()'s
+    shape: a flat node map with `label` (not `name`, unlike build_tree()'s
+    figure-bearing nodes), keyed by GL code.
+    """
+    node_by_code, children_by_parent = _load_gl_hierarchy(session)
+    return {
+        code: {
+            "id": code,
+            "label": node.description,
+            "parentId": node.parent_code,
+            "childIds": list(children_by_parent.get(code, [])),
+            "nodeType": node.node_type.value,
+            "normalBalance": node.normal_balance.value if node.normal_balance else None,
+        }
+        for code, node in node_by_code.items()
+    }
+
+
+def build_tree(session: Session, companies: list[str], period_code: Optional[str] = None, ytd: bool = False) -> dict[str, dict]:
+    node_by_code, children_by_parent = _load_gl_hierarchy(session)
 
     period_by_code, period_children = load_period_hierarchy(session)
     years = sorted((p for p in period_by_code.values() if p.period_type == PeriodType.YEAR), key=lambda p: p.order)

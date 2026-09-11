@@ -10,7 +10,7 @@
   import { scopeDraft } from "../state/scope-draft.svelte";
   import { periodState } from "../state/period.svelte";
   import { periodDraft } from "../state/period-draft.svelte";
-  import { loadScope } from "../data/gl-store.svelte";
+  import { loadScope } from "../data/financial-store.svelte";
   import { vdtStore, loadVdtScope } from "../data/vdt-store.svelte";
   import { periodStore, periodYearOf } from "../data/period-store.svelte";
   import type { PeriodType } from "../data/types";

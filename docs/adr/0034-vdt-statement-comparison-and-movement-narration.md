@@ -15,7 +15,7 @@ This activation is scoped to VDT Variance Analysis only. The same chip renders i
 
 ## Cost Bridge reshaped
 
-The bridge changes from a same-period decomposition into a waterfall matching Comparison's existing shape (ADR-0031): start bar = SOC Crew Cost's total at Period A, one bar per direct child showing its Period A→B delta (colored increase/decrease), end bar = SOC Crew Cost's total at Period B. Backed by a new endpoint, `GET /api/vdt/comparison`, the VDT-hierarchy analogue of `GET /api/gl/comparison` — same request/response shape, different tree. The statement table below the bridge becomes comparison-aware too: Period A / Period B / Delta / Delta% columns for the same subtree, in place of today's single-period actual column.
+The bridge changes from a same-period decomposition into a waterfall matching Comparison's existing shape (ADR-0031): start bar = SOC Crew Cost's total at Period A, one bar per direct child showing its Period A→B delta (colored increase/decrease), end bar = SOC Crew Cost's total at Period B. Backed by a new endpoint, `GET /api/vdt/comparison`, the VDT-hierarchy analogue of `GET /api/financial/comparison` — same request/response shape, different tree. The statement table below the bridge becomes comparison-aware too: Period A / Period B / Delta / Delta% columns for the same subtree, in place of today's single-period actual column.
 
 ## Variance Analysis narrative
 

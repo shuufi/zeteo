@@ -24,7 +24,7 @@
     getNode,
     getChildren,
     buildDisplayRows,
-  } from "../lib/data/gl-client";
+  } from "../lib/data/financial-client";
   import {
     getComparisonNode,
     getComparisonChildren,
@@ -65,7 +65,7 @@
   onMount(loadPeriods);
 
   // vdtStore isn't populated by App.svelte's app-wide onMount (that's
-  // glStore/Accounting only) — this is the VDT hierarchy's own landing page,
+  // financialStore/Accounting only) — this is the VDT hierarchy's own landing page,
   // so it lazily triggers its own fetch, same pattern VdtTree/VdtRanked use.
   onMount(() => {
     if (vdtStore.status !== "ready")

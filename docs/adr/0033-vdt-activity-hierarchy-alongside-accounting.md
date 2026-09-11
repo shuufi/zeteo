@@ -1,6 +1,6 @@
 # VDT becomes a real, activity-based second hierarchy with its own estimated leaves; the old GL/FSI tree is renamed Accounting hierarchy
 
-Until now "VDT" was just another name for the accounting GL/FSI tree (ADR-0022) — `VdtNode`/`GET /api/gl/tree` and VDT Explorer all rendered the same reporting-structured hierarchy Trends does. Management now wants a genuinely distinct **VDT hierarchy**, organized by activity (e.g. Crew Pay and Benefits Cost, Crew Traveling and Welfare Cost) rather than by GL nature (Manpower Cost, Materials And Supplies), for the pilot scope (Cost of Revenue and Revenue only — see Open Items).
+Until now "VDT" was just another name for the accounting GL/FSI tree (ADR-0022) — `VdtNode`/`GET /api/financial/tree` and VDT Explorer all rendered the same reporting-structured hierarchy Trends does. Management now wants a genuinely distinct **VDT hierarchy**, organized by activity (e.g. Crew Pay and Benefits Cost, Crew Traveling and Welfare Cost) rather than by GL nature (Manpower Cost, Materials And Supplies), for the pilot scope (Cost of Revenue and Revenue only — see Open Items).
 
 Unlike a straightforward re-parenting, the VDT hierarchy's leaves are **not** the same rows as the Accounting hierarchy's `Posting GL Account`s. Two new node types cover it:
 

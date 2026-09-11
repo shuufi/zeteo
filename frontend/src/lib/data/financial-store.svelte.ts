@@ -1,6 +1,6 @@
 import type { HierarchyNode } from './types';
 
-export interface GlScopeMeta {
+export interface FinancialScopeMeta {
   scope: string;
   scopeKind: 'company';
   currency: string;
@@ -13,9 +13,9 @@ type Status = 'loading' | 'ready' | 'error' | 'not-yet-modelled';
 
 let tree = $state<Record<string, HierarchyNode>>({});
 let status = $state<Status>('loading');
-let meta = $state<GlScopeMeta | null>(null);
+let meta = $state<FinancialScopeMeta | null>(null);
 
-export const glStore = {
+export const financialStore = {
   get tree() {
     return tree;
   },
@@ -32,7 +32,7 @@ export async function loadScope(scope: string, periodCode?: string): Promise<voi
   try {
     const params = new URLSearchParams({ scope });
     if (periodCode) params.set('period', periodCode);
-    const res = await fetch(`/api/gl/tree?${params}`);
+    const res = await fetch(`/api/financial/tree?${params}`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     const data = await res.json();
     if (data.notYetModelled) {
@@ -52,7 +52,7 @@ export async function loadScope(scope: string, periodCode?: string): Promise<voi
     };
     status = 'ready';
   } catch (err) {
-    console.error('Failed to load GL tree', err);
+    console.error('Failed to load Financial tree', err);
     status = 'error';
   }
 }

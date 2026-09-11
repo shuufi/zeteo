@@ -10,7 +10,7 @@
   import { scopeState } from "../lib/state/scope.svelte";
   import { periodState } from "../lib/state/period.svelte";
   import { reconciliationStore, loadReconciliation } from "../lib/data/reconciliation-store.svelte";
-  import { getNode, buildDisplayRows } from "../lib/data/gl-client";
+  import { getNode, buildDisplayRows } from "../lib/data/financial-client";
   import { loadPeriods } from "../lib/data/period-store.svelte";
   import { hierarchyMoneyValues, moneyCaption, resolveMoneyScale, type MoneyScaleChoice } from "../lib/data/format";
   import type { DisplayRow } from "../lib/data/types";

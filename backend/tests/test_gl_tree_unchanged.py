@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from gl_tree import build_tree  # noqa: E402
+from gl_tree import build_gl_master_tree, build_tree  # noqa: E402
 
 from conftest import fixture_graph  # noqa: E402
 
@@ -57,3 +57,27 @@ def test_activity_node_tables_do_not_appear_in_accounting_tree(session):
 
     assert codes["act_top"] not in tree
     assert codes["va_driven"] not in tree
+
+
+def test_gl_master_tree_is_pure_hierarchy_no_figures(session):
+    codes = fixture_graph(session)
+    tree = build_gl_master_tree(session)
+
+    root = tree[codes["root"]]
+    assert root["id"] == codes["root"]
+    assert root["label"] == "Net Profit After Tax"
+    assert root["parentId"] is None
+    assert set(root["childIds"]) == {codes["rev"], codes["cor"]}
+    assert root["nodeType"] == "Reporting Root"
+    assert root["normalBalance"] is None
+    assert "actual" not in root and "budget" not in root
+
+    rev_leaf = tree[codes["gl_leaf_rev"]]
+    assert rev_leaf["nodeType"] == "Posting GL Account"
+    assert rev_leaf["normalBalance"] == "C"
+    assert rev_leaf["parentId"] == codes["rev"]
+    assert rev_leaf["childIds"] == []
+
+    # VDT-only tables (Activity Node etc.) never appear here either — this
+    # is purely the GL/FSI chart of accounts.
+    assert codes["act_top"] not in tree

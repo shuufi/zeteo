@@ -12,7 +12,7 @@ load_dotenv()
 from company_tree import InvalidMonetaryScope, MissingCompanyCurrency, UnknownScope, build_company_tree, resolve_scope
 from db import get_session
 from driver_engine import DriverEngine
-from gl_tree import build_tree, diff_subtree, subtree
+from gl_tree import build_gl_master_tree, build_tree, diff_subtree, subtree
 from models import GLNode, PeriodType
 from variance_analysis import VarianceAnalysisUnavailable, generate_variance_analysis
 from periods import (
@@ -64,8 +64,13 @@ def get_periods(session: Session = Depends(get_session)):
     return build_period_tree(session)
 
 
-@app.get("/api/gl/tree")
-def get_gl_tree(scope: str, period: Optional[str] = None, session: Session = Depends(get_session)):
+@app.get("/api/gl")
+def get_gl_master_tree(session: Session = Depends(get_session)):
+    return build_gl_master_tree(session)
+
+
+@app.get("/api/financial/tree")
+def get_financial_tree(scope: str, period: Optional[str] = None, session: Session = Depends(get_session)):
     if not session.exec(select(GLNode).limit(1)).first():
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
@@ -87,8 +92,8 @@ def get_gl_tree(scope: str, period: Optional[str] = None, session: Session = Dep
     }
 
 
-@app.get("/api/gl/comparison")
-def get_gl_comparison(
+@app.get("/api/financial/comparison")
+def get_financial_comparison(
     scope: str,
     node: str,
     period_a: str = Query(alias="periodA"),

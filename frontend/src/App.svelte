@@ -4,7 +4,7 @@
   import NavBar from './lib/components/NavBar.svelte';
   import { scopeState } from './lib/state/scope.svelte';
   import { periodState } from './lib/state/period.svelte';
-  import { loadScope } from './lib/data/gl-store.svelte';
+  import { loadScope } from './lib/data/financial-store.svelte';
   import Home from './routes/Home.svelte';
   import FinancialPerformance from './routes/FinancialPerformance.svelte';
   import FinancialComparison from './routes/FinancialComparison.svelte';

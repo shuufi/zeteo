@@ -7,8 +7,8 @@
   import ChipRow from '../lib/components/ChipRow.svelte';
   import Badge from '../lib/components/Badge.svelte';
   import NotYetModelled from '../lib/components/NotYetModelled.svelte';
-  import { glStore } from '../lib/data/gl-store.svelte';
-  import { getNode, getAncestors } from '../lib/data/gl-client';
+  import { financialStore } from '../lib/data/financial-store.svelte';
+  import { getNode, getAncestors } from '../lib/data/financial-client';
   import { periodState } from '../lib/state/period.svelte';
   import {
     formatMoney,
@@ -20,13 +20,13 @@
 
   let { params }: { params: { id: string; tab?: string } } = $props();
 
-  const node = $derived(getNode(glStore.tree, params.id));
+  const node = $derived(getNode(financialStore.tree, params.id));
   const tab = $derived(params.tab ?? 'diagnose');
   const ancestors = $derived(
-    node ? getAncestors(glStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}?period=${periodState.code}` })) : []
+    node ? getAncestors(financialStore.tree, node.id).map((a) => ({ id: a.id, name: a.name, href: `/vdt/${a.id}?period=${periodState.code}` })) : []
   );
   let moneyScale = $state<MoneyScaleChoice>('auto');
-  const currency = $derived(glStore.meta?.currency ?? '');
+  const currency = $derived(financialStore.meta?.currency ?? '');
   const moneyValues = $derived(
     node
       ? [
@@ -60,10 +60,10 @@
   }
 </script>
 
-{#if glStore.status === 'loading'}
+{#if financialStore.status === 'loading'}
   <PageHeader title="Driver Diagnostic" />
   <PageBody>Loading…</PageBody>
-{:else if glStore.status === 'not-yet-modelled'}
+{:else if financialStore.status === 'not-yet-modelled'}
   <PageHeader title="Driver Diagnostic" />
   <PageBody>
     <ContextBar />

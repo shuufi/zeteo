@@ -2,7 +2,7 @@
   import { untrack } from 'svelte';
   import { slide } from 'svelte/transition';
   import { link } from 'svelte-spa-router';
-  import { indentClass } from '../data/gl-client';
+  import { indentClass } from '../data/financial-client';
   import type { DisplayRow, Direction, OperationalUnit } from '../data/types';
   import { formatMoney, formatStatementMoney, type MoneyScale } from '../data/format';
 

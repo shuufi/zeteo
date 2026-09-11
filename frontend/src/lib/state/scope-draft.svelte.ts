@@ -6,7 +6,7 @@ let label = $state(scopeState.label);
 
 /**
  * The Business picker's pending selection — separate from scopeState (the
- * scope GET /api/gl/tree actually uses) so picking a company doesn't refetch
+ * scope GET /api/financial/tree actually uses) so picking a company doesn't refetch
  * data until ContextBar's Apply button commits it. Mirrors scopeState until
  * the user picks something (`dirty`), so it can't go stale against a scope
  * change applied elsewhere — e.g. Apply itself, or a deep-link.

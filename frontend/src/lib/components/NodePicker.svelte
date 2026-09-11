@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { glStore } from '../data/gl-store.svelte';
+  import { financialStore } from '../data/financial-store.svelte';
   import type { HierarchyNode } from '../data/types';
 
   let {
@@ -17,7 +17,7 @@
   // Account is always a leaf row, never bridgeable, even ones with Driver/
   // Driver Formula children (their units aren't RM-comparable) — see docs/adr/0031.
   const candidates = $derived(
-    Object.values(glStore.tree).filter((n) => n.nodeType === 'Reporting Root' || n.nodeType === 'Reporting Node'),
+    Object.values(financialStore.tree).filter((n) => n.nodeType === 'Reporting Root' || n.nodeType === 'Reporting Node'),
   );
   const nodeById = $derived(new Map(candidates.map((n) => [n.id, n])));
   const root = $derived(candidates.find((n) => n.parentId === null));
@@ -59,7 +59,7 @@
     return searching ? ancestorIds.has(node.id) : expanded.has(node.id);
   }
 
-  const selectedLabel = $derived(value ? (glStore.tree[value]?.name ?? value) : '');
+  const selectedLabel = $derived(value ? (financialStore.tree[value]?.name ?? value) : '');
 
   function select(node: HierarchyNode): void {
     value = node.id;

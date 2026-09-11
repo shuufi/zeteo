@@ -21,7 +21,7 @@ let meta = $state<VdtComparisonMeta | null>(null);
 
 /**
  * VDT Variance Analysis's own comparison tree — a separate store from comparisonStore
- * (Accounting hierarchy, GET /api/gl/comparison) since they hit different
+ * (Accounting hierarchy, GET /api/financial/comparison) since they hit different
  * endpoints/trees, even though both share the ComparisonNode shape — see
  * docs/adr/0034.
  */

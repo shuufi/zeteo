@@ -16,9 +16,9 @@ let status = $state<Status>('loading');
 let meta = $state<VdtScopeMeta | null>(null);
 
 /**
- * The VDT hierarchy's own tree — a genuinely separate store from glStore
+ * The VDT hierarchy's own tree — a genuinely separate store from financialStore
  * (Accounting hierarchy), not a `hierarchy` parameter on the same store,
- * since only VDT Explorer's screens need it and every existing glStore
+ * since only VDT Explorer's screens need it and every existing financialStore
  * consumer (Trends, DriverDiagnostic) should stay untouched — see
  * docs/adr/0033.
  */

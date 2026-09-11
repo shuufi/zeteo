@@ -4,7 +4,7 @@
   import { scopeDraft } from '../state/scope-draft.svelte';
   import { periodState } from '../state/period.svelte';
   import { companyStore, loadCompanies } from '../data/company-store.svelte';
-  import { loadScope } from '../data/gl-store.svelte';
+  import { loadScope } from '../data/financial-store.svelte';
 
   let open = $state(false);
   let query = $state('');
