@@ -14,11 +14,11 @@ export const companyStore = {
   },
 };
 
-/** The Group/BU/Company hierarchy is static master data — fetched once, unlike loadScope. */
+/** The Company hierarchy is static master data — fetched once, unlike loadScope. */
 export async function loadCompanies(): Promise<void> {
   status = 'loading';
   try {
-    const res = await fetch('/api/companies');
+    const res = await fetch('/api/company-hierarchy?kind=BU');
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     tree = await res.json();
     status = 'ready';

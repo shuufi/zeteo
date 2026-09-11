@@ -71,9 +71,25 @@ plain rounded floats (2dp), not strings — see `_money_json`.
 ## Master data
 
 ### `GET /api/companies`
-Company hierarchy (MISC Group → Business Unit → Company). No params.
+Company master data — leaves only, no hierarchy (see `docs/adr/0045`). No params.
 
-Returns a node map: `{code: {id, label, companyType, currency, parentId, childIds}}`.
+Returns a node map: `{code: {id, label, currency, isSampled, buNodeCode}}`. `buNodeCode`
+is the required FK into `company_hierarchy` (see below) — walk that endpoint to
+resolve a company's BU chain up to MISC Group.
+
+### `GET /api/company-hierarchy?kind=BU`
+Company grouping hierarchy above Company (MISC Group and its descendants) with
+Company leaves attached via `buNodeCode`, one combined tree — see
+`docs/adr/0045-company-hierarchy-bu-legal-dimension.md`. Depth is variable, not
+fixed at one BU tier: some branches (e.g. `MISC Marine`) sit between a Business
+Unit and MISC Group, others parent directly to MISC Group. `kind` selects the
+hierarchy (`BU` today; `LEGAL` planned, not yet seeded).
+
+Returns a node map: `{code: {id, label, parentId, childIds, kind, isCompany}}`,
+with Company leaves merged in as childless nodes under their `buNodeCode`
+parent. `isCompany` distinguishes a real Company leaf from a grouping node
+explicitly — a grouping node with no companies yet would otherwise be
+indistinguishable from a leaf by childIds alone.
 
 ### `GET /api/periods`
 Fiscal Year/Quarter/Month hierarchy. No params.

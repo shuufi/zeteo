@@ -1,15 +1,19 @@
 export type Direction = 'adverse' | 'favourable' | 'neutral';
 
-export type CompanyNodeType = 'Group' | 'Business Unit' | 'Company';
-
-/** A node in the MISC Group -> Business Unit -> Company hierarchy served by GET /api/companies — see docs/adr/0028. */
+/**
+ * A node in the variable-depth Company hierarchy served by
+ * GET /api/company-hierarchy?kind=BU — see docs/adr/0045. `isCompany`
+ * distinguishes a real Company leaf from a grouping node (MISC Group, MISC
+ * Marine, a Business Unit, ...) explicitly, rather than inferring it from
+ * childIds — a grouping node with no companies yet would otherwise look
+ * exactly like a leaf.
+ */
 export interface CompanyNode {
   id: string;
   label: string;
-  companyType: CompanyNodeType;
-  currency: string | null;
   parentId: string | null;
   childIds: string[];
+  isCompany: boolean;
 }
 
 export interface KpiCard {

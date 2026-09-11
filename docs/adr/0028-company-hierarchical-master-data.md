@@ -8,4 +8,4 @@
 
 `companies.py` is deleted — nothing needed it once `resolve_scope` and `/api/companies` both moved to querying `company_node` directly.
 
-**Status**: accepted
+**Status**: superseded by `docs/adr/0045-company-hierarchy-bu-legal-dimension.md` — the `Group`/`Business Unit` tiers described here move out of `company_node` into a separate `company_hierarchy` dimension, since a real second BU tier (variable depth per branch) and a future Legal hierarchy no longer fit one `node_type` enum on `company`.

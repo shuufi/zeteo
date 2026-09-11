@@ -9,11 +9,18 @@ from sqlmodel import Session, select
 
 load_dotenv()
 
-from company_tree import InvalidMonetaryScope, MissingCompanyCurrency, UnknownScope, build_company_tree, resolve_scope
+from company_tree import (
+    InvalidMonetaryScope,
+    MissingCompanyCurrency,
+    UnknownScope,
+    build_company_hierarchy_tree,
+    build_company_tree,
+    resolve_scope,
+)
 from db import get_session
 from driver_engine import DriverEngine
 from gl_tree import build_gl_master_tree, build_tree, diff_subtree, subtree
-from models import GLNode, PeriodType
+from models import GLNode, HierarchyKind, PeriodType
 from variance_analysis import VarianceAnalysisUnavailable, generate_variance_analysis
 from periods import (
     UnknownPeriod,
@@ -57,6 +64,11 @@ def _scope_meta(resolved: dict) -> dict:
 @app.get("/api/companies")
 def get_companies(session: Session = Depends(get_session)):
     return build_company_tree(session)
+
+
+@app.get("/api/company-hierarchy")
+def get_company_hierarchy(kind: HierarchyKind = HierarchyKind.BU, session: Session = Depends(get_session)):
+    return build_company_hierarchy_tree(session, kind)
 
 
 @app.get("/api/periods")
