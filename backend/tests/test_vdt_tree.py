@@ -2,11 +2,11 @@
 
 Covers the three load-bearing rules this session's design settled on:
   1. wholesale-replace at a GL attachment point (old GL children become
-     unreachable, not unioned with the new Activity Nodes)
-  2. a Posting Activity Account is always Driver-Formula-driven (no raw
+     unreachable, not unioned with the new VDT Hierarchy Nodes)
+  2. a VDT Account is always Driver-Formula-driven (no raw
      fact fallback) — driven and undriven cases
   3. sign is derived from the FA GL anchor's normal_balance, not stored on
-     the Posting Activity Account itself
+     the VDT Account itself
 """
 
 import sys
@@ -72,7 +72,7 @@ def test_wholesale_replace_at_gl_attachment_point(session):
     codes = fixture_graph(session)
     tree = build_vdt_tree(session, [codes["company"]], None)
 
-    # COR's VDT-side children are ONLY the Activity Node(s) attached there.
+    # COR's VDT-side children are ONLY the VDT Hierarchy Node(s) attached there.
     assert tree[codes["cor"]]["childIds"] == [codes["act_top"]]
 
     # The old GL subtree hanging off COR-OLD is unreachable in this tree —
@@ -95,7 +95,7 @@ def test_unaffected_branches_pass_through_unmodified(session):
     assert tree[codes["rev"]]["actual"] == 1200.0
 
 
-def test_driven_posting_activity_account_computes_via_formula(session):
+def test_driven_vdt_account_computes_via_formula(session):
     codes = fixture_graph(session)
     tree = build_vdt_tree(session, [codes["company"]], None)
 
@@ -104,7 +104,7 @@ def test_driven_posting_activity_account_computes_via_formula(session):
     va1 = tree[codes["va_driven"]]
     assert va1["actual"] == -240.0
     assert va1["budget"] == -240.0
-    assert va1["nodeType"] == "Posting Activity Account"
+    assert va1["nodeType"] == "VDT Account"
     assert va1["faGlCode"] == codes["gl_anchor_leaf"]
 
     # Driver Formula / Driver nodes spliced in under the driven account,
@@ -118,7 +118,7 @@ def test_driven_posting_activity_account_computes_via_formula(session):
     assert nested_formula_id in tree
 
 
-def test_undriven_posting_activity_account_falls_back_to_zero(session):
+def test_undriven_vdt_account_falls_back_to_zero(session):
     codes = fixture_graph(session)
     tree = build_vdt_tree(session, [codes["company"]], None)
 
@@ -127,7 +127,7 @@ def test_undriven_posting_activity_account_falls_back_to_zero(session):
     assert va2["budget"] == 0.0
 
 
-def test_rollup_through_activity_nodes(session):
+def test_rollup_through_vdt_hierarchy_nodes(session):
     codes = fixture_graph(session)
     tree = build_vdt_tree(session, [codes["company"]], None)
 

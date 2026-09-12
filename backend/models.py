@@ -222,8 +222,9 @@ class DriverFormulaTerm(SQLModel, table=True):
     operator: FormulaOperator = FormulaOperator.MULTIPLY
 
 
-class ActivityNode(SQLModel, table=True):
-    """A position in the VDT (activity-based) hierarchy's mid-tier — see docs/adr/0033.
+class VdtHierarchy(SQLModel, table=True):
+    """A position in the VDT hierarchy's mid-tier — see docs/adr/0033.
+    Renamed from `ActivityNode` — see docs/adr/0047.
 
     Own table rather than a new GLNode.node_type value, for the same reason
     Driver got its own table in ADR-0030: general_ledger's existing consumers
@@ -231,14 +232,14 @@ class ActivityNode(SQLModel, table=True):
     a closed, numeric-or-PNL-/NPAT code space that V-prefixed codes would break.
 
     `parent_code` is deliberately NOT a declared foreign_key: it points at
-    either another ActivityNode.code (interior nesting) or a
+    either another VdtHierarchy.code (interior nesting) or a
     general_ledger.code (the top-level attachment point, e.g. PNL-0011) — a
     single column can't FK two tables. Resolved by call-site convention only,
     the same move ADR-0030 already made for DriverFormula.target_code; safe
     here too since this SQLite database never enables FK enforcement (db.py).
     """
 
-    __tablename__ = "activity_node"
+    __tablename__ = "vdt_hierarchy"
 
     code: str = Field(primary_key=True)
     description: str
@@ -246,8 +247,9 @@ class ActivityNode(SQLModel, table=True):
     level: int
 
 
-class PostingActivityAccount(SQLModel, table=True):
+class VdtAccount(SQLModel, table=True):
     """The VDT hierarchy's terminal line — see docs/adr/0033.
+    Renamed from `PostingActivityAccount` — see docs/adr/0047.
 
     Not the same row as a Posting GL Account: its company-local-currency amount is always
     computed by its own Driver Formula (a DriverFormula.target_code equal to
@@ -260,9 +262,9 @@ class PostingActivityAccount(SQLModel, table=True):
     surfaces, not an error to close.
     """
 
-    __tablename__ = "posting_activity_account"
+    __tablename__ = "vdt_account"
 
     code: str = Field(primary_key=True)
     description: str
-    parent_code: str = Field(foreign_key="activity_node.code")
+    parent_code: str = Field(foreign_key="vdt_hierarchy.code")
     fa_gl_code: str = Field(foreign_key="general_ledger.code")

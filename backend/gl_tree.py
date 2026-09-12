@@ -144,8 +144,8 @@ MONEY_NODE_TYPES = {
     NodeType.REPORTING_ROOT.value,
     NodeType.REPORTING_NODE.value,
     NodeType.POSTING_GL_ACCOUNT.value,
-    "Activity Node",
-    "Posting Activity Account",
+    "VDT Hierarchy Node",
+    "VDT Account",
 }
 
 
@@ -309,7 +309,7 @@ def compute_gl_leaf(
 def sum_children_entry(child_entries: list[dict], width: int = 12) -> dict:
     """An internal (non-leaf) node's computed entry — the bottom-up sum of
     its children's entries. Shared by build_tree() (Reporting Node) and
-    vdt_tree.py (Activity Node) — summing children is summing children
+    vdt_tree.py (VDT Hierarchy Node) — summing children is summing children
     regardless of which table the parent/children rows live in. `width` must
     match the monthly-array width every child_entries member already carries
     (12 for Financial Year mode, the resolved window length for Trailing)."""

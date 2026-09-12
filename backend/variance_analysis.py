@@ -12,7 +12,7 @@ from typing import Any, Optional
 
 _cache: dict[tuple, dict[str, Any]] = {}
 
-POSTING_ACTIVITY_ACCOUNT = "Posting Activity Account"
+VDT_ACCOUNT = "VDT Account"
 MATERIALITY_THRESHOLD = 0.10
 MAX_CONTRIBUTORS = 4
 _DRIVER_DISPLAY_PLACES: dict[str, int] = {
@@ -49,10 +49,10 @@ def _select_contributors(nodes: dict[str, dict]) -> list[dict]:
     """Select the financial items the LLM is allowed to explain.
 
     The selection deliberately happens before prompting: operational movements
-    tell us *why* a Posting Activity Account changed, while that account's
+    tell us *why* a VDT Account changed, while that account's
     financial delta tells us whether it deserves attention at all.
     """
-    leaves = [node for node in nodes.values() if node.get("nodeType") == POSTING_ACTIVITY_ACCOUNT]
+    leaves = [node for node in nodes.values() if node.get("nodeType") == VDT_ACCOUNT]
     gross_movement = sum(abs(node["delta"]) for node in leaves)
     if not gross_movement:
         return []
@@ -86,7 +86,7 @@ def _render_contributor(nodes: dict[str, dict], contributor: dict, lines: list[s
     """
     code = contributor["id"]
     lines.append(
-        f"- [{code}] {contributor['name']} ({POSTING_ACTIVITY_ACCOUNT}, money): "
+        f"- [{code}] {contributor['name']} ({VDT_ACCOUNT}, money): "
         f"A={contributor['valueA']}, B={contributor['valueB']}, delta={contributor['delta']:+}"
         + (f" ({contributor['deltaPct']:+}%)" if contributor.get("deltaPct") is not None else "")
         + f", magnitude {_movement_label(contributor['valueA'], contributor['valueB'])}"
@@ -271,7 +271,7 @@ def generate_variance_analysis(
     if not selected:
         result = {
             "headline": (
-                "Movement was distributed across smaller Posting Activity Accounts; "
+                "Movement was distributed across smaller VDT Accounts; "
                 "no individual contributor met the materiality threshold."
             ),
             "netAmount": nodes[root]["delta"],

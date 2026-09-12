@@ -31,14 +31,14 @@
 
   const rows = $derived(buildDisplayRows(reconciliationStore.vdtTree, RECONCILIATION_ROOT));
 
-  // Only a Posting Activity Account leaf carries a real Accounting
+  // Only a VDT Account leaf carries a real Accounting
   // counterpart, via its FA GL anchor (see docs/adr/0033) — everything else
-  // (Activity Node rows, including the root, and Driver/Formula rows) has no
+  // (VDT Hierarchy Node rows, including the root, and Driver/Formula rows) has no
   // same-code Accounting node, so its GL/Delta cells stay blank rather than
   // inventing a rollup (see docs/adr/0037).
   function accountingActual(row: DisplayRow): number | undefined {
     const node = getNode(reconciliationStore.vdtTree, row.nodeId);
-    if (node?.nodeType !== "Posting Activity Account" || !node.faGlCode) return undefined;
+    if (node?.nodeType !== "VDT Account" || !node.faGlCode) return undefined;
     return getNode(reconciliationStore.accountingTree, node.faGlCode)?.actual;
   }
 

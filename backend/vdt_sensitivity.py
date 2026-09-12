@@ -9,7 +9,7 @@ other analysis module in this codebase.
 
 Deviation from spec.md §1.1's literal `engine.target_value(root_code,
 scenario)` wording: NPAT (a GL Reporting Root) is never itself a
-`DriverFormula` target — only Posting Activity Accounts and Drivers are — so
+`DriverFormula` target — only VDT Accounts and Drivers are — so
 `DriverEngine.target_value()` called directly on the root always returns an
 all-zero series (verified empirically against the test fixture). The ADR's
 own "Compute method" decision is unambiguous on this point ("re-run

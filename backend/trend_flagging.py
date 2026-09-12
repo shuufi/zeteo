@@ -11,7 +11,7 @@ MOM_THRESHOLD = 0.15          # 15% month-over-month magnitude change
 ROOT_SHARE_THRESHOLD = 0.05   # node magnitude must be >5% of root total that month
 MAX_FLAGGED_NODES = 12        # payload bound; LLM still caps bullets at 6
 
-LEAF_MONEY_NODE_TYPES = {"Posting GL Account", "Posting Activity Account"}
+LEAF_MONEY_NODE_TYPES = {"Posting GL Account", "VDT Account"}
 EPSILON = 1e-9
 
 
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     tree = {
         "ROOT": {
             "name": "Root",
-            "nodeType": "Activity Node",
+            "nodeType": "VDT Hierarchy Node",
             "monthlyActual": root_series,
             "monthlyBudget": root_series,
             "childIds": ["BIG", "SMALL", "JANSPIKE", "ZEROSTART"],
