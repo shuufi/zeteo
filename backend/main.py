@@ -34,7 +34,7 @@ from trend_analysis import TrendAnalysisUnavailable, generate_trend_analysis
 from vdt_sensitivity import SENSITIVITY_MAX_CYCLES, compute_sensitivity, terminal_driver_candidates
 from vdt_tree import build_vdt_tree
 
-VDT_COMPARISON_ROOT_TYPES = ("Reporting Root", "Reporting Node", "Activity Node")
+VDT_COMPARISON_ROOT_TYPES = ("Reporting Root", "Reporting Node", "VDT Hierarchy Node")
 VDT_TRENDS_ANCHOR = "V201000000"  # SOC Crew Cost, same fixed pilot anchor as VDT Variance Analysis/Reconciliation
 
 app = FastAPI(title="Zeteo API")
@@ -368,9 +368,9 @@ def get_vdt_reconciliation(
     scope: str, node: str, period: Optional[str] = None, ytd: bool = False, session: Session = Depends(get_session)
 ):
     """VDT-hierarchy subtree at `node`, plus the Accounting nodes needed to
-    show each Posting Activity Account leaf's FA GL anchor alongside it — see
+    show each VDT Account leaf's FA GL anchor alongside it — see
     docs/adr/0033, docs/adr/0037. `node` anchors in the VDT tree (it's
-    routinely a VDT-only Activity Node, e.g. SOC Crew Cost, with no same-code
+    routinely a VDT-only VDT Hierarchy Node, e.g. SOC Crew Cost, with no same-code
     Accounting node at all), so `accounting.nodes` is not a subtree of the
     same code — it's just the specific anchor nodes the VDT subtree's leaves
     point to, keyed by their own GL code. No delta/polarity coloring: the two
@@ -410,7 +410,7 @@ def get_vdt_reconciliation(
     anchor_codes = {
         n["faGlCode"]
         for n in vdt_nodes.values()
-        if n["nodeType"] == "Posting Activity Account" and n.get("faGlCode")
+        if n["nodeType"] == "VDT Account" and n.get("faGlCode")
     }
     accounting_nodes = {code: accounting_tree[code] for code in anchor_codes if code in accounting_tree}
 

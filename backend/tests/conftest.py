@@ -8,10 +8,10 @@ are hermetic and don't depend on running `python backend/seed.py` first.
 things Phase 1 of docs/adr/0033's implementation needs covered:
   - a plain GL passthrough leaf, untouched by any VDT override
   - a GL Reporting Node (COR) whose children get wholesale-replaced by
-    Activity Nodes in the VDT tree — its old GL children become unreachable
-    there (see vdt_tree.py's module docstring)
-  - an Activity Node nested two levels deep
-  - two Posting Activity Accounts anchored to the same FA GL code (many-to-one)
+    VDT Hierarchy Nodes in the VDT tree — its old GL children become
+    unreachable there (see vdt_tree.py's module docstring)
+  - a VDT Hierarchy Node nested two levels deep
+  - two VDT Accounts anchored to the same FA GL code (many-to-one)
   - one of them Driver-Formula-driven with one level of Driver-Formula
     recursion (D2 is itself computed by a second Formula from D3), the other
     left undriven on purpose to exercise the "no formula bound" fallback
@@ -27,7 +27,6 @@ from sqlalchemy.pool import StaticPool
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from models import (  # noqa: E402
-    ActivityNode,
     Company,
     CompanyHierarchy,
     Driver,
@@ -43,8 +42,9 @@ from models import (  # noqa: E402
     OperationalUnit,
     Period,
     PeriodType,
-    PostingActivityAccount,
     Source,
+    VdtAccount,
+    VdtHierarchy,
 )
 
 YEAR = "FY24"
@@ -132,16 +132,16 @@ def fixture_graph(session: Session) -> dict[str, str]:
         ),
     ]
 
-    activity_nodes = [
-        ActivityNode(code=codes["act_top"], description="Top Activity", parent_code=codes["cor"], level=2),
-        ActivityNode(code=codes["act_sub"], description="Sub Activity", parent_code=codes["act_top"], level=3),
+    vdt_hierarchy_nodes = [
+        VdtHierarchy(code=codes["act_top"], description="Top Activity", parent_code=codes["cor"], level=2),
+        VdtHierarchy(code=codes["act_sub"], description="Sub Activity", parent_code=codes["act_top"], level=3),
     ]
 
     accounts = [
-        PostingActivityAccount(
+        VdtAccount(
             code=codes["va_driven"], description="Driven Account", parent_code=codes["act_sub"], fa_gl_code=codes["gl_anchor_leaf"]
         ),
-        PostingActivityAccount(
+        VdtAccount(
             code=codes["va_undriven"], description="Undriven Account", parent_code=codes["act_sub"], fa_gl_code=codes["gl_anchor_leaf"]
         ),
     ]
@@ -207,7 +207,7 @@ def fixture_graph(session: Session) -> dict[str, str]:
         driver_facts.append(DriverFact(code=codes["driver_base_rate"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=2.0))
 
     session.add_all(gl_nodes)
-    session.add_all(activity_nodes)
+    session.add_all(vdt_hierarchy_nodes)
     session.add_all(accounts)
     session.add_all(drivers)
     session.add_all(formulas)

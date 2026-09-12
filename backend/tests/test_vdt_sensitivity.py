@@ -26,15 +26,15 @@ from db import get_session  # noqa: E402
 from main import app  # noqa: E402
 from driver_engine import DriverEngine  # noqa: E402
 from models import (  # noqa: E402
-    ActivityNode,
     Driver,
     DriverFact,
     DriverFormula,
     DriverFormulaTerm,
     FormulaOperator,
     OperationalUnit,
-    PostingActivityAccount,
     Source,
+    VdtAccount,
+    VdtHierarchy,
 )
 from periods import load_period_hierarchy, ordered_month_codes_of_year  # noqa: E402
 from vdt_sensitivity import (  # noqa: E402
@@ -250,17 +250,17 @@ def test_shared_driver_outside_scope_measured_to_npat_in_full(session):
     codes = fixture_graph(session)
     window = _window(session, codes, 2)
 
-    # A second Activity Node/Posting Activity Account, sibling to act_top,
+    # A second VDT Hierarchy Node/VDT Account, sibling to act_top,
     # reusing the SAME terminal Driver (headcount) but living OUTSIDE act_top.
     session.add_all(
         [
-            ActivityNode(code="ACT-OTHER", description="Other Activity", parent_code=codes["cor"], level=2),
+            VdtHierarchy(code="ACT-OTHER", description="Other Activity", parent_code=codes["cor"], level=2),
         ]
     )
     session.commit()
     session.add_all(
         [
-            PostingActivityAccount(
+            VdtAccount(
                 code="VA-3", description="Other Driven Account", parent_code="ACT-OTHER", fa_gl_code=codes["gl_anchor_leaf"]
             ),
         ]

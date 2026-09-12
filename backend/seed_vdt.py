@@ -1,9 +1,9 @@
-"""Builds the VDT (activity-based) hierarchy's pilot seed data — see docs/adr/0033.
+"""Builds the VDT hierarchy's pilot seed data — see docs/adr/0033.
 
-Source of truth for structure is docs/vdt-hierarchy-crew-cost.csv (Activity
-Node / Posting Activity Account rows, reusing real GL codes as `FA GL`
-anchors). Driver/DriverFormula content for all 21 Posting Activity Accounts
-is hand-authored here rather than a second CSV — 21 rows is too small a
+Source of truth for structure is backend/seeds/master/vdt_hierarchy_crew_cost.csv
+(VDT Hierarchy Node / VDT Account rows, reusing real GL codes as `FA GL`
+anchors). Driver/DriverFormula content for all 21 VDT Accounts is
+hand-authored here rather than a second CSV — 21 rows is too small a
 dataset to justify more ad-hoc CSV machinery, and this follows
 diagnostic_content.py's existing precedent for hand-curated content.
 VA00000001-3 (_CREW_MIX_FORMULAS, fixed headcount x rate shape) proved the
@@ -23,29 +23,29 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 from models import (
-    ActivityNode,
     Driver,
     DriverFact,
     DriverFormula,
     DriverFormulaTerm,
     FormulaOperator,
     OperationalUnit,
-    PostingActivityAccount,
     Source,
+    VdtAccount,
+    VdtHierarchy,
 )
 
 REPO_ROOT = Path(__file__).parent.parent
-CSV_PATH = REPO_ROOT / "docs" / "vdt-hierarchy-crew-cost.csv"
+CSV_PATH = REPO_ROOT / "backend" / "seeds" / "master" / "vdt_hierarchy_crew_cost.csv"
 
 SEED = 4300
 
 
-def load_activity_hierarchy(gl_level_by_code: dict[str, int]) -> tuple[list[ActivityNode], list[PostingActivityAccount]]:
-    """Reads docs/vdt-hierarchy-crew-cost.csv, splitting rows by Node Type.
+def load_vdt_hierarchy(gl_level_by_code: dict[str, int]) -> tuple[list[VdtHierarchy], list[VdtAccount]]:
+    """Reads backend/seeds/master/vdt_hierarchy_crew_cost.csv, splitting rows by Node Type.
 
     `level` isn't a CSV column here (unlike anaplan_is_master_data.csv) — computed
     from the parent chain, terminating either at a known GL code's own level
-    or recursing into another Activity Node row. Every `FA GL` value must
+    or recursing into another VDT Hierarchy Node row. Every `FA GL` value must
     resolve to an already-seeded general_ledger code — fail loud on a typo
     rather than silently seeding an orphaned anchor.
     """
@@ -64,24 +64,24 @@ def load_activity_hierarchy(gl_level_by_code: dict[str, int]) -> tuple[list[Acti
         level_cache[code] = level
         return level
 
-    activity_nodes: list[ActivityNode] = []
-    accounts: list[PostingActivityAccount] = []
+    vdt_hierarchy_nodes: list[VdtHierarchy] = []
+    accounts: list[VdtAccount] = []
     for r in rows:
         code, node_type = r["Code"], r["Node Type"]
-        if node_type == "Activity Node":
-            activity_nodes.append(ActivityNode(code=code, description=r["Description"], parent_code=r["Parent Code"], level=level_of(code)))
-        elif node_type == "Posting Activity Account":
+        if node_type == "VDT Hierarchy Node":
+            vdt_hierarchy_nodes.append(VdtHierarchy(code=code, description=r["Description"], parent_code=r["Parent Code"], level=level_of(code)))
+        elif node_type == "VDT Account":
             fa_gl_code = r["FA GL"]
             if fa_gl_code not in gl_level_by_code:
                 raise ValueError(f"{code}'s FA GL {fa_gl_code!r} doesn't match any seeded general_ledger code")
-            accounts.append(PostingActivityAccount(code=code, description=r["Description"], parent_code=r["Parent Code"], fa_gl_code=fa_gl_code))
+            accounts.append(VdtAccount(code=code, description=r["Description"], parent_code=r["Parent Code"], fa_gl_code=fa_gl_code))
         else:
             raise ValueError(f"Unknown Node Type {node_type!r} for {code}")
 
-    return activity_nodes, accounts
+    return vdt_hierarchy_nodes, accounts
 
 
-# First 3 of 21 Posting Activity Accounts get real Driver Formula content —
+# First 3 of 21 VDT Accounts get real Driver Formula content —
 # enough to prove the pipeline end-to-end (seed -> DriverEngine -> vdt_tree ->
 # API -> frontend render); the rest are a follow-up content-only change once
 # this shape is validated (see docs/adr/0033's Open Items). Each entry:
@@ -217,8 +217,8 @@ def build_crew_mix_seed(
     return drivers, formulas, terms, facts
 
 
-# The remaining 18 of 21 Posting Activity Accounts (VA00000004-021), sourced
-# from docs/vdt-hierarchy-crew-cost.csv's own Formula column rather than
+# The remaining 18 of 21 VDT Accounts (VA00000004-021), sourced
+# from backend/seeds/master/vdt_hierarchy_crew_cost.csv's own Formula column rather than
 # hand-derived like _CREW_MIX_FORMULAS above. Unlike that fixed
 # headcount-times-rate shape, formulas here vary (single-operand lump sum,
 # shared drivers across accounts), so each entry is a general

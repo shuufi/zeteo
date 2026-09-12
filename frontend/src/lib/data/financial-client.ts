@@ -70,7 +70,7 @@ function stripRedundantRevenueWord(name: string): string {
  * Flattens a hierarchy tree (Accounting via GET /api/financial/tree, or VDT via
  * GET /api/vdt/tree — see docs/adr/0033) into Financial's statement rows,
  * walking all the way down to leaves (see docs/adr/0029) — each Reporting
- * Node/Root, Activity Node, and leaf is collapsible. Driver Formula / Driver
+ * Node/Root, VDT Hierarchy Node, and leaf is collapsible. Driver Formula / Driver
  * rows (see docs/adr/0030) render nested beneath the leaf (or Driver) they're
  * bound to, and recurse the same way — a Formula-driven Driver expands into
  * its own Formula, arbitrarily deep.

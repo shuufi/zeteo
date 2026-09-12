@@ -20,7 +20,6 @@ from sqlmodel import Session, SQLModel
 
 from db import engine, init_db
 from models import (
-    ActivityNode,
     Company,
     CompanyHierarchy,
     Driver,
@@ -34,10 +33,11 @@ from models import (
     NormalBalance,
     Period,
     PeriodType,
-    PostingActivityAccount,
     Source,
+    VdtAccount,
+    VdtHierarchy,
 )
-from seed_vdt import build_crew_mix_seed, build_pending_account_seed, load_activity_hierarchy
+from seed_vdt import build_crew_mix_seed, build_pending_account_seed, load_vdt_hierarchy
 
 REPO_ROOT = Path(__file__).parent.parent
 CSV_PATH = REPO_ROOT / "docs" / "anaplan_is_master_data.csv"
@@ -314,12 +314,12 @@ def main() -> None:
     leaves = [n for n in hierarchy if n.node_type == NodeType.POSTING_GL_ACCOUNT]
     facts = generate_gl_facts(rng, leaves, FOCUS_COMPANY_CODE)
 
-    # VDT (activity-based) hierarchy pilot — see docs/adr/0033. Structure
-    # comes from docs/vdt-hierarchy-crew-cost.csv; `gl_level_by_code` lets
-    # its Activity Nodes compute their own `level` from the parent chain
-    # without a Hierarchy Level CSV column of their own.
+    # VDT hierarchy pilot — see docs/adr/0033. Structure comes from
+    # backend/seeds/master/vdt_hierarchy_crew_cost.csv; `gl_level_by_code`
+    # lets its VDT Hierarchy Nodes compute their own `level` from the parent
+    # chain without a Hierarchy Level CSV column of their own.
     gl_level_by_code = {n.code: n.level for n in hierarchy}
-    activity_nodes, accounts = load_activity_hierarchy(gl_level_by_code)
+    vdt_hierarchy_nodes, accounts = load_vdt_hierarchy(gl_level_by_code)
     vdt_drivers, vdt_formulas, vdt_terms, vdt_facts = build_crew_mix_seed(FOCUS_COMPANY_CODE, FISCAL_YEARS)
     pending_drivers, pending_formulas, pending_terms, pending_facts = build_pending_account_seed(FOCUS_COMPANY_CODE, FISCAL_YEARS)
     vdt_drivers += pending_drivers
@@ -337,13 +337,13 @@ def main() -> None:
         # after ADR-0032 (an orphaned Formula binding with no DriverFact data
         # would compute as zero and silently override a leaf's real fabricated
         # Financial value) — now actually repopulated, targeting the new VDT
-        # hierarchy's Posting Activity Accounts rather than GL leaves, so
+        # hierarchy's VDT Accounts rather than GL leaves, so
         # that risk doesn't apply here.
         session.add_all(hierarchy)
         session.add_all(periods)
         session.add_all(company_hierarchy)
         session.add_all(company_nodes)
-        session.add_all(activity_nodes)
+        session.add_all(vdt_hierarchy_nodes)
         session.add_all(accounts)
         session.add_all(vdt_drivers)
         session.add_all(vdt_formulas)
@@ -358,8 +358,8 @@ def main() -> None:
     print(f"Seeded {len(periods)} periods across {len(FISCAL_YEARS)} fiscal years ({', '.join(FISCAL_YEARS)})")
     print(f"Seeded {len(company_hierarchy)} BU hierarchy nodes and {len(company_nodes)} companies (1 sampled: {FOCUS_COMPANY_CODE})")
     print(f"Seeded {len(facts)} GL facts for {FOCUS_COMPANY_CODE} across {len(FISCAL_YEARS)} years")
-    print(f"Seeded {len(activity_nodes)} Activity Nodes and {len(accounts)} Posting Activity Accounts (VDT hierarchy pilot — docs/adr/0033)")
-    print(f"Seeded {len(vdt_drivers)} Drivers / {len(vdt_formulas)} Driver Formulas for {len(accounts)} Posting Activity Accounts")
+    print(f"Seeded {len(vdt_hierarchy_nodes)} VDT Hierarchy Nodes and {len(accounts)} VDT Accounts (VDT hierarchy pilot — docs/adr/0033)")
+    print(f"Seeded {len(vdt_drivers)} Drivers / {len(vdt_formulas)} Driver Formulas for {len(accounts)} VDT Accounts")
     print(f"Fully-modelled example node: {FULLY_MODELLED_NODE}")
 
 

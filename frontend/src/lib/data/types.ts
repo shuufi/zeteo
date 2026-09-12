@@ -169,15 +169,15 @@ export type GlNodeType =
   | 'Posting GL Account'
   | 'Driver Formula'
   | 'Driver'
-  | 'Activity Node'
-  | 'Posting Activity Account';
+  | 'VDT Hierarchy Node'
+  | 'VDT Account';
 
 /**
  * A node in either hierarchy — the Accounting hierarchy (GET /api/financial/tree,
  * see docs/adr/0022) or the VDT hierarchy (GET /api/vdt/tree, see
  * docs/adr/0033) — both return this exact same shape, so one type covers
  * both rather than a parallel interface per hierarchy. `faGlCode` is only
- * set on 'Posting Activity Account' nodes (the VDT hierarchy's leaf,
+ * set on 'VDT Account' nodes (the VDT hierarchy's leaf,
  * anchored to — not identical with — a real GL account; see docs/adr/0033).
  */
 export interface HierarchyNode {
@@ -197,7 +197,7 @@ export interface HierarchyNode {
   hasFullData: boolean;
   /** Sum-of-products expression text — only set on 'Driver Formula' nodes (see docs/adr/0030). */
   expression?: string;
-  /** Only set on 'Posting Activity Account' nodes — see docs/adr/0033. */
+  /** Only set on 'VDT Account' nodes — see docs/adr/0033. */
   faGlCode?: string;
   trend?: number[];
   drivers?: ContributionDriver[];
