@@ -51,7 +51,7 @@ def test_root_rollup(session):
     assert root["budget"] == 204.0
 
 
-def test_activity_node_tables_do_not_appear_in_accounting_tree(session):
+def test_vdt_hierarchy_tables_do_not_appear_in_accounting_tree(session):
     codes = fixture_graph(session)
     tree = build_tree(session, [codes["company"]], None)
 
@@ -78,6 +78,6 @@ def test_gl_master_tree_is_pure_hierarchy_no_figures(session):
     assert rev_leaf["parentId"] == codes["rev"]
     assert rev_leaf["childIds"] == []
 
-    # VDT-only tables (Activity Node etc.) never appear here either — this
+    # VDT-only tables (VDT Hierarchy Node etc.) never appear here either — this
     # is purely the GL/FSI chart of accounts.
     assert codes["act_top"] not in tree

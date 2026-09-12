@@ -20,7 +20,7 @@ NODES = {
     "ROOT": {
         "id": "ROOT",
         "name": "Crew Cost",
-        "nodeType": "Activity Node",
+        "nodeType": "VDT Hierarchy Node",
         "unit": "money",
         "valueA": -1_000.00,
         "valueB": -1_655.00,
@@ -31,7 +31,7 @@ NODES = {
     "SENIOR": {
         "id": "SENIOR",
         "name": "Senior crew salaries",
-        "nodeType": "Posting Activity Account",
+        "nodeType": "VDT Account",
         "unit": "money",
         "valueA": -1_000.00,
         "valueB": -1_500.00,
@@ -76,7 +76,7 @@ NODES = {
     "JUNIOR": {
         "id": "JUNIOR",
         "name": "Junior crew salaries",
-        "nodeType": "Posting Activity Account",
+        "nodeType": "VDT Account",
         "unit": "money",
         "valueA": -400.00,
         "valueB": -600.00,
@@ -87,7 +87,7 @@ NODES = {
     "TRAVEL": {
         "id": "TRAVEL",
         "name": "Crew travel",
-        "nodeType": "Posting Activity Account",
+        "nodeType": "VDT Account",
         "unit": "money",
         "valueA": -900.00,
         "valueB": -750.00,
@@ -98,7 +98,7 @@ NODES = {
     "ACCOMMODATION": {
         "id": "ACCOMMODATION",
         "name": "Crew accommodation",
-        "nodeType": "Posting Activity Account",
+        "nodeType": "VDT Account",
         "unit": "money",
         "valueA": -100.00,
         "valueB": -200.00,
@@ -109,7 +109,7 @@ NODES = {
     "TINY": {
         "id": "TINY",
         "name": "Training",
-        "nodeType": "Posting Activity Account",
+        "nodeType": "VDT Account",
         "unit": "money",
         "valueA": -20.00,
         "valueB": -25.00,
@@ -120,7 +120,7 @@ NODES = {
 }
 
 
-def test_selects_only_material_posting_activity_accounts_by_gross_movement():
+def test_selects_only_material_vdt_accounts_by_gross_movement():
     selected = _select_contributors(NODES)
 
     # Gross movement is 955, so the 10% floor is 95.5. The tiny line is
@@ -198,7 +198,7 @@ def test_no_material_contributor_returns_deterministic_diffuse_result_without_ll
         "ROOT": {
             "id": "ROOT",
             "name": "Crew Cost",
-            "nodeType": "Activity Node",
+            "nodeType": "VDT Hierarchy Node",
             "unit": "money",
             "valueA": -100.0,
             "valueB": -100.0,
@@ -210,7 +210,7 @@ def test_no_material_contributor_returns_deterministic_diffuse_result_without_ll
             child_id: {
                 "id": child_id,
                 "name": f"Small item {index}",
-                "nodeType": "Posting Activity Account",
+                "nodeType": "VDT Account",
                 "unit": "money",
                 "valueA": -10.0,
                 "valueB": -11.0,

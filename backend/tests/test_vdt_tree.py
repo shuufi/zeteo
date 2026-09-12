@@ -2,11 +2,11 @@
 
 Covers the three load-bearing rules this session's design settled on:
   1. wholesale-replace at a GL attachment point (old GL children become
-     unreachable, not unioned with the new Activity Nodes)
-  2. a Posting Activity Account is always Driver-Formula-driven (no raw
+     unreachable, not unioned with the new VDT Hierarchy Nodes)
+  2. a VDT Account is always Driver-Formula-driven (no raw
      fact fallback) — driven and undriven cases
   3. sign is derived from the FA GL anchor's normal_balance, not stored on
-     the Posting Activity Account itself
+     the VDT Account itself
 """
 
 import sys
@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from models import DriverFact, GLFact, Period, PeriodType, Source  # noqa: E402
+from models import DriverFact, Financial, Period, PeriodType, Source  # noqa: E402
 from periods import load_period_hierarchy, ordered_month_codes_of_year, trailing_month_codes  # noqa: E402
 from vdt_tree import build_vdt_tree  # noqa: E402
 
@@ -56,7 +56,7 @@ def _seed_second_fiscal_year(session, codes: dict[str, str]) -> None:
     driver_facts = []
     for month in range(1, 13):
         period_code = f"{SECOND_YEAR}-M{month:02d}"
-        facts.append(GLFact(code=codes["gl_leaf_rev"], company=codes["company"], period_code=period_code, source=Source.ACTUAL, amount=200.0))
+        facts.append(Financial(code=codes["gl_leaf_rev"], company=codes["company"], period_code=period_code, source=Source.ACTUAL, amount=200.0))
         driver_facts.append(
             DriverFact(code=codes["driver_headcount"], company=codes["company"], period_code=period_code, source=Source.ACTUAL, amount=20.0)
         )
@@ -72,7 +72,7 @@ def test_wholesale_replace_at_gl_attachment_point(session):
     codes = fixture_graph(session)
     tree = build_vdt_tree(session, [codes["company"]], None)
 
-    # COR's VDT-side children are ONLY the Activity Node(s) attached there.
+    # COR's VDT-side children are ONLY the VDT Hierarchy Node(s) attached there.
     assert tree[codes["cor"]]["childIds"] == [codes["act_top"]]
 
     # The old GL subtree hanging off COR-OLD is unreachable in this tree —
@@ -95,7 +95,7 @@ def test_unaffected_branches_pass_through_unmodified(session):
     assert tree[codes["rev"]]["actual"] == 1200.0
 
 
-def test_driven_posting_activity_account_computes_via_formula(session):
+def test_driven_vdt_account_computes_via_formula(session):
     codes = fixture_graph(session)
     tree = build_vdt_tree(session, [codes["company"]], None)
 
@@ -104,7 +104,7 @@ def test_driven_posting_activity_account_computes_via_formula(session):
     va1 = tree[codes["va_driven"]]
     assert va1["actual"] == -240.0
     assert va1["budget"] == -240.0
-    assert va1["nodeType"] == "Posting Activity Account"
+    assert va1["nodeType"] == "VDT Account"
     assert va1["faGlCode"] == codes["gl_anchor_leaf"]
 
     # Driver Formula / Driver nodes spliced in under the driven account,
@@ -118,7 +118,7 @@ def test_driven_posting_activity_account_computes_via_formula(session):
     assert nested_formula_id in tree
 
 
-def test_undriven_posting_activity_account_falls_back_to_zero(session):
+def test_undriven_vdt_account_falls_back_to_zero(session):
     codes = fixture_graph(session)
     tree = build_vdt_tree(session, [codes["company"]], None)
 
@@ -127,7 +127,7 @@ def test_undriven_posting_activity_account_falls_back_to_zero(session):
     assert va2["budget"] == 0.0
 
 
-def test_rollup_through_activity_nodes(session):
+def test_rollup_through_vdt_hierarchy_nodes(session):
     codes = fixture_graph(session)
     tree = build_vdt_tree(session, [codes["company"]], None)
 
@@ -182,7 +182,7 @@ def test_month_codes_param_crosses_real_fiscal_year_boundary(session):
     two ACTUALLY SEEDED fiscal years with DIFFERENT fact values, a window
     resolved by trailing_month_codes() that crosses their boundary, and
     assertions that both halves' distinct values land in the right slots —
-    proving GLFact/DriverFact loading and DriverEngine evaluation don't
+    proving Financial/DriverFact loading and DriverEngine evaluation don't
     silently misalign or duplicate across the two Year rows (see
     docs/adr/0042). fixture_graph() alone only ever seeds one fiscal year
     (FY24), so nothing else in this suite exercises a real cross-year fact

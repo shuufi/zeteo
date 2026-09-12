@@ -15,7 +15,7 @@
   let rootEl = $state<HTMLDivElement | null>(null);
   let expanded = $state(new Set<string>());
 
-  // Scope candidates: Reporting Root/Node, Activity Node, and any GL/VDT
+  // Scope candidates: Reporting Root/Node, VDT Hierarchy Node, and any GL/VDT
   // leaf — everything except the stitched-in Driver Formula/Driver rows
   // (those aren't real tree positions to scope a run to; see docs/adr/0030).
   const candidates = $derived(
@@ -136,7 +136,7 @@
     <input
       id="sensitivity-scope"
       type="text"
-      placeholder="Search whole book, Activity Node, GL leaf…"
+      placeholder="Search whole book, VDT Hierarchy Node, GL leaf…"
       value={open ? query : selectedLabel}
       onfocus={() => (open = true)}
       oninput={(e) => (query = (e.target as HTMLInputElement).value)}

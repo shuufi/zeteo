@@ -25,7 +25,7 @@ def _tree(width: int = 12, **leaves: dict) -> dict[str, dict]:
     tree = {
         "ROOT": {
             "name": "Root",
-            "nodeType": "Activity Node",
+            "nodeType": "VDT Hierarchy Node",
             "monthlyActual": root_series,
             "monthlyBudget": root_series,
             "childIds": list(leaves.keys()),

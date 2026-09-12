@@ -33,7 +33,7 @@ client walks it. A GL/VDT node looks like:
   "name": "SOC Crew Cost",
   "parentId": "V200000000",
   "childIds": ["V201100000", "V201200000"],
-  "nodeType": "Activity Node",
+  "nodeType": "VDT Hierarchy Node",
   "unit": "money",
   "actual": 1234567.89,
   "budget": 1200000.0,
@@ -144,7 +144,7 @@ Errors: 400 grain mismatch, 404 unknown node, 400 wrong node type.
 ## VDT (Value Driver Tree)
 
 ### `GET /api/vdt/tree`
-VDT hierarchy (Reporting Root → Activity Node → Posting Activity Account),
+VDT hierarchy (Reporting Root → VDT Hierarchy Node → VDT Account),
 Financial Year or Trailing mode.
 
 | param | required | notes |
@@ -155,7 +155,7 @@ Financial Year or Trailing mode.
 
 Response: scope envelope + `{notYetModelled, period, months?, nodes}` —
 `months` (the resolved window's month codes) is only present in Trailing mode.
-Node map entries add `faGlCode` on `Posting Activity Account` leaves (their FA
+Node map entries add `faGlCode` on `VDT Account` leaves (their FA
 GL anchor — see docs/adr/0033).
 
 Errors: 500 unseeded, 404/422 scope, 404 unknown period, 404 unknown
@@ -166,7 +166,7 @@ Same-grain VDT diff between two periods, optional YTD accumulation.
 
 | param | required | notes |
 |---|---|---|
-| `scope`, `node`, `periodA`, `periodB` | yes | `node` must be `Reporting Root`/`Reporting Node`/`Activity Node` |
+| `scope`, `node`, `periodA`, `periodB` | yes | `node` must be `Reporting Root`/`Reporting Node`/`VDT Hierarchy Node` |
 | `ytd` | no, default `false` | accumulate from year start instead of a single period |
 
 Response: scope envelope + `{node, periodA, periodB, ytd, nodes}` (diffed subtree).
@@ -204,13 +204,13 @@ Errors: 400 both/neither of `year`/`trailingEnd`, 400 bad `source`, 404
 scope/period, 503 LLM failure.
 
 ### `GET /api/vdt/reconciliation`
-VDT subtree at `node` plus the Accounting (GL) anchor nodes its Posting
-Activity Account leaves point to (docs/adr/0033, docs/adr/0037) — the two
+VDT subtree at `node` plus the Accounting (GL) anchor nodes its VDT Account
+leaves point to (docs/adr/0033, docs/adr/0037) — the two
 hierarchies are independent estimates, not required to reconcile.
 
 | param | required | notes |
 |---|---|---|
-| `scope`, `node` | yes | `node` must be `Reporting Root`/`Reporting Node`/`Activity Node` |
+| `scope`, `node` | yes | `node` must be `Reporting Root`/`Reporting Node`/`VDT Hierarchy Node` |
 | `period` | no | Financial Year mode only (no Trailing mode on this route) |
 | `ytd` | no, default `false` | |
 

@@ -17,7 +17,7 @@ from sqlmodel import Session, col, select
 
 from diagnostic_content import DIAGNOSTIC_CONTENT
 from driver_engine import DriverEngine
-from models import GLFact, GLNode, NodeType, NormalBalance, Period, PeriodType
+from models import Financial, GLAccount, GLHierarchy, NormalBalance, Period, PeriodType
 from periods import load_period_hierarchy, month_indices_for, ordered_month_codes_of_year, ytd_month_indices_for
 
 
@@ -139,13 +139,15 @@ def _stitch_driver_nodes(
 
 # Node types whose "actual" is same-company-currency money, across both hierarchies
 # (see docs/adr/0033) — Driver/Driver Formula units (rate/%/days/ratio)
-# aren't, so favourable/adverse doesn't apply to them.
+# aren't, so favourable/adverse doesn't apply to them. GL's three values are
+# derived strings now (see docs/adr/0048), not a stored NodeType enum, but
+# the same three values still apply here.
 MONEY_NODE_TYPES = {
-    NodeType.REPORTING_ROOT.value,
-    NodeType.REPORTING_NODE.value,
-    NodeType.POSTING_GL_ACCOUNT.value,
-    "Activity Node",
-    "Posting Activity Account",
+    "Reporting Root",
+    "Reporting Node",
+    "Posting GL Account",
+    "VDT Hierarchy Node",
+    "VDT Account",
 }
 
 
@@ -256,12 +258,12 @@ def load_monthly(
     if not companies or not month_codes:
         return result
     code_to_index = {code: i for i, code in enumerate(month_codes)}
-    # Selecting only the needed columns (rather than full GLFact rows)
+    # Selecting only the needed columns (rather than full Financial rows)
     # skips ORM row hydration, the dominant cost for ~40k facts per scope.
     facts = session.exec(
-        select(GLFact.code, GLFact.source, GLFact.period_code, GLFact.amount)
-        .where(col(GLFact.company).in_(companies))
-        .where(col(GLFact.period_code).in_(month_codes))
+        select(Financial.code, Financial.source, Financial.period_code, Financial.amount)
+        .where(col(Financial.company).in_(companies))
+        .where(col(Financial.period_code).in_(month_codes))
     ).all()
     for code, source, fact_period_code, amount in facts:
         result[code][source.value][code_to_index[fact_period_code]] += _decimal(amount)
@@ -269,7 +271,7 @@ def load_monthly(
 
 
 def compute_gl_leaf(
-    node: GLNode,
+    node: GLAccount,
     engine: DriverEngine,
     monthly: dict[str, dict[str, list[Decimal]]],
     prior_monthly: dict[str, dict[str, list[Decimal]]],
@@ -309,7 +311,7 @@ def compute_gl_leaf(
 def sum_children_entry(child_entries: list[dict], width: int = 12) -> dict:
     """An internal (non-leaf) node's computed entry — the bottom-up sum of
     its children's entries. Shared by build_tree() (Reporting Node) and
-    vdt_tree.py (Activity Node) — summing children is summing children
+    vdt_tree.py (VDT Hierarchy Node) — summing children is summing children
     regardless of which table the parent/children rows live in. `width` must
     match the monthly-array width every child_entries member already carries
     (12 for Financial Year mode, the resolved window length for Trailing)."""
@@ -326,14 +328,67 @@ def sum_children_entry(child_entries: list[dict], width: int = 12) -> dict:
     }
 
 
-def _load_gl_hierarchy(session: Session) -> tuple[dict[str, GLNode], dict[str, list[str]]]:
-    nodes = session.exec(select(GLNode)).all()
-    node_by_code = {n.code: n for n in nodes}
+def _load_gl_hierarchy(
+    session: Session,
+) -> tuple[dict[str, GLHierarchy | GLAccount], dict[str, list[str]], set[str]]:
+    """Loads both GLHierarchy (interior) and GLAccount (leaf) rows into one
+    combined code-keyed map — see docs/adr/0048. `leaf_codes` is how callers
+    tell the two apart, since neither table stores a node_type column.
+
+    For a parent with both interior and leaf children (rare — 3 of 99 GL
+    hierarchy nodes today), this always orders all interior children before
+    all leaf children, since they're read from two separate tables/queries
+    rather than one combined one. `financial-client.ts`'s `buildDisplayRows()`
+    renders `childIds` in this exact order with no re-sort, so this does
+    affect display order for a mixed parent — verified harmless against
+    today's real seed data only because every mixed parent's leaf children
+    already came after its interior children in the original CSV. No `order`
+    column was added to preserve this byte-for-byte (see docs/adr/0048's
+    rejection of `order`) since nothing today needs it; revisit if seed data
+    ever puts a leaf before an interior sibling under the same parent."""
+    hierarchy_nodes = session.exec(select(GLHierarchy)).all()
+    accounts = session.exec(select(GLAccount)).all()
+    node_by_code: dict[str, GLHierarchy | GLAccount] = {n.code: n for n in hierarchy_nodes}
+    node_by_code.update({n.code: n for n in accounts})
+    leaf_codes = {n.code for n in accounts}
     children_by_parent: dict[str, list[str]] = defaultdict(list)
-    for n in nodes:
+    for n in hierarchy_nodes:
         if n.parent_code:
             children_by_parent[n.parent_code].append(n.code)
-    return node_by_code, children_by_parent
+    for n in accounts:
+        children_by_parent[n.parent_code].append(n.code)
+    return node_by_code, children_by_parent, leaf_codes
+
+
+def _node_type(code: str, node: GLHierarchy | GLAccount, leaf_codes: set[str]) -> str:
+    """Derives the nodeType string the API contract (docs/adr/0044) still
+    exposes, from table membership + parent_code — not a stored column, see
+    docs/adr/0048. The Root/Node distinction is just "which row has no
+    parent"; there is exactly one such row (NPAT)."""
+    if code in leaf_codes:
+        return "Posting GL Account"
+    return "Reporting Root" if node.parent_code is None else "Reporting Node"
+
+
+def _normal_balance(
+    code: str,
+    node_by_code: dict[str, GLHierarchy | GLAccount],
+    children_by_parent: dict[str, list[str]],
+    leaf_codes: set[str],
+    cache: dict[str, Optional[NormalBalance]],
+) -> Optional[NormalBalance]:
+    """An interior node's balance is the union of its leaves' balances,
+    `None` if mixed (e.g. Gross Profit) — computed here, not stored, since
+    GLHierarchy carries no normal_balance column (docs/adr/0048)."""
+    if code in cache:
+        return cache[code]
+    if code in leaf_codes:
+        result = node_by_code[code].normal_balance
+    else:
+        balances = {_normal_balance(c, node_by_code, children_by_parent, leaf_codes, cache) for c in children_by_parent.get(code, [])}
+        result = balances.pop() if len(balances) == 1 else None
+    cache[code] = result
+    return result
 
 
 def build_gl_master_tree(session: Session) -> dict[str, dict]:
@@ -342,22 +397,24 @@ def build_gl_master_tree(session: Session) -> dict[str, dict]:
     shape: a flat node map with `label` (not `name`, unlike build_tree()'s
     figure-bearing nodes), keyed by GL code.
     """
-    node_by_code, children_by_parent = _load_gl_hierarchy(session)
-    return {
-        code: {
+    node_by_code, children_by_parent, leaf_codes = _load_gl_hierarchy(session)
+    balance_cache: dict[str, Optional[NormalBalance]] = {}
+    result = {}
+    for code, node in node_by_code.items():
+        balance = _normal_balance(code, node_by_code, children_by_parent, leaf_codes, balance_cache)
+        result[code] = {
             "id": code,
             "label": node.description,
             "parentId": node.parent_code,
             "childIds": list(children_by_parent.get(code, [])),
-            "nodeType": node.node_type.value,
-            "normalBalance": node.normal_balance.value if node.normal_balance else None,
+            "nodeType": _node_type(code, node, leaf_codes),
+            "normalBalance": balance.value if balance else None,
         }
-        for code, node in node_by_code.items()
-    }
+    return result
 
 
 def build_tree(session: Session, companies: list[str], period_code: Optional[str] = None, ytd: bool = False) -> dict[str, dict]:
-    node_by_code, children_by_parent = _load_gl_hierarchy(session)
+    node_by_code, children_by_parent, leaf_codes = _load_gl_hierarchy(session)
 
     period_by_code, period_children = load_period_hierarchy(session)
     years = sorted((p for p in period_by_code.values() if p.period_type == PeriodType.YEAR), key=lambda p: p.order)
@@ -397,7 +454,7 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
             return computed[code]
         node = node_by_code[code]
 
-        if node.node_type == NodeType.POSTING_GL_ACCOUNT:
+        if code in leaf_codes:
             entry = compute_gl_leaf(node, engine, monthly, prior_monthly, scope_indices, width)
         else:
             child_entries = [compute(c) for c in children_by_parent.get(code, [])]
@@ -407,7 +464,7 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
         return entry
 
     for code, node in node_by_code.items():
-        if node.node_type == NodeType.REPORTING_ROOT:
+        if code not in leaf_codes and node.parent_code is None:
             compute(code)
 
     result = {}
@@ -419,7 +476,7 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
             "name": node.description,
             "parentId": node.parent_code,
             "childIds": list(children_by_parent.get(code, [])),
-            "nodeType": node.node_type.value,
+            "nodeType": _node_type(code, node, leaf_codes),
             "unit": "money",
             "actual": _money_json(entry["actual"]),
             "budget": _money_json(entry["budget"]),
@@ -432,7 +489,7 @@ def build_tree(session: Session, companies: list[str], period_code: Optional[str
             **(full_data or {}),
         }
 
-        if node.node_type == NodeType.POSTING_GL_ACCOUNT and engine.is_driven(code):
+        if code in leaf_codes and engine.is_driven(code):
             extra_nodes, formula_ids = _stitch_driver_nodes(engine, code, code, scoped_sum_local, period_len)
             result[code]["childIds"] = result[code]["childIds"] + formula_ids
             result.update(extra_nodes)
