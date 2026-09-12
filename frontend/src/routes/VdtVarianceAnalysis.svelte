@@ -364,7 +364,7 @@
   }
 
   // Default bridge scope: SOC Crew Cost (V201000000, under Cost of Revenue —
-  // see backend/seeds/master/vdt_hierarchy_crew_cost.csv), decomposed into its direct
+  // see backend/data/configuration/vdt/hierarchy.csv), decomposed into its direct
   // VDT Hierarchy Node children.
   const socCrewCost = $derived(getNode(vdtStore.tree, "V201000000"));
   const socCrewCostChildren = $derived(

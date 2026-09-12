@@ -16,5 +16,5 @@ start_if_free() {
   (cd "$dir" && nohup $cmd >"$LOG_DIR/$name.log" 2>&1 &)
 }
 
-start_if_free 8000 backend "$ROOT_DIR/backend" "uvicorn main:app --reload --host 0.0.0.0 --port 8000"
+start_if_free 8000 backend "$ROOT_DIR" "uvicorn backend.app:app --reload --host 0.0.0.0 --port 8000"
 start_if_free 5173 frontend "$ROOT_DIR/frontend" "npm run dev -- --host 0.0.0.0 --port 5173"

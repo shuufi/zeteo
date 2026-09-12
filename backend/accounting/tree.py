@@ -15,10 +15,11 @@ from typing import Optional
 
 from sqlmodel import Session, col, select
 
-from diagnostic_content import DIAGNOSTIC_CONTENT
-from driver_engine import DriverEngine
-from models import Financial, GLAccount, GLHierarchy, NormalBalance, Period, PeriodType
-from periods import load_period_hierarchy, month_indices_for, ordered_month_codes_of_year, ytd_month_indices_for
+from backend.diagnostics.content import DIAGNOSTIC_CONTENT
+from backend.drivers.engine import DriverEngine
+from backend.accounting.models import Financial, GLAccount, GLHierarchy, NormalBalance
+from backend.calendar.models import Period, PeriodType
+from backend.calendar.periods import load_period_hierarchy, month_indices_for, ordered_month_codes_of_year, ytd_month_indices_for
 
 
 ZERO = Decimal("0")

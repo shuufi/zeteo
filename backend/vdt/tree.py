@@ -24,9 +24,9 @@ from typing import Optional
 
 from sqlmodel import Session, select
 
-from diagnostic_content import DIAGNOSTIC_CONTENT
-from driver_engine import DriverEngine
-from gl_tree import (
+from backend.diagnostics.content import DIAGNOSTIC_CONTENT
+from backend.drivers.engine import DriverEngine
+from backend.accounting.tree import (
     _direction,
     _load_gl_hierarchy,
     _money_json,
@@ -40,8 +40,10 @@ from gl_tree import (
     sum_children_entry,
     ZERO,
 )
-from models import GLAccount, GLHierarchy, NormalBalance, PeriodType, VdtAccount, VdtHierarchy
-from periods import load_period_hierarchy, month_indices_for, ordered_month_codes_of_year, ytd_month_indices_for
+from backend.accounting.models import GLAccount, GLHierarchy, NormalBalance
+from backend.calendar.models import PeriodType
+from backend.vdt.models import VdtAccount, VdtHierarchy
+from backend.calendar.periods import load_period_hierarchy, month_indices_for, ordered_month_codes_of_year, ytd_month_indices_for
 
 logger = logging.getLogger(__name__)
 

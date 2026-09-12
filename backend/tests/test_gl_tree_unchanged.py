@@ -5,12 +5,7 @@ future refactor of gl_tree.py's extracted helpers (compute_gl_leaf,
 sum_children_entry, load_monthly, scoped_sum) can't silently change output.
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from gl_tree import build_gl_master_tree, build_tree  # noqa: E402
+from backend.accounting.tree import build_gl_master_tree, build_tree
 
 from conftest import fixture_graph  # noqa: E402
 

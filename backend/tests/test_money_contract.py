@@ -1,16 +1,12 @@
 """Contract tests for absolute monetary storage, rounding, and company currency."""
 
-import sys
 from decimal import Decimal
-from pathlib import Path
 
 from sqlmodel import select
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from driver_engine import DriverEngine  # noqa: E402
-from models import DriverFact, HierarchyKind, Source  # noqa: E402
-from seed import build_company_hierarchy, build_company_nodes  # noqa: E402
+from backend.drivers.engine import DriverEngine
+from backend.models import DriverFact, HierarchyKind, Source
+from backend.scripts.seed import build_company_hierarchy, build_company_nodes
 
 from conftest import fixture_graph  # noqa: E402
 

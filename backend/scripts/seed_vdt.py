@@ -1,6 +1,6 @@
 """Builds the VDT hierarchy's pilot seed data — see docs/adr/0033.
 
-Source of truth for structure is backend/seeds/master/vdt_hierarchy_crew_cost.csv
+Source of truth for structure is backend/data/configuration/vdt/hierarchy.csv
 (VDT Hierarchy Node / VDT Account rows, reusing real GL codes as `FA GL`
 anchors). Driver/DriverFormula content for all 21 VDT Accounts is
 hand-authored here rather than a second CSV — 21 rows is too small a
@@ -22,7 +22,7 @@ import random
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
-from models import (
+from backend.models import (
     Driver,
     DriverFact,
     DriverFormula,
@@ -34,8 +34,8 @@ from models import (
     VdtHierarchy,
 )
 
-REPO_ROOT = Path(__file__).parent.parent
-CSV_PATH = REPO_ROOT / "backend" / "seeds" / "master" / "vdt_hierarchy_crew_cost.csv"
+REPO_ROOT = Path(__file__).parents[2]
+CSV_PATH = REPO_ROOT / "backend" / "data" / "configuration" / "vdt" / "hierarchy.csv"
 
 SEED = 4300
 
@@ -43,7 +43,7 @@ SEED = 4300
 def load_vdt_hierarchy(
     gl_level_by_code: dict[str, int], gl_account_codes: set[str]
 ) -> tuple[list[VdtHierarchy], list[VdtAccount]]:
-    """Reads backend/seeds/master/vdt_hierarchy_crew_cost.csv, splitting rows by Node Type.
+    """Reads the Zeteo-owned VDT hierarchy CSV, splitting rows by Node Type.
 
     `level` isn't a CSV column here (unlike the GL hierarchy CSVs) — computed
     from the parent chain, terminating either at a known gl_hierarchy code's
@@ -222,7 +222,7 @@ def build_crew_mix_seed(
 
 
 # The remaining 18 of 21 VDT Accounts (VA00000004-021), sourced
-# from backend/seeds/master/vdt_hierarchy_crew_cost.csv's own Formula column rather than
+# from the VDT hierarchy CSV's own Formula column rather than
 # hand-derived like _CREW_MIX_FORMULAS above. Unlike that fixed
 # headcount-times-rate shape, formulas here vary (single-operand lump sum,
 # shared drivers across accounts), so each entry is a general

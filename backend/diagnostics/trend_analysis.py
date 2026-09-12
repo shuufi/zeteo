@@ -12,7 +12,7 @@ import os
 import json
 from typing import Any, Optional
 
-from trend_flagging import flag_trends
+from backend.diagnostics.trend_flagging import flag_trends
 
 _cache: dict[tuple, dict[str, Any]] = {}
 

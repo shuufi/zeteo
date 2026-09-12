@@ -2,14 +2,14 @@ import json
 from typing import AsyncIterator, Optional
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
 load_dotenv()
 
-from company_tree import (
+from backend.organization.hierarchy import (
     InvalidMonetaryScope,
     MissingCompanyCurrency,
     UnknownScope,
@@ -17,12 +17,14 @@ from company_tree import (
     build_company_tree,
     resolve_scope,
 )
-from db import get_session
-from driver_engine import DriverEngine
-from gl_tree import build_gl_master_tree, build_tree, diff_subtree, subtree
-from models import GLAccount, GLHierarchy, HierarchyKind, PeriodType
-from variance_analysis import VarianceAnalysisUnavailable, generate_variance_analysis
-from periods import (
+from backend.infrastructure.db import get_session
+from backend.drivers.engine import DriverEngine
+from backend.accounting.tree import build_gl_master_tree, build_tree, diff_subtree, subtree
+from backend.accounting.models import GLAccount, GLHierarchy
+from backend.calendar.models import PeriodType
+from backend.organization.models import HierarchyKind
+from backend.diagnostics.variance_analysis import VarianceAnalysisUnavailable, generate_variance_analysis
+from backend.calendar.periods import (
     UnknownPeriod,
     build_period_tree,
     calendar_month_label,
@@ -30,14 +32,14 @@ from periods import (
     ordered_month_codes_of_year,
     trailing_month_codes,
 )
-from trend_analysis import TrendAnalysisUnavailable, generate_trend_analysis
-from vdt_sensitivity import SENSITIVITY_MAX_CYCLES, compute_sensitivity, terminal_driver_candidates
-from vdt_tree import build_vdt_tree
+from backend.diagnostics.trend_analysis import TrendAnalysisUnavailable, generate_trend_analysis
+from backend.diagnostics.sensitivity import SENSITIVITY_MAX_CYCLES, compute_sensitivity, terminal_driver_candidates
+from backend.vdt.tree import build_vdt_tree
 
 VDT_COMPARISON_ROOT_TYPES = ("Reporting Root", "Reporting Node", "VDT Hierarchy Node")
 VDT_TRENDS_ANCHOR = "V201000000"  # SOC Crew Cost, same fixed pilot anchor as VDT Variance Analysis/Reconciliation
 
-app = FastAPI(title="Zeteo API")
+router = APIRouter()
 
 
 def _gl_seeded(session: Session) -> bool:
@@ -71,27 +73,27 @@ def _scope_meta(resolved: dict) -> dict:
     }
 
 
-@app.get("/api/companies")
+@router.get("/api/companies")
 def get_companies(session: Session = Depends(get_session)):
     return build_company_tree(session)
 
 
-@app.get("/api/company-hierarchy")
+@router.get("/api/company-hierarchy")
 def get_company_hierarchy(kind: HierarchyKind = HierarchyKind.BU, session: Session = Depends(get_session)):
     return build_company_hierarchy_tree(session, kind)
 
 
-@app.get("/api/periods")
+@router.get("/api/periods")
 def get_periods(session: Session = Depends(get_session)):
     return build_period_tree(session)
 
 
-@app.get("/api/gl")
+@router.get("/api/gl")
 def get_gl_master_tree(session: Session = Depends(get_session)):
     return build_gl_master_tree(session)
 
 
-@app.get("/api/financial/tree")
+@router.get("/api/financial/tree")
 def get_financial_tree(scope: str, period: Optional[str] = None, session: Session = Depends(get_session)):
     if not _gl_seeded(session):
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
@@ -114,7 +116,7 @@ def get_financial_tree(scope: str, period: Optional[str] = None, session: Sessio
     }
 
 
-@app.get("/api/financial/comparison")
+@router.get("/api/financial/comparison")
 def get_financial_comparison(
     scope: str,
     node: str,
@@ -177,7 +179,7 @@ def _resolve_trailing_window(
     return trailing_month_codes(period_by_code, period_children, trailing_end)
 
 
-@app.get("/api/vdt/tree")
+@router.get("/api/vdt/tree")
 def get_vdt_tree(
     scope: str,
     period: Optional[str] = None,
@@ -276,7 +278,7 @@ def _vdt_comparison_payload(
     }
 
 
-@app.get("/api/vdt/comparison")
+@router.get("/api/vdt/comparison")
 def get_vdt_comparison(
     scope: str,
     node: str,
@@ -288,7 +290,7 @@ def get_vdt_comparison(
     return _vdt_comparison_payload(session, scope, node, period_a, period_b, ytd)
 
 
-@app.post("/api/vdt/variance-analysis")
+@router.post("/api/vdt/variance-analysis")
 def post_vdt_variance_analysis(
     scope: str,
     node: str,
@@ -311,7 +313,7 @@ def post_vdt_variance_analysis(
     return {"varianceAnalysis": variance_analysis}
 
 
-@app.post("/api/vdt/trend-analysis")
+@router.post("/api/vdt/trend-analysis")
 def post_vdt_trend_analysis(
     scope: str,
     year: Optional[str] = None,
@@ -373,7 +375,7 @@ def post_vdt_trend_analysis(
     return {"trendAnalysis": result}
 
 
-@app.get("/api/vdt/reconciliation")
+@router.get("/api/vdt/reconciliation")
 def get_vdt_reconciliation(
     scope: str, node: str, period: Optional[str] = None, ytd: bool = False, session: Session = Depends(get_session)
 ):
@@ -467,7 +469,7 @@ class SensitivityRequest(BaseModel):
     trailingEnd: Optional[str] = None  # Trailing mode (anchor Month code)
 
 
-@app.post("/api/vdt/sensitivity")
+@router.post("/api/vdt/sensitivity")
 def post_vdt_sensitivity(payload: SensitivityRequest, request: Request, session: Session = Depends(get_session)):
     """VDT Sensitivity Analysis — see docs/adr/0043. First streaming-response
     endpoint in this codebase: validation happens as ordinary HTTP errors
