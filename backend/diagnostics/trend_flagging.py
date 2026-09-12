@@ -1,4 +1,4 @@
-"""Server-side MoM anomaly flagging for VDT Trend Analysis — see docs/adr/0040.
+"""Server-side trend-diagnostic flagging — see docs/adr/0040.
 
 Detection is deterministic here (the LLM never judges materiality): a leaf is
 flagged in a month when its magnitude MoM change > MOM_THRESHOLD AND its own

@@ -3,16 +3,11 @@ and top-level response shape, not exhaustive value assertions (those live in
 test_vdt_tree.py against the tree-walk directly).
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from fastapi.testclient import TestClient  # noqa: E402
 
-import main  # noqa: E402
-from db import get_session  # noqa: E402
-from main import app  # noqa: E402
+import backend.api.routes as main
+from backend.app import app
+from backend.infrastructure.db import get_session
 
 from conftest import fixture_graph  # noqa: E402
 

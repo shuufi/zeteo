@@ -10,7 +10,7 @@ from typing import Optional
 
 from sqlmodel import Session, select
 
-from models import Period, PeriodType
+from backend.calendar.models import Period, PeriodType
 
 
 class UnknownPeriod(Exception):

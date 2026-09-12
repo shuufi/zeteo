@@ -5,15 +5,11 @@ both of which short-circuit before reaching the Quarter/Month branches these
 tests target directly.
 """
 
-import sys
 from collections import defaultdict
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from conftest import fixture_graph  # noqa: E402
-from models import Period, PeriodType  # noqa: E402
-from periods import (  # noqa: E402
+from conftest import fixture_graph
+from backend.models import Period, PeriodType
+from backend.calendar.periods import (
     UnknownPeriod,
     calendar_month_label,
     load_period_hierarchy,

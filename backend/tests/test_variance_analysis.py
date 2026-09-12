@@ -1,13 +1,8 @@
 """Variance Analysis selects financial contributors before narrating operational evidence."""
 
-import sys
-from pathlib import Path
-
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from variance_analysis import (  # noqa: E402
+from backend.diagnostics.variance_analysis import (
     VarianceAnalysisUnavailable,
     _parse_variance_analysis,
     _select_contributors,

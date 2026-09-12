@@ -1,4 +1,4 @@
-"""Illustrative Driver Diagnostic depth for the one fully-modelled node.
+"""Illustrative content used by the diagnostic views' fully-modelled node.
 
 Ported from the old mock's `repairs-maintenance` node onto its real GL/FSI
 equivalent, PNL-0024 ("Repairs And Maintenance", under Cost of Revenue — see

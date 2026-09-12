@@ -10,22 +10,18 @@ partial-window test.
 """
 
 import asyncio
-import sys
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlmodel import select  # noqa: E402
 
-import main  # noqa: E402
-from db import get_session  # noqa: E402
-from main import app  # noqa: E402
-from driver_engine import DriverEngine  # noqa: E402
-from models import (  # noqa: E402
+import backend.api.routes as main
+from backend.app import app
+from backend.infrastructure.db import get_session
+from backend.drivers.engine import DriverEngine
+from backend.models import (
     Driver,
     DriverFact,
     DriverFormula,
@@ -36,15 +32,15 @@ from models import (  # noqa: E402
     VdtAccount,
     VdtHierarchy,
 )
-from periods import load_period_hierarchy, ordered_month_codes_of_year  # noqa: E402
-from vdt_sensitivity import (  # noqa: E402
+from backend.calendar.periods import load_period_hierarchy, ordered_month_codes_of_year
+from backend.diagnostics.sensitivity import (
     DriverOverride,
     SENSITIVITY_MAX_CYCLES,
     compute_npat_with_overrides,
     compute_sensitivity,
     terminal_driver_candidates,
 )
-from vdt_tree import build_vdt_tree  # noqa: E402
+from backend.vdt.tree import build_vdt_tree
 
 from conftest import fixture_graph  # noqa: E402
 
@@ -341,7 +337,7 @@ def test_baseline_npat_near_zero_flags_all_na_but_keeps_dollar_impact(session):
     # anchor flips sign) — NPAT lands at exactly 0 every month in the window.
     for row in session.exec(select(DriverFact)).all():
         pass
-    from models import Financial
+    from backend.models import Financial
 
     for row in session.exec(select(Financial)).all():
         if row.code == codes["gl_leaf_rev"] and row.source == Source.ACTUAL:

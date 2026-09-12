@@ -3,13 +3,8 @@ returns leaf-only Company master data, build_company_hierarchy_tree() returns th
 BU grouping hierarchy with Company leaves merged in.
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from company_tree import build_company_hierarchy_tree, build_company_tree  # noqa: E402
-from models import HierarchyKind  # noqa: E402
+from backend.organization.hierarchy import build_company_hierarchy_tree, build_company_tree
+from backend.models import HierarchyKind
 
 from conftest import fixture_graph  # noqa: E402
 

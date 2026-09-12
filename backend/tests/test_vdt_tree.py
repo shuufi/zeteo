@@ -9,14 +9,9 @@ Covers the three load-bearing rules this session's design settled on:
      the VDT Account itself
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from models import DriverFact, Financial, Period, PeriodType, Source  # noqa: E402
-from periods import load_period_hierarchy, ordered_month_codes_of_year, trailing_month_codes  # noqa: E402
-from vdt_tree import build_vdt_tree  # noqa: E402
+from backend.models import DriverFact, Financial, Period, PeriodType, Source
+from backend.calendar.periods import load_period_hierarchy, ordered_month_codes_of_year, trailing_month_codes
+from backend.vdt.tree import build_vdt_tree
 
 from conftest import MONTH_LABELS, fixture_graph  # noqa: E402
 

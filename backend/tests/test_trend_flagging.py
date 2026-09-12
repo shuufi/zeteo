@@ -1,12 +1,7 @@
 """Trend Analysis flagging is deterministic dollar-impact + root-share threshold logic —
 see docs/adr/0040. Pure function over a hand-built tree dict, no DB needed."""
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from trend_flagging import MAX_FLAGGED_NODES, flag_trends  # noqa: E402
+from backend.diagnostics.trend_flagging import MAX_FLAGGED_NODES, flag_trends
 
 
 def _leaf(name: str, actual: list[float], budget: list[float] | None = None, parent: str = "ROOT") -> dict:

@@ -1,15 +1,13 @@
-"""Rebuild backend/data/zeteo.db from the real GL/FSI hierarchy plus fabricated
+"""Rebuild backend/data/runtime/zeteo.db from the imported reference data plus fabricated
 facts for one focus company, across three real fiscal years.
 
-Source of truth for the hierarchy is backend/seeds/master/gl_hierarchy.csv
-(interior nodes) and gl_account.csv (leaves) — split from a real SAP GL/FSI
-export, see docs/adr/0048. Fact amounts are fabricated with a fixed RNG seed
-so the dataset is reproducible — designed (stable per-leaf cost/revenue
-structure, category-level YoY growth, seasonality) rather than independently
-random per row, so the P&L reads as one coherent business rather than noise.
+Company and Accounting reference data is manually imported from the ERP into
+backend/data/imported/. Zeteo-owned VDT configuration lives under
+backend/data/configuration/. Fact amounts are fabricated with a fixed RNG seed
+so the P&L reads as one coherent business rather than noise.
 See docs/adr/0022, 0023, 0024, 0032.
 
-Run with: python backend/seed.py
+Run with: python -m backend.scripts.seed
 """
 
 import csv
@@ -19,8 +17,8 @@ from pathlib import Path
 
 from sqlmodel import Session, SQLModel
 
-from db import engine, init_db
-from models import (
+from backend.infrastructure.db import engine, init_db
+from backend.models import (
     Company,
     CompanyHierarchy,
     Driver,
@@ -38,13 +36,14 @@ from models import (
     VdtAccount,
     VdtHierarchy,
 )
-from seed_vdt import build_crew_mix_seed, build_pending_account_seed, load_vdt_hierarchy
+from backend.scripts.seed_vdt import build_crew_mix_seed, build_pending_account_seed, load_vdt_hierarchy
 
-REPO_ROOT = Path(__file__).parent.parent
-GL_HIERARCHY_CSV_PATH = REPO_ROOT / "backend" / "seeds" / "master" / "gl_hierarchy.csv"
-GL_ACCOUNT_CSV_PATH = REPO_ROOT / "backend" / "seeds" / "master" / "gl_account.csv"
-COMPANIES_CSV_PATH = REPO_ROOT / "docs" / "misc_companies.csv"
-BU_HIERARCHY_CSV_PATH = REPO_ROOT / "backend" / "seeds" / "master" / "bu_hierarchy_mapping.csv"
+REPO_ROOT = Path(__file__).parents[2]
+DATA_ROOT = REPO_ROOT / "backend" / "data"
+GL_HIERARCHY_CSV_PATH = DATA_ROOT / "imported" / "accounting" / "gl_hierarchy.csv"
+GL_ACCOUNT_CSV_PATH = DATA_ROOT / "imported" / "accounting" / "gl_account.csv"
+COMPANIES_CSV_PATH = DATA_ROOT / "imported" / "organization" / "companies.csv"
+BU_HIERARCHY_CSV_PATH = DATA_ROOT / "imported" / "organization" / "company_hierarchy.csv"
 
 SEED = 42
 MONTHS = range(1, 13)
@@ -96,7 +95,7 @@ FOCUS_COMPANY_CODE = "0190"
 
 def build_company_hierarchy() -> list[CompanyHierarchy]:
     """The BU grouping hierarchy above Company — see docs/adr/0045.
-    Adjacency-list rows straight from `backend/seeds/master/bu_hierarchy_mapping.csv`
+    Adjacency-list rows from the imported Company Hierarchy extract.
     (`code,label,parent_code,hierarchy_kind`); depth is whatever the CSV
     encodes, not a fixed number of tiers.
     """
@@ -361,7 +360,7 @@ def main() -> None:
     facts = generate_gl_facts(rng, gl_accounts, FOCUS_COMPANY_CODE)
 
     # VDT hierarchy pilot — see docs/adr/0033. Structure comes from
-    # backend/seeds/master/vdt_hierarchy_crew_cost.csv; `gl_level_by_code`
+    # backend/data/configuration/vdt/hierarchy.csv; `gl_level_by_code`
     # lets its VDT Hierarchy Nodes compute their own `level` from the parent
     # chain without a Hierarchy Level CSV column of their own (gl_hierarchy
     # itself doesn't store level either, see docs/adr/0048 — both compute it

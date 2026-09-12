@@ -1,4 +1,4 @@
-"""LLM-generated Variance Analysis narrative for VDT Variance Analysis — see docs/adr/0034 and 0041.
+"""LLM-generated narrative for the variance diagnostic — see docs/adr/0034 and 0041.
 
 Backend-mediated: the OpenAI key never reaches the browser, and the prompt is
 built entirely from numbers the backend already computed (a comparison

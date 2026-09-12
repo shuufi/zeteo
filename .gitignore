@@ -14,8 +14,9 @@ __pycache__/
 venv/
 *.egg-info/
 
-# Seeded/generated DB (rebuild with backend/seed.py)
+# Seeded/generated DB (rebuild with python -m backend.scripts.seed)
 backend/data/*.db
+backend/data/**/*.db
 .fuse_hidden*
 
 # Dev server logs

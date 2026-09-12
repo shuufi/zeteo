@@ -11,7 +11,7 @@ from collections import defaultdict
 
 from sqlmodel import Session, select
 
-from models import Company, CompanyHierarchy, HierarchyKind
+from backend.organization.models import Company, CompanyHierarchy, HierarchyKind
 
 
 class UnknownScope(Exception):

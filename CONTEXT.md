@@ -1,8 +1,24 @@
-# Zeteo Frontend
+# Zeteo Diagnostic
 
-The diagnostic dashboard UI for Zeteo — the Value Driver Tree explorer, driver diagnostics, and the exception-driven CFO journey described in `docs/URS_Zeteo_v2.2.md`. This file captures IA/UI-specific language that crystallised while building `frontend/`; business and data-platform terms (VDT, Gold Layer, EDH, etc.) are already defined in the URS Terminology table and are not repeated here — only the concepts specific to this context.
+Zeteo is a diagnostic model for explaining financial performance through Accounting, Value Drivers, and Drivers. It is one bounded context: its modules use one shared meaning for its business terms, while consuming authoritative Company and Accounting reference data from upstream systems.
 
 ## Language
+
+**Zeteo Diagnostic**:
+The bounded context that turns financial and operational data into financial-performance diagnostics. Accounting, VDT, Driver Model, and Diagnostics are internal modules of this one model, not separate bounded contexts.
+_Avoid_: treating a module, database table, or API route as a bounded context by itself.
+
+**Authoritative source**:
+The upstream ERP or master-data platform that owns the canonical Company, Company Hierarchy, Accounting hierarchy, and Posting GL Account definitions. Zeteo consumes a read-only representation for diagnostic use; it does not become the system of record for those definitions.
+_Avoid_: calling Zeteo's local imported copy the master record or treating it as the source of truth.
+
+**Diagnostic read model**:
+Zeteo's local, read-only representation of Company and Accounting reference data received from its Authoritative Source, shaped for diagnostic queries rather than source-system administration. It is not a live query into the ERP and does not write changes back to it; operational processes, not Zeteo, govern its import and retention.
+_Avoid_: a local master-data system or a live ERP proxy.
+
+**Zeteo-owned master data**:
+The canonical definitions maintained within Zeteo: Period, VDT Hierarchy Node, VDT Account, and Driver. Period is a common reference model used by both Accounting and VDT; the other definitions belong to the diagnostic model rather than imported ERP reference data.
+_Avoid_: assuming all master data comes from the ERP or that Zeteo may write back its definitions to it.
 
 **Accounting hierarchy**:
 The GL/FSI reporting tree — Reporting Root (`NPAT`), Reporting Nodes (subtotal categories grouped by GL nature, e.g. Manpower Cost, Materials And Supplies, Repairs And Maintenance), Posting GL Accounts as leaves. Trends is its home screen. Stored as two dimensions since ADR-0048 — `gl_hierarchy` (Root/Node structure) and `gl_account` (leaves) — mirroring Company hierarchy's split from Company below; `nodeType` (Reporting Root/Reporting Node/Posting GL Account) is derived at serve time from table membership and `parent_code IS NULL`, not stored. See `docs/adr/0033-vdt-activity-hierarchy-alongside-accounting.md` and `docs/adr/0048-gl-account-hierarchy-split.md`.
@@ -17,7 +33,7 @@ The VDT hierarchy's non-leaf node type within Cost of Revenue/Revenue, replacing
 _Avoid_: "VDT node" (retired, ambiguous between the two hierarchies — say VDT Hierarchy Node specifically); "Activity Node" (retired — see `docs/adr/0047-vdt-hierarchy-account-rename.md`).
 
 **VDT Account**:
-The VDT hierarchy's terminal line within Cost of Revenue/Revenue — a named item (e.g. "Senior officer nationality mix") with its own Driver Formula computing its own RM amount, the same shape as a Driver Formula target (see below) rather than a `Financial` row. Carries an `FA GL` pointer to the real Posting GL Account it's conceptually explaining — a display/reconciliation anchor, **not identity**: the pointer can be many-to-one (several VDT Accounts anchoring to one GL account, e.g. `backend/seeds/master/vdt_hierarchy_crew_cost.csv`'s Senior/Junior/Ratings officer nationality mix all anchoring to `5100100100`), and its amount is an independent estimate **not required to sum** to the anchor's real total — the gap between them is the diagnostic signal the Reconciliation screen surfaces, not an error to close. Coded separately from VDT Hierarchy Node, flat sequential `VA` + 8 digits (e.g. `VA00000001`), no positional encoding. Always anchors to a `gl_account` (leaf) code, never an interior `gl_hierarchy` node — see `docs/adr/0048-gl-account-hierarchy-split.md`. Renamed from Posting Activity Account — see `docs/adr/0047-vdt-hierarchy-account-rename.md`. See `docs/adr/0033-vdt-activity-hierarchy-alongside-accounting.md`.
+The VDT hierarchy's terminal line within Cost of Revenue/Revenue — a named item (e.g. "Senior officer nationality mix") with its own Driver Formula computing its own RM amount, the same shape as a Driver Formula target (see below) rather than a `Financial` row. Carries an `FA GL` pointer to the real Posting GL Account it's conceptually explaining — a display/reconciliation anchor, **not identity**: the pointer can be many-to-one (several VDT Accounts anchoring to one GL account, e.g. `backend/data/configuration/vdt/hierarchy.csv`'s Senior/Junior/Ratings officer nationality mix all anchoring to `5100100100`), and its amount is an independent estimate **not required to sum** to the anchor's real total — the gap between them is the diagnostic signal the Reconciliation screen surfaces, not an error to close. Coded separately from VDT Hierarchy Node, flat sequential `VA` + 8 digits (e.g. `VA00000001`), no positional encoding. Always anchors to a `gl_account` (leaf) code, never an interior `gl_hierarchy` node — see `docs/adr/0048-gl-account-hierarchy-split.md`. Renamed from Posting Activity Account — see `docs/adr/0047-vdt-hierarchy-account-rename.md`. See `docs/adr/0033-vdt-activity-hierarchy-alongside-accounting.md`.
 _Avoid_: treating the `FA GL` pointer as a parent/allocation relationship (implies the amounts must reconcile — they don't); "VDT node" (retired); "Posting Activity Account" (retired — see `docs/adr/0047-vdt-hierarchy-account-rename.md`).
 
 **Reporting Node**:

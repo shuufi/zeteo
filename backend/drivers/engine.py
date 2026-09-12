@@ -26,7 +26,7 @@ from typing import Optional
 
 from sqlmodel import Session, col, select
 
-from models import Driver, DriverFact, DriverFormula, DriverFormulaTerm, FormulaOperator
+from backend.drivers.models import Driver, DriverFact, DriverFormula, DriverFormulaTerm, FormulaOperator
 
 
 class DriverCycleError(Exception):

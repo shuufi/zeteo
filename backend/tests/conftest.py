@@ -1,7 +1,7 @@
 """Shared pytest fixtures — first test infrastructure in this repo.
 
 Uses an in-memory SQLite engine (StaticPool so the same in-memory DB survives
-across the session's connections) rather than backend/data/zeteo.db, so tests
+across the session's connections) rather than backend/data/runtime/zeteo.db, so tests
 are hermetic and don't depend on running `python backend/seed.py` first.
 
 `fixture_graph()` builds a small, hand-authored graph exercising the specific
@@ -17,16 +17,11 @@ things Phase 1 of docs/adr/0033's implementation needs covered:
     left undriven on purpose to exercise the "no formula bound" fallback
 """
 
-import sys
-from pathlib import Path
-
 import pytest
 from sqlmodel import Session, SQLModel, create_engine
 from sqlalchemy.pool import StaticPool
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from models import (  # noqa: E402
+from backend.models import (
     Company,
     CompanyHierarchy,
     Driver,
