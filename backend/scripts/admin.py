@@ -13,7 +13,7 @@ from sqlmodel import Session, select
 from backend.accounting.fact_import import FactImportError, FactImportPlan, apply_fact_import, validate_actual_csv, validate_budget_csv
 from backend.accounting.models import Financial, Source
 from backend.application.settings import current_actual_period, set_current_actual_period
-from backend.calendar.models import Period, PeriodType
+from backend.calendar.models import Period, Year
 from backend.drivers.models import DriverFact
 from backend.infrastructure.db import engine, init_db
 from backend.organization.models import Company
@@ -52,9 +52,9 @@ def _set_current_actual_period(session: Session) -> None:
     try:
         year = _calendar_year(input("Calendar year (for example 2026): "))
         period = _period_number(input("Period (1-12): "))
-        period_code = _period_code(session, year, period)
-        set_current_actual_period(session, period_code)
-        print(f"Current Actual Period set to {period_code}.")
+        _validate_period(session, year, period)
+        set_current_actual_period(session, year, period)
+        print(f"Current Actual Period set to {year}-{period:02d}.")
     except ValueError as error:
         print(f"error: {error}")
 
@@ -76,12 +76,13 @@ def _import_actual(session: Session) -> None:
     if current_period is None:
         print("Set Current Actual Period before importing Actuals.")
         return
+    current_year, current_period_number = current_period
     try:
         company_code = input("Company code: ").strip()
         dataset_type = _dataset_type()
         path = _file_path()
         with path.open(newline="", encoding="utf-8-sig") as stream:
-            plan = validate_actual_csv(session, company_code, current_period, dataset_type, stream)
+            plan = validate_actual_csv(session, company_code, current_year, current_period_number, dataset_type, stream)
         _confirm_and_apply(session, plan)
     except (FactImportError, ValueError) as error:
         _print_import_error(error)
@@ -100,7 +101,8 @@ def _confirm_and_apply(session: Session, plan: FactImportPlan) -> None:
 
 
 def _show_status(session: Session) -> None:
-    actual_period = current_actual_period(session) or "Not set"
+    current_period = current_actual_period(session)
+    actual_period = f"{current_period[0]}-{current_period[1]:02d}" if current_period else "Not set"
     company_count = len(session.exec(select(Company.code)).all())
     financial_actual_count = len(session.exec(select(Financial.id).where(Financial.source == Source.ACTUAL)).all())
     financial_budget_count = len(session.exec(select(Financial.id).where(Financial.source == Source.BUDGET)).all())
@@ -132,12 +134,9 @@ def _period_number(value: str) -> int:
     return period
 
 
-def _period_code(session: Session, year: int, period: int) -> str:
-    period_code = f"FY{year % 100:02d}-M{period:02d}"
-    node = session.get(Period, period_code)
-    if node is None or node.period_type != PeriodType.MONTH:
+def _validate_period(session: Session, year: int, period: int) -> None:
+    if session.get(Year, year) is None or session.get(Period, period) is None:
         raise ValueError(f"Calendar year {year} and period {period} do not map to a Zeteo Month.")
-    return period_code
 
 
 def _dataset_type() -> str:

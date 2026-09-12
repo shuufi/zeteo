@@ -21,7 +21,7 @@ def test_vdt_tree_endpoint_shape(session):
     codes = fixture_graph(session)
     client = _client(session)
 
-    resp = client.get("/api/vdt/tree", params={"scope": codes["company"], "period": codes["year"]})
+    resp = client.get("/api/vdt/tree", params={"scope": codes["company"], "year": codes["year"]})
     assert resp.status_code == 200
     body = resp.json()
     assert body["scope"] == codes["company"]
@@ -37,7 +37,9 @@ def test_vdt_reconciliation_endpoint_shape(session):
     codes = fixture_graph(session)
     client = _client(session)
 
-    resp = client.get("/api/vdt/reconciliation", params={"scope": codes["company"], "node": codes["act_top"], "period": codes["year"]})
+    resp = client.get(
+        "/api/vdt/reconciliation", params={"scope": codes["company"], "node": codes["act_top"], "year": codes["year"]}
+    )
     assert resp.status_code == 200
     body = resp.json()
     assert set(body.keys()) >= {"accounting", "vdt", "node", "scope"}
@@ -59,13 +61,13 @@ def test_vdt_reconciliation_ytd_scopes_both_trees(session):
     codes = fixture_graph(session)
     client = _client(session)
 
-    quarter = f"{codes['year']}-Q2"
     plain = client.get(
-        "/api/vdt/reconciliation", params={"scope": codes["company"], "node": codes["act_top"], "period": quarter}
+        "/api/vdt/reconciliation",
+        params={"scope": codes["company"], "node": codes["act_top"], "year": codes["year"], "quarter": 2},
     ).json()
     ytd = client.get(
         "/api/vdt/reconciliation",
-        params={"scope": codes["company"], "node": codes["act_top"], "period": quarter, "ytd": "true"},
+        params={"scope": codes["company"], "node": codes["act_top"], "year": codes["year"], "quarter": 2, "ytd": "true"},
     ).json()
     assert ytd["ytd"] is True
     # gl_anchor_leaf's fact is a uniform 30.0/month — Q2 alone sums 3 months,
@@ -84,31 +86,35 @@ def test_vdt_comparison_accepts_quarter_and_year_pairs(session):
     codes = fixture_graph(session)
     client = _client(session)
 
-    for period_a, period_b in (
-        (f"{codes['year']}-Q1", f"{codes['year']}-Q2"),
-        (codes["year"], codes["year"]),
+    for params_a, params_b in (
+        ({"yearA": codes["year"], "quarterA": 1}, {"yearB": codes["year"], "quarterB": 2}),
+        ({"yearA": codes["year"]}, {"yearB": codes["year"]}),
     ):
         resp = client.get(
             "/api/vdt/comparison",
             params={
                 "scope": codes["company"],
                 "node": codes["act_top"],
-                "periodA": period_a,
-                "periodB": period_b,
+                **params_a,
+                **params_b,
             },
         )
 
         assert resp.status_code == 200
         body = resp.json()
-        assert body["periodA"] == period_a
-        assert body["periodB"] == period_b
+        assert body["yearA"] == params_a["yearA"]
+        assert body["yearB"] == params_b["yearB"]
+        assert body.get("quarterA") == params_a.get("quarterA")
+        assert body.get("quarterB") == params_b.get("quarterB")
 
 
 def test_vdt_reconciliation_rejects_leaf_node(session):
     codes = fixture_graph(session)
     client = _client(session)
 
-    resp = client.get("/api/vdt/reconciliation", params={"scope": codes["company"], "node": codes["gl_leaf_rev"], "period": codes["year"]})
+    resp = client.get(
+        "/api/vdt/reconciliation", params={"scope": codes["company"], "node": codes["gl_leaf_rev"], "year": codes["year"]}
+    )
     assert resp.status_code == 400
 
 
@@ -116,7 +122,7 @@ def test_vdt_reconciliation_rejects_unknown_node(session):
     codes = fixture_graph(session)
     client = _client(session)
 
-    resp = client.get("/api/vdt/reconciliation", params={"scope": codes["company"], "node": "NOT-REAL", "period": codes["year"]})
+    resp = client.get("/api/vdt/reconciliation", params={"scope": codes["company"], "node": "NOT-REAL", "year": codes["year"]})
     assert resp.status_code == 404
 
 
@@ -129,35 +135,41 @@ def test_vdt_tree_rejects_unknown_scope(session):
 
 
 def test_vdt_tree_endpoint_trailing_end(session):
-    # fixture_graph only seeds one fiscal year (FY24), so an anchor mid-year
-    # necessarily produces a partial window — no FY23 exists to reach back
+    # fixture_graph only seeds one fiscal year (2024), so an anchor mid-year
+    # necessarily produces a partial window — no 2023 exists to reach back
     # into. That's the deliberate docs/adr/0042 behavior, not a limitation
     # of this test.
     codes = fixture_graph(session)
     client = _client(session)
 
-    resp = client.get("/api/vdt/tree", params={"scope": codes["company"], "trailingEnd": f"{codes['year']}-M06"})
+    resp = client.get(
+        "/api/vdt/tree",
+        params={"scope": codes["company"], "trailingEndYear": codes["year"], "trailingEndPeriod": 6},
+    )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["months"] == [f"{codes['year']}-M{i:02d}" for i in range(1, 7)]
-    assert body["period"] is None
+    assert body["months"] == [{"year": codes["year"], "period": i} for i in range(1, 7)]
+    assert body["year"] is None
     assert codes["gl_leaf_rev"] in body["nodes"]
     assert body["nodes"][codes["gl_leaf_rev"]]["actual"] == 600.0  # 100/month * 6 months, not 12
 
 
-def test_vdt_tree_endpoint_trailing_end_rejects_unknown_period(session):
+def test_vdt_tree_endpoint_trailing_end_rejects_unknown_fiscal_year(session):
     codes = fixture_graph(session)
     client = _client(session)
 
-    resp = client.get("/api/vdt/tree", params={"scope": codes["company"], "trailingEnd": "NOT-REAL"})
+    resp = client.get(
+        "/api/vdt/tree",
+        params={"scope": codes["company"], "trailingEndYear": 1900, "trailingEndPeriod": 6},
+    )
     assert resp.status_code == 404
 
 
-def test_vdt_tree_endpoint_trailing_end_rejects_non_month_anchor(session):
+def test_vdt_tree_endpoint_trailing_end_requires_period_with_year(session):
     codes = fixture_graph(session)
     client = _client(session)
 
-    resp = client.get("/api/vdt/tree", params={"scope": codes["company"], "trailingEnd": f"{codes['year']}-Q2"})
+    resp = client.get("/api/vdt/tree", params={"scope": codes["company"], "trailingEndYear": codes["year"]})
     assert resp.status_code == 400
 
 
@@ -170,7 +182,12 @@ def test_trend_analysis_endpoint_requires_exactly_one_of_year_or_trailing_end(se
 
     resp = client.post(
         "/api/vdt/trend-analysis",
-        params={"scope": codes["company"], "year": codes["year"], "trailingEnd": f"{codes['year']}-M06"},
+        params={
+            "scope": codes["company"],
+            "year": codes["year"],
+            "trailingEndYear": codes["year"],
+            "trailingEndPeriod": 6,
+        },
     )
     assert resp.status_code == 400
 
@@ -187,7 +204,8 @@ def test_trend_analysis_endpoint_trailing_end_quiet_window(session, monkeypatch)
     client = _client(session)
 
     resp = client.post(
-        "/api/vdt/trend-analysis", params={"scope": codes["company"], "trailingEnd": f"{codes['year']}-M06"}
+        "/api/vdt/trend-analysis",
+        params={"scope": codes["company"], "trailingEndYear": codes["year"], "trailingEndPeriod": 6},
     )
     assert resp.status_code == 200
     body = resp.json()["trendAnalysis"]
@@ -227,6 +245,6 @@ def test_monetary_endpoints_reject_group_and_business_unit_scopes(session):
     client = _client(session)
 
     for scope in (codes["group"], codes["business_unit"]):
-        resp = client.get("/api/financial/tree", params={"scope": scope, "period": codes["year"]})
+        resp = client.get("/api/financial/tree", params={"scope": scope, "year": codes["year"]})
         assert resp.status_code == 422
         assert resp.json()["detail"] == f"Company scope required: {scope}"

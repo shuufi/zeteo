@@ -1,4 +1,5 @@
 import type { HierarchyNode } from './types';
+import { periodParams } from './period-store.svelte';
 
 export interface VdtScopeMeta {
   scope: string;
@@ -44,9 +45,14 @@ export async function loadVdtScope(scope: string, periodCode?: string, trailingE
   try {
     const params = new URLSearchParams({ scope });
     if (trailingEnd) {
-      params.set('trailingEnd', trailingEnd);
+      const { year, month } = periodParams(trailingEnd);
+      params.set('trailingEndYear', String(year));
+      if (month != null) params.set('trailingEndPeriod', String(month));
     } else if (periodCode) {
-      params.set('period', periodCode);
+      const { year, quarter, month } = periodParams(periodCode);
+      params.set('year', String(year));
+      if (quarter != null) params.set('quarter', String(quarter));
+      if (month != null) params.set('month', String(month));
     }
     const res = await fetch(`/api/vdt/tree?${params}`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);

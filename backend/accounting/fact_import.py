@@ -7,11 +7,11 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Literal, TextIO
 
-from sqlalchemy import delete
+from sqlalchemy import and_, delete, or_
 from sqlmodel import Session, col, select
 
 from backend.accounting.models import Financial, GLAccount, Source
-from backend.calendar.models import Period, PeriodType
+from backend.calendar.models import Period, Year
 from backend.drivers.models import Driver, DriverFact
 from backend.organization.models import Company
 
@@ -36,7 +36,8 @@ class FactImportError(ValueError):
 class FactImportRow:
     company_code: str
     code: str
-    period_code: str
+    year: int
+    period: int
     amount: Decimal
 
 
@@ -45,7 +46,7 @@ class FactImportPlan:
     source: Source
     dataset_type: DatasetType
     scope_label: str
-    period_codes: list[str]
+    periods: list[tuple[int, int]]
     company_scope: str | None
     rows: list[FactImportRow]
     existing_fact_count: int
@@ -59,7 +60,7 @@ def validate_budget_csv(
     stream: TextIO,
 ) -> FactImportPlan:
     """Validate Budget rows for one calendar year without changing the database."""
-    fiscal_year = _fiscal_year_for_calendar_year(session, calendar_year)
+    fiscal_year = _validate_fiscal_year(session, calendar_year)
     rows, skipped_rows = _read_matching_rows(
         session,
         dataset_type,
@@ -69,13 +70,13 @@ def validate_budget_csv(
     )
     if not rows:
         raise FactImportError([f"No CSV rows match selected calendar year {calendar_year}."])
-    period_codes = [f"{fiscal_year}-M{month:02d}" for month in range(1, 13)]
+    periods = [(fiscal_year, month) for month in range(1, 13)]
     return _plan(
         session,
         source=Source.BUDGET,
         dataset_type=dataset_type,
         scope_label=f"{calendar_year} {dataset_type} Budget",
-        period_codes=period_codes,
+        periods=periods,
         company_scope=None,
         rows=rows,
         skipped_rows=skipped_rows,
@@ -85,53 +86,67 @@ def validate_budget_csv(
 def validate_actual_csv(
     session: Session,
     company_code: str,
-    current_actual_period_code: str,
+    current_actual_year: int,
+    current_actual_period: int,
     dataset_type: DatasetType,
     stream: TextIO,
 ) -> FactImportPlan:
     """Validate Actual rows matching one Company and Current Actual Period."""
     if session.get(Company, company_code) is None:
         raise FactImportError([f"Company {company_code!r} does not exist in Zeteo's master data."])
-    current_period = session.get(Period, current_actual_period_code)
-    if current_period is None or current_period.period_type != PeriodType.MONTH:
-        raise FactImportError([f"Current Actual Period {current_actual_period_code!r} is not a postable Month."])
+    if session.get(Year, current_actual_year) is None or session.get(Period, current_actual_period) is None:
+        raise FactImportError(
+            [f"Current Actual Period {current_actual_year}-{current_actual_period:02d} is not a valid Zeteo period."]
+        )
 
+    current_period = (current_actual_year, current_actual_period)
     rows, skipped_rows = _read_matching_rows(
         session,
         dataset_type,
         stream,
         matches=lambda row: (
             (row.get("company_code") or "").strip() == company_code
-            and _period_code_if_valid(session, row.get("year"), row.get("period")) == current_actual_period_code
+            and _period_if_valid(session, row.get("year"), row.get("period")) == current_period
         ),
-        period_for=lambda _row, _line, _errors: current_actual_period_code,
+        period_for=lambda _row, _line, _errors: current_period,
     )
     if not rows:
         raise FactImportError(
-            [f"No rows match Company {company_code!r} and Current Actual Period {current_actual_period_code!r}."],
+            [f"No rows match Company {company_code!r} and Current Actual Period {current_actual_year}-{current_actual_period:02d}."],
         )
     return _plan(
         session,
         source=Source.ACTUAL,
         dataset_type=dataset_type,
-        scope_label=f"{company_code} {current_actual_period_code} {dataset_type} Actual",
-        period_codes=[current_actual_period_code],
+        scope_label=f"{company_code} {current_actual_year}-{current_actual_period:02d} {dataset_type} Actual",
+        periods=[current_period],
         company_scope=company_code,
         rows=rows,
         skipped_rows=skipped_rows,
     )
 
 
+def _year_period_filter(model, periods: list[tuple[int, int]]):
+    """A `year`/`period` WHERE clause matching any of `periods` — a single
+    `and_` when every pair shares one year (the common case: a whole year's
+    12 months for Budget, one Month for Actual), an `or_` of pairs otherwise."""
+    years = {year for year, _ in periods}
+    if len(years) == 1:
+        (year,) = years
+        return and_(model.year == year, col(model.period).in_(p for _, p in periods))
+    return or_(*(and_(model.year == year, model.period == period) for year, period in periods))
+
+
 def apply_fact_import(session: Session, plan: FactImportPlan) -> None:
     """Replace precisely a validated import plan's Budget or Actual fact scope."""
     model = Financial if plan.dataset_type == "financial" else DriverFact
-    statement = delete(model).where(model.source == plan.source).where(col(model.period_code).in_(plan.period_codes))
+    statement = delete(model).where(model.source == plan.source).where(_year_period_filter(model, plan.periods))
     if plan.company_scope:
         statement = statement.where(model.company == plan.company_scope)
     session.exec(statement)
     session.add_all(
         [
-            model(code=row.code, company=row.company_code, period_code=row.period_code, source=plan.source, amount=row.amount)
+            model(code=row.code, company=row.company_code, year=row.year, period=row.period, source=plan.source, amount=row.amount)
             for row in plan.rows
         ],
     )
@@ -148,20 +163,20 @@ def _plan(
     source: Source,
     dataset_type: DatasetType,
     scope_label: str,
-    period_codes: list[str],
+    periods: list[tuple[int, int]],
     company_scope: str | None,
     rows: list[FactImportRow],
     skipped_rows: int,
 ) -> FactImportPlan:
     model = Financial if dataset_type == "financial" else DriverFact
-    statement = select(model.id).where(model.source == source).where(col(model.period_code).in_(period_codes))
+    statement = select(model.id).where(model.source == source).where(_year_period_filter(model, periods))
     if company_scope:
         statement = statement.where(model.company == company_scope)
     return FactImportPlan(
         source=source,
         dataset_type=dataset_type,
         scope_label=scope_label,
-        period_codes=period_codes,
+        periods=periods,
         company_scope=company_scope,
         rows=rows,
         existing_fact_count=len(session.exec(statement).all()),
@@ -191,7 +206,7 @@ def _read_matching_rows(
     valid_codes = _valid_codes(session, dataset_type)
     code_header, amount_header = expected_headers[3], expected_headers[4]
     rows: list[FactImportRow] = []
-    seen_keys: set[tuple[str, str, str]] = set()
+    seen_keys: set[tuple[str, str, int, int]] = set()
     skipped_rows = 0
 
     for line_number, raw_row in enumerate(reader, start=2):
@@ -204,33 +219,32 @@ def _read_matching_rows(
 
         company_code = _required(raw_row, "company_code", line_number, errors)
         code = _required(raw_row, code_header, line_number, errors)
-        period_code = period_for(raw_row, line_number, errors)
+        period_result = period_for(raw_row, line_number, errors)
         amount = _amount(raw_row.get(amount_header), amount_header, line_number, errors)
-        if company_code is None or code is None or period_code is None or amount is None:
+        if company_code is None or code is None or period_result is None or amount is None:
             continue
+        year, period = period_result
         if company_code not in company_codes:
             errors.append(f"Line {line_number}: unknown Company code {company_code!r}.")
         if code not in valid_codes:
             entity = "GL Account" if dataset_type == "financial" else "Driver"
             errors.append(f"Line {line_number}: unknown {entity} code {code!r}.")
 
-        key = (company_code, code, period_code)
+        key = (company_code, code, year, period)
         if key in seen_keys:
-            errors.append(f"Line {line_number}: duplicate Company × code × month row for {company_code!r}, {code!r}, {period_code!r}.")
+            errors.append(f"Line {line_number}: duplicate Company × code × month row for {company_code!r}, {code!r}, {year}-{period:02d}.")
         seen_keys.add(key)
-        rows.append(FactImportRow(company_code=company_code, code=code, period_code=period_code, amount=amount))
+        rows.append(FactImportRow(company_code=company_code, code=code, year=year, period=period, amount=amount))
 
     if errors:
         raise FactImportError(errors)
     return rows, skipped_rows
 
 
-def _fiscal_year_for_calendar_year(session: Session, calendar_year: int) -> str:
-    fiscal_year = f"FY{calendar_year % 100:02d}"
-    year = session.get(Period, fiscal_year)
-    if year is None or year.period_type != PeriodType.YEAR:
-        raise FactImportError([f"Calendar year {calendar_year} does not map to a Fiscal Year in Zeteo's Period master data."])
-    return fiscal_year
+def _validate_fiscal_year(session: Session, calendar_year: int) -> int:
+    if session.get(Year, calendar_year) is None:
+        raise FactImportError([f"Calendar year {calendar_year} does not map to a Fiscal Year in Zeteo's Year master data."])
+    return calendar_year
 
 
 def _period_for_source_values(
@@ -239,18 +253,18 @@ def _period_for_source_values(
     raw_period: str | None,
     line_number: int,
     errors: list[str],
-) -> str | None:
+) -> tuple[int, int] | None:
     calendar_year = _calendar_year(raw_year, line_number, errors)
     period = _period_number(raw_period, line_number, errors)
     if calendar_year is None or period is None:
         return None
-    period_code = _period_code_if_valid(session, str(calendar_year), str(period))
-    if period_code is None:
-        errors.append(f"Line {line_number}: year {calendar_year} and period {period} do not map to a Zeteo Month.")
-    return period_code
+    resolved = _period_if_valid(session, str(calendar_year), str(period))
+    if resolved is None:
+        errors.append(f"Line {line_number}: year {calendar_year} and period {period} do not map to a Zeteo fiscal Year.")
+    return resolved
 
 
-def _period_code_if_valid(session: Session, raw_year: str | None, raw_period: str | None) -> str | None:
+def _period_if_valid(session: Session, raw_year: str | None, raw_period: str | None) -> tuple[int, int] | None:
     try:
         calendar_year = int((raw_year or "").strip())
         period = int((raw_period or "").strip())
@@ -258,9 +272,9 @@ def _period_code_if_valid(session: Session, raw_year: str | None, raw_period: st
         return None
     if period not in range(1, 13):
         return None
-    period_code = f"FY{calendar_year % 100:02d}-M{period:02d}"
-    month = session.get(Period, period_code)
-    return period_code if month is not None and month.period_type == PeriodType.MONTH else None
+    if session.get(Year, calendar_year) is None:
+        return None
+    return calendar_year, period
 
 
 def _valid_codes(session: Session, dataset_type: DatasetType) -> set[str]:

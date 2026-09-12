@@ -18,6 +18,7 @@ from pathlib import Path
 from sqlmodel import Session, SQLModel
 
 from backend.infrastructure.db import engine, init_db
+from backend.calendar.periods import quarter_of
 from backend.models import (
     Company,
     CompanyHierarchy,
@@ -31,10 +32,10 @@ from backend.models import (
     HierarchyKind,
     NormalBalance,
     Period,
-    PeriodType,
     Source,
     VdtAccount,
     VdtHierarchy,
+    Year,
 )
 from backend.scripts.seed_vdt import build_crew_mix_seed, build_pending_account_seed, load_vdt_hierarchy
 
@@ -48,42 +49,24 @@ BU_HIERARCHY_CSV_PATH = DATA_ROOT / "imported" / "organization" / "company_hiera
 SEED = 42
 MONTHS = range(1, 13)
 
-# Three real fiscal years, calendar-aligned (Jan start) — see docs/adr/0032,
-# which replaced the single-FY26-only model. Chronological order matters:
-# it's what fixes each Year row's `order` (1=oldest), which is how gl_tree.py
-# finds "the prior year" of any given year.
-FISCAL_YEARS = ["FY24", "FY25", "FY26"]
-QUARTER_MONTHS = {1: (1, 2, 3), 2: (4, 5, 6), 3: (7, 8, 9), 4: (10, 11, 12)}
-MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+# Three real fiscal years, calendar-aligned (period 1 = January) — see
+# docs/adr/0032, docs/adr/0051. Chronological order doesn't need to be
+# encoded anywhere anymore — `year` is a plain, sortable int.
+FISCAL_YEARS = [2024, 2025, 2026]
+MONTH_LABELS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+]
 
 
-def month_period_code(fiscal_year: str, month: int) -> str:
-    return f"{fiscal_year}-M{month:02d}"
+def build_years() -> list[Year]:
+    return [Year(year=year) for year in FISCAL_YEARS]
 
 
 def build_periods() -> list[Period]:
-    periods = []
-    for year_order, fiscal_year in enumerate(FISCAL_YEARS, start=1):
-        periods.append(Period(code=fiscal_year, label=fiscal_year, parent_code=None, period_type=PeriodType.YEAR, order=year_order))
-        for quarter, months in QUARTER_MONTHS.items():
-            quarter_code = f"{fiscal_year}-Q{quarter}"
-            # Year-qualified — three fiscal years coexist as sibling roots now
-            # (see docs/adr/0032), so a bare "Jan"/"Q1" would be ambiguous in
-            # any cross-year picker (e.g. Financial Comparison's period pickers).
-            periods.append(
-                Period(code=quarter_code, label=f"Q{quarter} {fiscal_year}", parent_code=fiscal_year, period_type=PeriodType.QUARTER, order=quarter)
-            )
-            for month in months:
-                periods.append(
-                    Period(
-                        code=month_period_code(fiscal_year, month),
-                        label=f"{MONTH_LABELS[month - 1]} {fiscal_year}",
-                        parent_code=quarter_code,
-                        period_type=PeriodType.MONTH,
-                        order=month,
-                    )
-                )
-    return periods
+    """Static reference data — one row per fiscal-relative month (1-12),
+    shared by every fiscal Year, not seeded per-year (see docs/adr/0051)."""
+    return [Period(period=month, label=MONTH_LABELS[month - 1], quarter=quarter_of(month)) for month in MONTHS]
 
 
 # Only this one company carries fabricated fact data — every other company
@@ -340,9 +323,8 @@ def generate_gl_facts(rng: random.Random, leaves: list[GLAccount], company: str)
             monthly_budget = prorate(monthly_actual, annual_actual * rng.uniform(0.93, 1.07))
             for month in MONTHS:
                 i = month - 1
-                period_code = month_period_code(fiscal_year, month)
-                facts.append(Financial(code=leaf.code, company=company, period_code=period_code, source=Source.ACTUAL, amount=monthly_actual[i]))
-                facts.append(Financial(code=leaf.code, company=company, period_code=period_code, source=Source.BUDGET, amount=monthly_budget[i]))
+                facts.append(Financial(code=leaf.code, company=company, year=fiscal_year, period=month, source=Source.ACTUAL, amount=monthly_actual[i]))
+                facts.append(Financial(code=leaf.code, company=company, year=fiscal_year, period=month, source=Source.BUDGET, amount=monthly_budget[i]))
     return facts
 
 
@@ -352,6 +334,7 @@ def main() -> None:
     gl_hierarchy = load_gl_hierarchy()
     gl_accounts = load_gl_accounts()
     validate_gl_data(gl_hierarchy, gl_accounts)
+    years = build_years()
     periods = build_periods()
     company_hierarchy = build_company_hierarchy()
     bu_node_codes = {n.code for n in company_hierarchy if n.hierarchy_kind == HierarchyKind.BU}
@@ -389,6 +372,7 @@ def main() -> None:
         # that risk doesn't apply here.
         session.add_all(gl_hierarchy)
         session.add_all(gl_accounts)
+        session.add_all(years)
         session.add_all(periods)
         session.add_all(company_hierarchy)
         session.add_all(company_nodes)
@@ -404,7 +388,7 @@ def main() -> None:
         session.commit()
 
     print(f"Seeded {len(gl_hierarchy)} GL hierarchy nodes and {len(gl_accounts)} GL accounts")
-    print(f"Seeded {len(periods)} periods across {len(FISCAL_YEARS)} fiscal years ({', '.join(FISCAL_YEARS)})")
+    print(f"Seeded {len(years)} fiscal years ({', '.join(str(y) for y in FISCAL_YEARS)}) and {len(periods)} periods (1-12)")
     print(f"Seeded {len(company_hierarchy)} BU hierarchy nodes and {len(company_nodes)} companies (1 sampled: {FOCUS_COMPANY_CODE})")
     print(f"Seeded {len(facts)} GL facts for {FOCUS_COMPANY_CODE} across {len(FISCAL_YEARS)} years")
     print(f"Seeded {len(vdt_hierarchy_nodes)} VDT Hierarchy Nodes and {len(accounts)} VDT Accounts (VDT hierarchy pilot — docs/adr/0033)")

@@ -7,7 +7,7 @@ SQLModel table before `SQLModel.metadata.create_all()` runs.
 
 from backend.accounting.models import Financial, GLAccount, GLHierarchy, NormalBalance, Source
 from backend.application.models import AppSettings
-from backend.calendar.models import Period, PeriodType
+from backend.calendar.models import Period, Year
 from backend.drivers.models import Driver, DriverFact, DriverFormula, DriverFormulaTerm, FormulaOperator, OperationalUnit
 from backend.organization.models import Company, CompanyHierarchy, HierarchyKind
 from backend.vdt.models import VdtAccount, VdtHierarchy
@@ -28,8 +28,8 @@ __all__ = [
     "NormalBalance",
     "OperationalUnit",
     "Period",
-    "PeriodType",
     "Source",
     "VdtAccount",
     "VdtHierarchy",
+    "Year",
 ]

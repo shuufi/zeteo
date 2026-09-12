@@ -1,3 +1,5 @@
+import { periodParams } from './period-store.svelte';
+
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 
 export interface TrendDriver {
@@ -77,9 +79,12 @@ export async function generateTrendAnalysis(
   try {
     const params = new URLSearchParams({ scope, source });
     if ('trailingEnd' in window) {
-      params.set('trailingEnd', window.trailingEnd);
+      const { year, month } = periodParams(window.trailingEnd);
+      params.set('trailingEndYear', String(year));
+      if (month != null) params.set('trailingEndPeriod', String(month));
     } else {
-      params.set('year', window.year);
+      const { year } = periodParams(window.year);
+      params.set('year', String(year));
     }
     const res = await fetch(`/api/vdt/trend-analysis?${params}`, { method: 'POST' });
     if (!res.ok) {

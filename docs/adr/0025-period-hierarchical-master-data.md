@@ -10,4 +10,4 @@ This also fixes a latent gap `gl_tree.py`'s `compute()` had: `gl_fact` already s
 
 Rejected: separate `year`/`quarter`/`month` tables with explicit FKs — more type-safe, but diverges from the `gl_node` precedent for no real benefit here, and would need its own bespoke join/rollup logic instead of reusing the adjacency-list walk already proven for the GL hierarchy.
 
-**Status**: accepted
+**Status**: superseded by `docs/adr/0051-period-year-and-period-integers.md` for the table shape (separate `year`/`period` int columns replace the `code`/`parent_code` hierarchy this ADR chose); the Month-only-postable rule this ADR established is unchanged.

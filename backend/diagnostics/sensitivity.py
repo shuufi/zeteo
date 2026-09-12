@@ -54,21 +54,22 @@ SENSITIVITY_MAX_CYCLES = 1500
 @dataclass
 class DriverOverride:
     driver_code: str
-    monthly_values: list[Decimal]  # len == len(month_codes), ordered same as month_codes
+    monthly_values: list[Decimal]  # len == len(periods), ordered same as periods
 
 
 def compute_npat_with_overrides(
     session: Session,
     company: str,
     source: str,
-    month_codes: list[str],
+    periods: list[tuple[int, int]],
     overrides: list[DriverOverride],
     target_code: str,
     include_subtree: bool = False,
 ) -> dict:
     """Construct a FRESH `DriverEngine` on EVERY call, overlay `overrides`
     in memory onto its `facts`, and recompute `target_code`'s monthly value
-    for `month_codes` — see docs/adr/0043's "API shape" decision.
+    for `periods` (a list of (year, month) pairs) — see docs/adr/0043's
+    "API shape" decision.
 
     Isolation guarantee: the engine is per-call and the overlay touches only
     that engine's own `facts` dict — never `session.add`, never `DriverFact`,
@@ -81,16 +82,16 @@ def compute_npat_with_overrides(
     Analysis only needs `npat`; the param exists so a future Simulation
     caller can ask for the full recomputed tree without a signature change.
     """
-    engine = DriverEngine(session, [company], month_codes)
+    engine = DriverEngine(session, [company], periods)
     for override in overrides:
         # `facts` is a defaultdict — a driver with no baseline fact still
         # overlays cleanly, no pre-seeding required.
         engine.facts[override.driver_code][company][source] = list(override.monthly_values)
 
-    nodes = build_vdt_tree(session, [company], month_codes=month_codes, engine=engine)
+    nodes = build_vdt_tree(session, [company], explicit_periods=periods, engine=engine)
     entry = nodes.get(target_code)
     field = "monthlyActual" if source == "actual" else "monthlyBudget"
-    npat = [Decimal(str(v)) for v in entry[field]] if entry is not None else [ZERO] * len(month_codes)
+    npat = [Decimal(str(v)) for v in entry[field]] if entry is not None else [ZERO] * len(periods)
     return {"npat": npat, "subtree": nodes if include_subtree else None}
 
 
@@ -234,7 +235,7 @@ def compute_sensitivity(
     session: Session,
     company: str,
     source: str,
-    month_codes: list[str],
+    periods: list[tuple[int, int]],
     root_code: str,
     candidates: list[str],
     bump_pct: float,
@@ -266,7 +267,7 @@ def compute_sensitivity(
     """
     bump_frac = Decimal(str(bump_pct)) / Decimal("100")
 
-    baseline = compute_npat_with_overrides(session, company, source, month_codes, [], root_code)
+    baseline = compute_npat_with_overrides(session, company, source, periods, [], root_code)
     baseline_npat = baseline["npat"]
     baseline_sum = sum(baseline_npat, ZERO)
     npat_near_zero = _is_near_zero(baseline_npat, NPAT_REL_EPSILON)
@@ -325,7 +326,7 @@ def compute_sensitivity(
             # for that walk M times over for no reason (see SENSITIVITY_MAX_CYCLES).
             bumped_values = [v * (Decimal("1") + sign * bump_frac) for v in baseline_driver[code]]
             rerun = compute_npat_with_overrides(
-                session, company, source, month_codes, [DriverOverride(code, bumped_values)], root_code
+                session, company, source, periods, [DriverOverride(code, bumped_values)], root_code
             )
             bumped_sum = sum(rerun["npat"], ZERO)
             completed += 1
@@ -375,7 +376,7 @@ def compute_sensitivity(
     yield {
         "type": "result",
         "source": source,
-        "months": month_codes,
+        "months": [{"year": y, "period": p} for y, p in periods],
         "baselineNpat": float(baseline_sum),
         "npatNearZero": npat_near_zero,
         "reason": reason,

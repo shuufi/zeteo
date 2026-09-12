@@ -1,4 +1,5 @@
 import type { HierarchyNode } from './types';
+import { periodParams } from './period-store.svelte';
 
 export interface ReconciliationMeta {
   scope: string;
@@ -43,7 +44,12 @@ export async function loadReconciliation(scope: string, node: string, periodCode
   status = 'loading';
   try {
     const params = new URLSearchParams({ scope, node });
-    if (periodCode) params.set('period', periodCode);
+    if (periodCode) {
+      const { year, quarter, month } = periodParams(periodCode);
+      params.set('year', String(year));
+      if (quarter != null) params.set('quarter', String(quarter));
+      if (month != null) params.set('month', String(month));
+    }
     if (ytd) params.set('ytd', 'true');
     const res = await fetch(`/api/vdt/reconciliation?${params}`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
@@ -65,7 +71,7 @@ export async function loadReconciliation(scope: string, node: string, periodCode
       sampledCompanyCount: data.sampledCompanyCount,
       totalCompanyCount: data.totalCompanyCount,
       node: data.node,
-      period: data.period,
+      period: periodCode ?? null,
     };
     status = 'ready';
   } catch (err) {

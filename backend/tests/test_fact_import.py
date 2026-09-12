@@ -41,21 +41,21 @@ def test_budget_import_replaces_only_selected_calendar_year_budget_scope(session
     budget_rows = session.exec(
         select(Financial)
         .where(Financial.source == Source.BUDGET)
-        .where(col(Financial.period_code).like(f"{YEAR}-%")),
+        .where(Financial.year == YEAR),
     ).all()
     actual_rows = session.exec(
         select(Financial)
         .where(Financial.source == Source.ACTUAL)
-        .where(col(Financial.period_code).like(f"{YEAR}-%")),
+        .where(Financial.year == YEAR),
     ).all()
     driver_budget_rows = session.exec(
         select(DriverFact)
         .where(DriverFact.source == Source.BUDGET)
-        .where(col(DriverFact.period_code).like(f"{YEAR}-%")),
+        .where(DriverFact.year == YEAR),
     ).all()
 
-    assert [(row.company, row.code, row.period_code, row.amount) for row in budget_rows] == [
-        (COMPANY, codes["gl_leaf_rev"], f"{YEAR}-M01", Decimal("123.45")),
+    assert [(row.company, row.code, row.year, row.period, row.amount) for row in budget_rows] == [
+        (COMPANY, codes["gl_leaf_rev"], YEAR, 1, Decimal("123.45")),
     ]
     assert len(actual_rows) == 36
     assert len(driver_budget_rows) == 24
@@ -76,29 +76,30 @@ def test_driver_budget_import_replaces_only_driver_budget_scope(session: Session
     driver_budget_rows = session.exec(
         select(DriverFact)
         .where(DriverFact.source == Source.BUDGET)
-        .where(col(DriverFact.period_code).like(f"{YEAR}-%")),
+        .where(DriverFact.year == YEAR),
     ).all()
     financial_budget_rows = session.exec(
         select(Financial)
         .where(Financial.source == Source.BUDGET)
-        .where(col(Financial.period_code).like(f"{YEAR}-%")),
+        .where(Financial.year == YEAR),
     ).all()
 
-    assert [(row.company, row.code, row.period_code, row.amount) for row in driver_budget_rows] == [
-        (COMPANY, codes["driver_headcount"], f"{YEAR}-M02", Decimal("25")),
+    assert [(row.company, row.code, row.year, row.period, row.amount) for row in driver_budget_rows] == [
+        (COMPANY, codes["driver_headcount"], YEAR, 2, Decimal("25")),
     ]
     assert len(financial_budget_rows) == 36
 
 
 def test_actual_import_filters_to_selected_company_and_current_actual_period(session: Session):
     codes = fixture_graph(session)
-    current_period = f"{YEAR}-M02"
-    set_current_actual_period(session, current_period)
+    set_current_actual_period(session, YEAR, 2)
 
+    current_year, current_period = current_actual_period(session) or (None, None)
     plan = validate_actual_csv(
         session,
         COMPANY,
-        current_actual_period(session) or "",
+        current_year,
+        current_period,
         "financial",
         _financial_csv(
             f"{COMPANY},2024,2,{codes['gl_leaf_rev']},222.22",
@@ -115,13 +116,15 @@ def test_actual_import_filters_to_selected_company_and_current_actual_period(ses
         select(Financial)
         .where(Financial.source == Source.ACTUAL)
         .where(Financial.company == COMPANY)
-        .where(Financial.period_code == current_period),
+        .where(Financial.year == YEAR)
+        .where(Financial.period == 2),
     ).all()
     budget_rows = session.exec(
         select(Financial)
         .where(Financial.source == Source.BUDGET)
         .where(Financial.company == COMPANY)
-        .where(Financial.period_code == current_period),
+        .where(Financial.year == YEAR)
+        .where(Financial.period == 2),
     ).all()
 
     assert [(row.code, row.amount) for row in actual_rows] == [(codes["gl_leaf_rev"], Decimal("222.22"))]
@@ -165,7 +168,8 @@ def test_rejects_wrong_headers_unknown_calendar_year_and_no_actual_rows_in_scope
         validate_actual_csv(
             session,
             COMPANY,
-            f"{YEAR}-M01",
+            YEAR,
+            1,
             "financial",
             _financial_csv(f"{COMPANY},2024,2,{codes['gl_leaf_rev']},10"),
         )

@@ -1,4 +1,5 @@
 import type { HierarchyNode } from './types';
+import { periodParams } from './period-store.svelte';
 
 export interface FinancialScopeMeta {
   scope: string;
@@ -31,7 +32,12 @@ export async function loadScope(scope: string, periodCode?: string): Promise<voi
   status = 'loading';
   try {
     const params = new URLSearchParams({ scope });
-    if (periodCode) params.set('period', periodCode);
+    if (periodCode) {
+      const { year, quarter, month } = periodParams(periodCode);
+      params.set('year', String(year));
+      if (quarter != null) params.set('quarter', String(quarter));
+      if (month != null) params.set('month', String(month));
+    }
     const res = await fetch(`/api/financial/tree?${params}`);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     const data = await res.json();

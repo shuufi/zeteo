@@ -34,7 +34,8 @@ def test_formula_money_target_rounds_half_up_per_company_month(session):
     january_rate = session.exec(
         select(DriverFact).where(
             DriverFact.code == codes["driver_base_rate"],
-            DriverFact.period_code == f"{codes['year']}-M01",
+            DriverFact.year == codes["year"],
+            DriverFact.period == 1,
             DriverFact.source == Source.ACTUAL,
         )
     ).one()
@@ -42,8 +43,8 @@ def test_formula_money_target_rounds_half_up_per_company_month(session):
     session.add(january_rate)
     session.commit()
 
-    month_codes = [f"{codes['year']}-M{i:02d}" for i in range(1, 13)]
-    engine = DriverEngine(session, [codes["company"]], month_codes)
+    periods = [(codes["year"], i) for i in range(1, 13)]
+    engine = DriverEngine(session, [codes["company"]], periods)
     monthly = engine.target_value(codes["va_driven"], "actual")
 
     # Headcount 10 × rate 0.0005 = 0.005, rounded at the final monetary

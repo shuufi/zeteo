@@ -21,6 +21,7 @@ import pytest
 from sqlmodel import Session, SQLModel, create_engine
 from sqlalchemy.pool import StaticPool
 
+from backend.calendar.periods import quarter_of
 from backend.models import (
     Company,
     CompanyHierarchy,
@@ -36,15 +37,18 @@ from backend.models import (
     NormalBalance,
     OperationalUnit,
     Period,
-    PeriodType,
     Source,
     VdtAccount,
     VdtHierarchy,
+    Year,
 )
 
-YEAR = "FY24"
+YEAR = 2024
 COMPANY = "C1"
-MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+MONTH_LABELS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+]
 
 
 @pytest.fixture
@@ -55,19 +59,8 @@ def session():
         yield s
 
 
-def _build_periods() -> list[Period]:
-    periods = [Period(code=YEAR, label=YEAR, parent_code=None, period_type=PeriodType.YEAR, order=1)]
-    month = 1
-    for quarter in range(1, 5):
-        quarter_code = f"{YEAR}-Q{quarter}"
-        periods.append(Period(code=quarter_code, label=f"Q{quarter} {YEAR}", parent_code=YEAR, period_type=PeriodType.QUARTER, order=quarter))
-        for _ in range(3):
-            month_code = f"{YEAR}-M{month:02d}"
-            periods.append(
-                Period(code=month_code, label=f"{MONTH_LABELS[month - 1]} {YEAR}", parent_code=quarter_code, period_type=PeriodType.MONTH, order=month)
-            )
-            month += 1
-    return periods
+def build_periods() -> list[Period]:
+    return [Period(period=month, label=MONTH_LABELS[month - 1], quarter=quarter_of(month)) for month in range(1, 13)]
 
 
 def fixture_graph(session: Session) -> dict[str, str]:
@@ -160,7 +153,8 @@ def fixture_graph(session: Session) -> dict[str, str]:
         ),
     ]
 
-    periods = _build_periods()
+    years = [Year(year=YEAR)]
+    periods = build_periods()
     company_hierarchy_nodes = [
         CompanyHierarchy(code=codes["group"], label="Group One", parent_code=None, hierarchy_kind=HierarchyKind.BU, order=1),
         CompanyHierarchy(
@@ -185,18 +179,17 @@ def fixture_graph(session: Session) -> dict[str, str]:
     gl_facts = []
     driver_facts = []
     for month in range(1, 13):
-        period_code = f"{YEAR}-M{month:02d}"
-        gl_facts.append(Financial(code=codes["gl_leaf_rev"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=100.0))
-        gl_facts.append(Financial(code=codes["gl_leaf_rev"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=90.0))
-        gl_facts.append(Financial(code=codes["gl_old_leaf"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=50.0))
-        gl_facts.append(Financial(code=codes["gl_old_leaf"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=45.0))
-        gl_facts.append(Financial(code=codes["gl_anchor_leaf"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=30.0))
-        gl_facts.append(Financial(code=codes["gl_anchor_leaf"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=28.0))
+        gl_facts.append(Financial(code=codes["gl_leaf_rev"], company=COMPANY, year=YEAR, period=month, source=Source.ACTUAL, amount=100.0))
+        gl_facts.append(Financial(code=codes["gl_leaf_rev"], company=COMPANY, year=YEAR, period=month, source=Source.BUDGET, amount=90.0))
+        gl_facts.append(Financial(code=codes["gl_old_leaf"], company=COMPANY, year=YEAR, period=month, source=Source.ACTUAL, amount=50.0))
+        gl_facts.append(Financial(code=codes["gl_old_leaf"], company=COMPANY, year=YEAR, period=month, source=Source.BUDGET, amount=45.0))
+        gl_facts.append(Financial(code=codes["gl_anchor_leaf"], company=COMPANY, year=YEAR, period=month, source=Source.ACTUAL, amount=30.0))
+        gl_facts.append(Financial(code=codes["gl_anchor_leaf"], company=COMPANY, year=YEAR, period=month, source=Source.BUDGET, amount=28.0))
 
-        driver_facts.append(DriverFact(code=codes["driver_headcount"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=10.0))
-        driver_facts.append(DriverFact(code=codes["driver_headcount"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=10.0))
-        driver_facts.append(DriverFact(code=codes["driver_base_rate"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=2.0))
-        driver_facts.append(DriverFact(code=codes["driver_base_rate"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=2.0))
+        driver_facts.append(DriverFact(code=codes["driver_headcount"], company=COMPANY, year=YEAR, period=month, source=Source.ACTUAL, amount=10.0))
+        driver_facts.append(DriverFact(code=codes["driver_headcount"], company=COMPANY, year=YEAR, period=month, source=Source.BUDGET, amount=10.0))
+        driver_facts.append(DriverFact(code=codes["driver_base_rate"], company=COMPANY, year=YEAR, period=month, source=Source.ACTUAL, amount=2.0))
+        driver_facts.append(DriverFact(code=codes["driver_base_rate"], company=COMPANY, year=YEAR, period=month, source=Source.BUDGET, amount=2.0))
 
     session.add_all(gl_hierarchy_nodes)
     session.add_all(gl_accounts)
@@ -205,6 +198,7 @@ def fixture_graph(session: Session) -> dict[str, str]:
     session.add_all(drivers)
     session.add_all(formulas)
     session.add_all(formula_terms)
+    session.add_all(years)
     session.add_all(periods)
     session.add_all(company_hierarchy_nodes)
     session.add_all(company_nodes)

@@ -138,6 +138,24 @@ export function calendarMonthLabel(code: string): string {
   return `${monthName} '${fiscalYear.slice(-2)}`;
 }
 
+/**
+ * Resolves a Period picker UI id (`"2026"`, `"2026-Q3"`, `"2026-M06"`) into
+ * the plain `year`/`quarter`/`month` ints the backend's API actually wants
+ * (see docs/adr/0051) — every store that used to forward the id straight
+ * through as `?period=` now calls this first. Parses the id's own format
+ * rather than looking it up in periodStore.tree: a store's initial fetch
+ * (e.g. App.svelte's onMount) can race ahead of loadPeriods() resolving, and
+ * this id format is this module's own contract with periods.py's
+ * build_period_tree, not something that needs the tree loaded to decode.
+ */
+export function periodParams(code: string): { year: number; quarter?: number; month?: number } {
+  const month = code.match(/^(\d+)-M(\d{2})$/);
+  if (month) return { year: Number(month[1]), month: Number(month[2]) };
+  const quarter = code.match(/^(\d+)-Q(\d)$/);
+  if (quarter) return { year: Number(quarter[1]), quarter: Number(quarter[2]) };
+  return { year: Number(code) };
+}
+
 /** Periods are static master data (not scope-dependent) — fetched once, unlike loadScope. */
 export async function loadPeriods(): Promise<void> {
   status = 'loading';
