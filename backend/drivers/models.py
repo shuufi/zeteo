@@ -43,7 +43,8 @@ class DriverFact(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     code: str = Field(foreign_key="driver.code", index=True)
     company: str = Field(foreign_key="company.code", index=True)
-    period_code: str = Field(foreign_key="period.code", index=True)
+    year: int = Field(foreign_key="year.year", index=True)
+    period: int = Field(foreign_key="period.period", index=True)
     source: Source
     amount: Decimal = Field(sa_column=Column(Numeric(24, 6), nullable=False))
 

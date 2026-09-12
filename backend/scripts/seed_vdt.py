@@ -133,13 +133,13 @@ _MONTHLY_RATE_GROWTH = 0.015
 # following month's plain baseline then reads as a matching drop back down —
 # modelling a real one-off event (relief crew boarded for a drydock, a
 # crew-rotation batch) rather than a permanent step change.
-_SEEDED_ANOMALIES: dict[tuple[str, str, int], float] = {
-    ("DRV-CREWMIX-SR-HC", "FY26", 4): 1.25,   # relief senior officers boarded
-    ("DRV-CREWMOVE-COUNT", "FY26", 9): 1.70,  # crew rotation batch
+_SEEDED_ANOMALIES: dict[tuple[str, int, int], float] = {
+    ("DRV-CREWMIX-SR-HC", 2026, 4): 1.25,   # relief senior officers boarded
+    ("DRV-CREWMOVE-COUNT", 2026, 9): 1.70,  # crew rotation batch
 }
 
 
-def _apply_anomaly(driver_code: str, fiscal_year: str, month: int, value: float) -> float:
+def _apply_anomaly(driver_code: str, fiscal_year: int, month: int, value: float) -> float:
     return value * _SEEDED_ANOMALIES.get((driver_code, fiscal_year, month), 1.0)
 
 
@@ -148,7 +148,7 @@ def _decimal(value: float, places: str) -> Decimal:
 
 
 def build_crew_mix_seed(
-    focus_company: str, fiscal_years: list[str]
+    focus_company: str, fiscal_years: list[int]
 ) -> tuple[list[Driver], list[DriverFormula], list[DriverFormulaTerm], list[DriverFact]]:
     """Rates differ by rank, so each rank gets its own Driver row rather than
     sharing one 'average salary rate' — a Driver carries exactly one value
@@ -177,7 +177,6 @@ def build_crew_mix_seed(
             hc_annual = hc_base * ((1 + hc_growth) ** year_index)
             rate_annual = rate_base * ((1 + rate_growth) ** year_index)
             for month in range(1, 13):
-                period_code = f"{fiscal_year}-M{month:02d}"
                 hc_month = hc_annual * ((1 + _MONTHLY_HC_GROWTH) ** (month - 6.5))
                 rate_month = rate_annual * ((1 + _MONTHLY_RATE_GROWTH) ** (month - 6.5))
                 hc_month_actual = _apply_anomaly(hc_code, fiscal_year, month, hc_month)
@@ -185,7 +184,8 @@ def build_crew_mix_seed(
                     DriverFact(
                         code=hc_code,
                         company=focus_company,
-                        period_code=period_code,
+                        year=fiscal_year,
+                        period=month,
                         source=Source.ACTUAL,
                         amount=_decimal(hc_month_actual * rng.uniform(0.995, 1.005), "0.001"),
                     )
@@ -194,7 +194,8 @@ def build_crew_mix_seed(
                     DriverFact(
                         code=hc_code,
                         company=focus_company,
-                        period_code=period_code,
+                        year=fiscal_year,
+                        period=month,
                         source=Source.BUDGET,
                         amount=_decimal(hc_month * rng.uniform(0.995, 1.005), "0.001"),
                     )
@@ -203,7 +204,8 @@ def build_crew_mix_seed(
                     DriverFact(
                         code=rate_code,
                         company=focus_company,
-                        period_code=period_code,
+                        year=fiscal_year,
+                        period=month,
                         source=Source.ACTUAL,
                         amount=_decimal(rate_month * rng.uniform(0.997, 1.003), "0.01"),
                     )
@@ -212,7 +214,8 @@ def build_crew_mix_seed(
                     DriverFact(
                         code=rate_code,
                         company=focus_company,
-                        period_code=period_code,
+                        year=fiscal_year,
+                        period=month,
                         source=Source.BUDGET,
                         amount=_decimal(rate_month * rng.uniform(0.997, 1.003), "0.01"),
                     )
@@ -385,7 +388,7 @@ def _drift_params(unit: OperationalUnit) -> tuple[float, tuple[float, float], st
 
 
 def build_pending_account_seed(
-    focus_company: str, fiscal_years: list[str]
+    focus_company: str, fiscal_years: list[int]
 ) -> tuple[list[Driver], list[DriverFormula], list[DriverFormulaTerm], list[DriverFact]]:
     """VA00000004-021's Driver Formulas — see _PENDING_ACCOUNT_FORMULAS above.
 
@@ -424,7 +427,6 @@ def build_pending_account_seed(
         for year_index, fiscal_year in enumerate(fiscal_years):
             annual = base * ((1 + growth) ** year_index)
             for month in range(1, 13):
-                period_code = f"{fiscal_year}-M{month:02d}"
                 month_value = annual * ((1 + monthly_growth) ** (month - 6.5))
                 for source in (Source.ACTUAL, Source.BUDGET):
                     value = month_value
@@ -434,7 +436,8 @@ def build_pending_account_seed(
                         DriverFact(
                             code=driver_code,
                             company=focus_company,
-                            period_code=period_code,
+                            year=fiscal_year,
+                            period=month,
                             source=source,
                             amount=_decimal(value * rng.uniform(*noise_range), places),
                         )

@@ -114,7 +114,7 @@ export interface SensitivityResult {
   source: 'actual' | 'budget';
   currency: string;
   bumpPct: number;
-  months: string[];
+  months: { year: number; period: number }[];
   monthLabels: string[];
   windowLabel: string;
   baselineNpat: number;
@@ -238,7 +238,14 @@ export interface ComparisonNode {
 
 export type PeriodType = 'Year' | 'Quarter' | 'Month';
 
-/** A node in the Year/Quarter/Month hierarchy served by GET /api/periods — see docs/adr/0025. */
+/**
+ * A node in the Year/Quarter/Month tree served by GET /api/periods — computed
+ * server-side from the `Year`/`Period` int tables (see docs/adr/0051), not
+ * read off a stored hierarchy. `id` is a synthetic UI key only (`"2026"`,
+ * `"2026-Q3"`, `"2026-M06"`); `year`/`quarter`/`period` carry the real
+ * identity. `order` is a convenience sort key (the year itself for a Year
+ * node, the quarter/period number otherwise).
+ */
 export interface PeriodNode {
   id: string;
   label: string;
@@ -246,6 +253,9 @@ export interface PeriodNode {
   parentId: string | null;
   childIds: string[];
   order: number;
+  year?: number;
+  quarter?: number;
+  period?: number;
 }
 
 export interface DriverLink {

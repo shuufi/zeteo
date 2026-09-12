@@ -31,19 +31,17 @@ from backend.accounting.tree import (
     _load_gl_hierarchy,
     _money_json,
     _node_type,
-    _prior_year_code,
     _stitch_driver_nodes,
-    _year_of,
     compute_gl_leaf,
     load_monthly,
+    periods_of_year,
     scoped_sum,
     sum_children_entry,
     ZERO,
 )
 from backend.accounting.models import GLAccount, GLHierarchy, NormalBalance
-from backend.calendar.models import PeriodType
 from backend.vdt.models import VdtAccount, VdtHierarchy
-from backend.calendar.periods import load_period_hierarchy, month_indices_for, ordered_month_codes_of_year, ytd_month_indices_for
+from backend.calendar.periods import load_years, month_indices_for, ytd_month_indices_for
 
 logger = logging.getLogger(__name__)
 
@@ -92,9 +90,11 @@ def _compute_vdt_account(
 def build_vdt_tree(
     session: Session,
     companies: list[str],
-    period_code: Optional[str] = None,
+    year: Optional[int] = None,
+    quarter: Optional[int] = None,
+    month: Optional[int] = None,
     ytd: bool = False,
-    month_codes: Optional[list[str]] = None,
+    explicit_periods: Optional[list[tuple[int, int]]] = None,
     engine: Optional[DriverEngine] = None,
 ) -> dict[str, dict]:
     """`engine`, if given, is used in place of constructing a fresh
@@ -110,7 +110,7 @@ def build_vdt_tree(
     that overlay actually reach NPAT, matching the ADR's "re-run DriverEngine
     up through vdt_tree to NPAT" compute method. `None` (every other caller)
     preserves today's behaviour exactly — a fresh engine built from
-    `companies`/`month_codes` as before.
+    `companies`/`explicit_periods` as before.
     """
     gl_by_code, children_by_parent, gl_leaf_codes = _load_gl_hierarchy(session)
     vdt_hierarchy_nodes = session.exec(select(VdtHierarchy)).all()
@@ -140,44 +140,37 @@ def build_vdt_tree(
         children_by_parent[n.parent_code].append(n.code)
 
     # --- period/company scoping (identical to build_tree(), except the
-    # Trailing-mode branch below — see docs/adr/0042) ---
-    period_by_code, period_children = load_period_hierarchy(session)
-    if month_codes is not None:
+    # Trailing-mode branch below — see docs/adr/0042, docs/adr/0051) ---
+    if explicit_periods is not None:
         # Trailing mode: caller already resolved an explicit window (possibly
-        # spanning two fiscal years' sibling Year roots), so none of the
-        # single-Year machinery below applies. No prior-year series (that
-        # concept means "the same window one fiscal year back", which ADR-0042
-        # doesn't define for an arbitrary trailing window) and no sub-window
-        # scope_indices (Trailing mode's Cumulative toggle is computed
-        # client-side from the full monthlyActual array, unlike Financial Year
-        # mode's YTD, which nothing here still calls YTD for VDT Trends itself).
-        window_codes: Optional[list[str]] = month_codes
-        prior_window_codes: Optional[list[str]] = None
+        # spanning two fiscal years), so none of the single-Year machinery
+        # below applies. No prior-year series (that concept means "the same
+        # window one fiscal year back", which ADR-0042 doesn't define for an
+        # arbitrary trailing window) and no sub-window scope_indices (Trailing
+        # mode's Cumulative toggle is computed client-side from the full
+        # monthlyActual array, unlike Financial Year mode's YTD, which nothing
+        # here still calls YTD for VDT Trends itself).
+        window_periods: Optional[list[tuple[int, int]]] = explicit_periods
+        prior_window_periods: Optional[list[tuple[int, int]]] = None
         scope_indices = None
     else:
-        years = sorted((p for p in period_by_code.values() if p.period_type == PeriodType.YEAR), key=lambda p: p.order)
-        year_code = _year_of(period_by_code, period_code) if period_code is not None else (years[-1].code if years else None)
-        prior_year_code = _prior_year_code(period_by_code, year_code) if year_code else None
-        window_codes = ordered_month_codes_of_year(period_by_code, period_children, year_code) if year_code else None
-        prior_window_codes = (
-            ordered_month_codes_of_year(period_by_code, period_children, prior_year_code) if prior_year_code else None
-        )
-        scope_indices = (
-            ytd_month_indices_for(period_by_code, period_children, period_code)
-            if ytd
-            else month_indices_for(period_by_code, period_children, period_code)
-        )
+        years = load_years(session)
+        resolved_year = year if year is not None else (years[-1] if years else None)
+        prior_year = resolved_year - 1 if resolved_year is not None and (resolved_year - 1) in years else None
+        window_periods = periods_of_year(resolved_year)
+        prior_window_periods = periods_of_year(prior_year)
+        scope_indices = ytd_month_indices_for(month, quarter) if ytd else month_indices_for(month, quarter)
 
     def scoped_sum_local(monthly_values: list[Decimal]) -> Decimal:
         return scoped_sum(monthly_values, scope_indices)
 
-    width = len(window_codes) if window_codes else 12
-    monthly = load_monthly(session, companies, window_codes)
-    prior_monthly = load_monthly(session, companies, prior_window_codes)
+    width = len(window_periods) if window_periods else 12
+    monthly = load_monthly(session, companies, window_periods)
+    prior_monthly = load_monthly(session, companies, prior_window_periods)
 
     period_len = len(scope_indices) if scope_indices is not None else width
     if engine is None:
-        engine = DriverEngine(session, companies, window_codes)
+        engine = DriverEngine(session, companies, window_periods)
 
     computed: dict[str, dict] = {}
 

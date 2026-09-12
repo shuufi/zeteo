@@ -1,4 +1,5 @@
 import type { SensitivityCandidate, SensitivityProgress, SensitivityResult } from './types';
+import { periodParams } from './period-store.svelte';
 
 type Status = 'idle' | 'streaming' | 'ready' | 'error';
 
@@ -74,12 +75,20 @@ export async function startSensitivity(req: {
   error = '';
   liveCandidates = [];
 
+  const windowPayload = (() => {
+    if ('trailingEnd' in req.window) {
+      const { year, month } = periodParams(req.window.trailingEnd);
+      return { trailingEndYear: year, trailingEndPeriod: month };
+    }
+    return { year: periodParams(req.window.year).year };
+  })();
+
   const payload = {
     scope: req.scope,
     scopeNode: req.scopeNode,
     bumpPct: req.bumpPct,
     source: req.source,
-    ...('trailingEnd' in req.window ? { trailingEnd: req.window.trailingEnd } : { year: req.window.year }),
+    ...windowPayload,
   };
 
   try {

@@ -18,8 +18,7 @@ from sqlmodel import Session, col, select
 from backend.diagnostics.content import DIAGNOSTIC_CONTENT
 from backend.drivers.engine import DriverEngine
 from backend.accounting.models import Financial, GLAccount, GLHierarchy, NormalBalance
-from backend.calendar.models import Period, PeriodType
-from backend.calendar.periods import load_period_hierarchy, month_indices_for, ordered_month_codes_of_year, ytd_month_indices_for
+from backend.calendar.periods import load_years, month_indices_for, ytd_month_indices_for
 
 
 ZERO = Decimal("0")
@@ -218,20 +217,15 @@ def subtree(tree: dict[str, dict], root: str) -> dict[str, dict]:
     return result
 
 
-def _year_of(period_by_code: dict[str, Period], code: str) -> str:
-    """Walks up to the Year ancestor of `code` (or returns `code` itself if it already is one)."""
-    node = period_by_code[code]
-    while node.period_type != PeriodType.YEAR:
-        node = period_by_code[node.parent_code]
-    return node.code
-
-
-def _prior_year_code(period_by_code: dict[str, Period], year_code: str) -> Optional[str]:
-    order = period_by_code[year_code].order
-    for code, p in period_by_code.items():
-        if p.period_type == PeriodType.YEAR and p.order == order - 1:
-            return code
-    return None
+def periods_of_year(year: Optional[int]) -> Optional[list[tuple[int, int]]]:
+    """One Year's 12 (year, month) pairs, chronological (Jan..Dec) order —
+    shared by build_tree()/build_vdt_tree(), both of which need an explicit
+    ordered window to restrict fact-loading to one fiscal year's months and
+    avoid silently summing e.g. 2024's and 2026's period 1 into the same slot
+    (see docs/adr/0032, docs/adr/0051)."""
+    if year is None:
+        return None
+    return [(year, month) for month in range(1, 13)]
 
 
 def scoped_sum(monthly_values: list[Decimal], scope_indices: Optional[set[int]]) -> Decimal:
@@ -243,31 +237,35 @@ def scoped_sum(monthly_values: list[Decimal], scope_indices: Optional[set[int]])
 def load_monthly(
     session: Session,
     companies: list[str],
-    month_codes: Optional[list[str]],
+    periods: Optional[list[tuple[int, int]]],
 ) -> dict[str, dict[str, list[Decimal]]]:
-    """gl_code -> source -> monthly array (one slot per entry in
-    `month_codes`, in that order) for `companies`. `month_codes` is an
-    explicit, already-resolved ordered list — a single Year's 12 Month codes
+    """gl_code -> source -> monthly array (one slot per entry in `periods`,
+    in that order) for `companies`. `periods` is an explicit, already-
+    resolved ordered list of (year, month) pairs — a single Year's 12 months
     for build_tree()/build_vdt_tree()'s Financial Year path, or a Trailing-
-    mode window that can span two fiscal years' sibling Year roots (see
-    docs/adr/0032, docs/adr/0042). Callers must never pass a `month_codes`
-    that silently mixes two years into the same slot by coincidence — every
-    caller here resolves its own explicit, deliberate window first.
+    mode window that can span two fiscal years (see docs/adr/0032,
+    docs/adr/0042, docs/adr/0051). Callers must never pass a `periods` that
+    silently mixes two years into the same slot by coincidence — every caller
+    here resolves its own explicit, deliberate window first.
     """
-    width = len(month_codes) if month_codes else 12
+    width = len(periods) if periods else 12
     result: dict[str, dict[str, list[Decimal]]] = defaultdict(lambda: defaultdict(lambda: [ZERO] * width))
-    if not companies or not month_codes:
+    if not companies or not periods:
         return result
-    code_to_index = {code: i for i, code in enumerate(month_codes)}
+    index_by_period = {period: i for i, period in enumerate(periods)}
+    years = {year for year, _ in periods}
     # Selecting only the needed columns (rather than full Financial rows)
     # skips ORM row hydration, the dominant cost for ~40k facts per scope.
     facts = session.exec(
-        select(Financial.code, Financial.source, Financial.period_code, Financial.amount)
+        select(Financial.code, Financial.source, Financial.year, Financial.period, Financial.amount)
         .where(col(Financial.company).in_(companies))
-        .where(col(Financial.period_code).in_(month_codes))
+        .where(col(Financial.year).in_(years))
     ).all()
-    for code, source, fact_period_code, amount in facts:
-        result[code][source.value][code_to_index[fact_period_code]] += _decimal(amount)
+    for code, source, year, period, amount in facts:
+        index = index_by_period.get((year, period))
+        if index is None:
+            continue
+        result[code][source.value][index] += _decimal(amount)
     return result
 
 
@@ -414,39 +412,39 @@ def build_gl_master_tree(session: Session) -> dict[str, dict]:
     return result
 
 
-def build_tree(session: Session, companies: list[str], period_code: Optional[str] = None, ytd: bool = False) -> dict[str, dict]:
+def build_tree(
+    session: Session,
+    companies: list[str],
+    year: Optional[int] = None,
+    quarter: Optional[int] = None,
+    month: Optional[int] = None,
+    ytd: bool = False,
+) -> dict[str, dict]:
     node_by_code, children_by_parent, leaf_codes = _load_gl_hierarchy(session)
 
-    period_by_code, period_children = load_period_hierarchy(session)
-    years = sorted((p for p in period_by_code.values() if p.period_type == PeriodType.YEAR), key=lambda p: p.order)
+    years = load_years(session)
     # None means "the current/most recent year, in full" — multiple fiscal
     # years can coexist (see docs/adr/0032), so unlike a single-year dataset
     # this can no longer mean "sum every fact regardless of year".
-    year_code = _year_of(period_by_code, period_code) if period_code is not None else (years[-1].code if years else None)
-    prior_year_code = _prior_year_code(period_by_code, year_code) if year_code else None
+    resolved_year = year if year is not None else (years[-1] if years else None)
+    prior_year = resolved_year - 1 if resolved_year is not None and (resolved_year - 1) in years else None
     # None (whole year requested) means every one of the 12 monthly slots counts.
-    scope_indices = (
-        ytd_month_indices_for(period_by_code, period_children, period_code)
-        if ytd
-        else month_indices_for(period_by_code, period_children, period_code)
-    )
+    scope_indices = ytd_month_indices_for(month, quarter) if ytd else month_indices_for(month, quarter)
 
     def scoped_sum_local(monthly_values: list[Decimal]) -> Decimal:
         return scoped_sum(monthly_values, scope_indices)
 
-    month_codes = ordered_month_codes_of_year(period_by_code, period_children, year_code) if year_code else None
-    prior_month_codes = (
-        ordered_month_codes_of_year(period_by_code, period_children, prior_year_code) if prior_year_code else None
-    )
-    width = len(month_codes) if month_codes else 12
-    monthly = load_monthly(session, companies, month_codes)
+    periods = periods_of_year(resolved_year)
+    prior_periods = periods_of_year(prior_year)
+    width = len(periods) if periods else 12
+    monthly = load_monthly(session, companies, periods)
     # A real prior-year comparison is just that year's own actuals, not a
     # separate stored source (see docs/adr/0032) — absent for the earliest
     # seeded year, where prior_monthly stays all-zero.
-    prior_monthly = load_monthly(session, companies, prior_month_codes)
+    prior_monthly = load_monthly(session, companies, prior_periods)
 
     period_len = len(scope_indices) if scope_indices is not None else width
-    engine = DriverEngine(session, companies, month_codes)
+    engine = DriverEngine(session, companies, periods)
 
     computed: dict[str, dict] = {}
 

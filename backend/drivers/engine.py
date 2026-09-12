@@ -17,7 +17,7 @@ Monthly arrays throughout are `self.width`-wide — 12 (Jan..Dec of one fiscal
 year) for build_tree()/build_vdt_tree()'s Financial Year path, or a Trailing-
 mode window's resolved length (up to 12, possibly spanning two fiscal years)
 for VDT Trends' Trailing mode — matching gl_tree.py's convention (see
-docs/adr/0042).
+docs/adr/0042, docs/adr/0051).
 """
 
 from collections import defaultdict
@@ -38,19 +38,19 @@ MONEY_QUANTUM = Decimal("0.01")
 
 
 class DriverEngine:
-    def __init__(self, session: Session, companies: list[str], month_codes: Optional[list[str]]):
-        """`month_codes` restricts DriverFact loading to an explicit, already-
-        resolved, ordered list of Month codes — without it, facts across
-        different fiscal years would silently sum into the same month-array
-        slot (the same cross-year hazard docs/adr/0032 already fixed for
-        Financial/load_monthly; DriverEngine just never had live multi-year
-        Driver data to expose it until now — see docs/adr/0033).
-        `month_codes=None` or empty (e.g. no Year periods seeded at all yet)
-        means no facts load, same as `companies=[]` today; the array width
-        then defaults to 12 since there's no window to size it from.
+    def __init__(self, session: Session, companies: list[str], periods: Optional[list[tuple[int, int]]]):
+        """`periods` restricts DriverFact loading to an explicit, already-
+        resolved, ordered list of (year, month) pairs — without it, facts
+        across different fiscal years would silently sum into the same
+        month-array slot (the same cross-year hazard docs/adr/0032 already
+        fixed for Financial/load_monthly; DriverEngine just never had live
+        multi-year Driver data to expose it until now — see docs/adr/0033,
+        docs/adr/0051). `periods=None` or empty (e.g. no Year rows seeded at
+        all yet) means no facts load, same as `companies=[]` today; the array
+        width then defaults to 12 since there's no window to size it from.
         """
         self.companies = companies
-        self.width = len(month_codes) if month_codes else 12
+        self.width = len(periods) if periods else 12
         self.driver_by_code = {d.code: d for d in session.exec(select(Driver)).all()}
         self.formula_by_code = {f.code: f for f in session.exec(select(DriverFormula)).all()}
 
@@ -71,15 +71,18 @@ class DriverEngine:
         facts: dict[str, dict[str, dict[str, list[Decimal]]]] = defaultdict(
             lambda: defaultdict(lambda: defaultdict(lambda: [ZERO] * width))
         )
-        if companies and month_codes:
-            code_to_index = {code: i for i, code in enumerate(month_codes)}
+        if companies and periods:
+            index_by_period = {period: i for i, period in enumerate(periods)}
+            years = {year for year, _ in periods}
             rows = session.exec(
-                select(DriverFact.code, DriverFact.company, DriverFact.source, DriverFact.period_code, DriverFact.amount)
+                select(DriverFact.code, DriverFact.company, DriverFact.source, DriverFact.year, DriverFact.period, DriverFact.amount)
                 .where(col(DriverFact.company).in_(companies))
-                .where(col(DriverFact.period_code).in_(month_codes))
+                .where(col(DriverFact.year).in_(years))
             ).all()
-            for code, company, source, period_code, amount in rows:
-                month_index = code_to_index[period_code]
+            for code, company, source, year, period, amount in rows:
+                month_index = index_by_period.get((year, period))
+                if month_index is None:
+                    continue
                 facts[code][company][source.value][month_index] += Decimal(str(amount))
         self.facts = facts
 

@@ -19,18 +19,17 @@ from backend.organization.hierarchy import (
 )
 from backend.infrastructure.db import get_session
 from backend.drivers.engine import DriverEngine
-from backend.accounting.tree import build_gl_master_tree, build_tree, diff_subtree, subtree
+from backend.accounting.tree import build_gl_master_tree, build_tree, diff_subtree, periods_of_year, subtree
 from backend.accounting.models import GLAccount, GLHierarchy
-from backend.calendar.models import PeriodType
 from backend.organization.models import HierarchyKind
 from backend.diagnostics.variance_analysis import VarianceAnalysisUnavailable, generate_variance_analysis
 from backend.calendar.periods import (
     UnknownPeriod,
     build_period_tree,
     calendar_month_label,
-    load_period_hierarchy,
-    ordered_month_codes_of_year,
-    trailing_month_codes,
+    load_periods,
+    load_years,
+    trailing_periods,
 )
 from backend.diagnostics.trend_analysis import TrendAnalysisUnavailable, generate_trend_analysis
 from backend.diagnostics.sensitivity import SENSITIVITY_MAX_CYCLES, compute_sensitivity, terminal_driver_candidates
@@ -40,6 +39,25 @@ VDT_COMPARISON_ROOT_TYPES = ("Reporting Root", "Reporting Node", "VDT Hierarchy 
 VDT_TRENDS_ANCHOR = "V201000000"  # SOC Crew Cost, same fixed pilot anchor as VDT Variance Analysis/Reconciliation
 
 router = APIRouter()
+
+
+def _grain(quarter: Optional[int], month: Optional[int]) -> str:
+    if month is not None:
+        return "Month"
+    if quarter is not None:
+        return "Quarter"
+    return "Year"
+
+
+def _period_label(session: Session, year: int, quarter: Optional[int], month: Optional[int]) -> str:
+    if month is not None:
+        periods = load_periods(session)
+        period_row = periods.get(month)
+        month_label = period_row.label[:3] if period_row else str(month)
+        return f"{month_label} {year}"
+    if quarter is not None:
+        return f"Q{quarter} {year}"
+    return str(year)
 
 
 def _gl_seeded(session: Session) -> bool:
@@ -94,7 +112,15 @@ def get_gl_master_tree(session: Session = Depends(get_session)):
 
 
 @router.get("/api/financial/tree")
-def get_financial_tree(scope: str, period: Optional[str] = None, session: Session = Depends(get_session)):
+def get_financial_tree(
+    scope: str,
+    year: Optional[int] = None,
+    quarter: Optional[int] = Query(default=None, ge=1, le=4),
+    month: Optional[int] = Query(default=None, ge=1, le=12),
+    session: Session = Depends(get_session),
+):
+    if quarter is not None and month is not None:
+        raise HTTPException(400, "quarter and month are mutually exclusive")
     if not _gl_seeded(session):
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
@@ -104,14 +130,16 @@ def get_financial_tree(scope: str, period: Optional[str] = None, session: Sessio
         return {"scope": scope, **_scope_meta(resolved), "notYetModelled": True, "nodes": {}}
 
     try:
-        nodes = build_tree(session, resolved["companies"], period)
+        nodes = build_tree(session, resolved["companies"], year, quarter, month)
     except UnknownPeriod:
-        raise HTTPException(404, f"Unknown period: {period}")
+        raise HTTPException(404, f"Unknown period: year={year} quarter={quarter} month={month}")
     return {
         "scope": scope,
         **_scope_meta(resolved),
         "notYetModelled": False,
-        "period": period,
+        "year": year,
+        "quarter": quarter,
+        "month": month,
         "nodes": nodes,
     }
 
@@ -120,8 +148,12 @@ def get_financial_tree(scope: str, period: Optional[str] = None, session: Sessio
 def get_financial_comparison(
     scope: str,
     node: str,
-    period_a: str = Query(alias="periodA"),
-    period_b: str = Query(alias="periodB"),
+    year_a: int = Query(alias="yearA"),
+    quarter_a: Optional[int] = Query(default=None, alias="quarterA", ge=1, le=4),
+    month_a: Optional[int] = Query(default=None, alias="monthA", ge=1, le=12),
+    year_b: int = Query(alias="yearB"),
+    quarter_b: Optional[int] = Query(default=None, alias="quarterB", ge=1, le=4),
+    month_b: Optional[int] = Query(default=None, alias="monthB", ge=1, le=12),
     session: Session = Depends(get_session),
 ):
     if not _gl_seeded(session):
@@ -132,18 +164,14 @@ def get_financial_comparison(
     if resolved.get("notYetModelled"):
         return {"scope": scope, **_scope_meta(resolved), "notYetModelled": True, "nodes": {}}
 
-    period_by_code, _ = load_period_hierarchy(session)
-    period_a_row = period_by_code.get(period_a)
-    period_b_row = period_by_code.get(period_b)
-    if period_a_row is None:
-        raise HTTPException(404, f"Unknown period: {period_a}")
-    if period_b_row is None:
-        raise HTTPException(404, f"Unknown period: {period_b}")
-    if period_a_row.period_type != period_b_row.period_type:
+    if _grain(quarter_a, month_a) != _grain(quarter_b, month_b):
         raise HTTPException(400, "periodA and periodB must be the same grain (both Month, both Quarter, or both Year)")
 
-    tree_a = build_tree(session, resolved["companies"], period_a)
-    tree_b = build_tree(session, resolved["companies"], period_b)
+    try:
+        tree_a = build_tree(session, resolved["companies"], year_a, quarter_a, month_a)
+        tree_b = build_tree(session, resolved["companies"], year_b, quarter_b, month_b)
+    except UnknownPeriod:
+        raise HTTPException(404, "Unknown period")
 
     root = tree_a.get(node)
     if root is None:
@@ -156,44 +184,52 @@ def get_financial_comparison(
         **_scope_meta(resolved),
         "notYetModelled": False,
         "node": node,
-        "periodA": period_a,
-        "periodB": period_b,
+        "yearA": year_a,
+        "quarterA": quarter_a,
+        "monthA": month_a,
+        "yearB": year_b,
+        "quarterB": quarter_b,
+        "monthB": month_b,
         "nodes": diff_subtree(tree_a, tree_b, node),
     }
 
 
-def _resolve_trailing_window(
-    period_by_code: dict, period_children: dict, trailing_end: str
-) -> list[str]:
-    """Validates `trailing_end` is a known Month code and resolves its
-    Trailing-mode window — shared by GET /api/vdt/tree and POST
-    /api/vdt/trend-analysis (see docs/adr/0042), both of which need the same
-    404 (unknown period) vs 400 (not a Month) distinction that
-    trailing_month_codes() alone can't give (it only raises UnknownPeriod for
-    both cases)."""
-    anchor_row = period_by_code.get(trailing_end)
-    if anchor_row is None:
-        raise HTTPException(404, f"Unknown period: {trailing_end}")
-    if anchor_row.period_type != PeriodType.MONTH:
-        raise HTTPException(400, f"{trailing_end} is not a Month period")
-    return trailing_month_codes(period_by_code, period_children, trailing_end)
+def _resolve_trailing_window(session: Session, trailing_end_year: int, trailing_end_month: int) -> list[tuple[int, int]]:
+    """Resolves Trailing mode's window ending at `(trailing_end_year,
+    trailing_end_month)` — shared by GET /api/vdt/tree and POST
+    /api/vdt/trend-analysis (see docs/adr/0042, docs/adr/0051). Intersecting
+    against `load_years()` is what produces a partial (< 12) window once the
+    walk runs past the earliest seeded fiscal year — a deliberate, expected
+    result (see the ADR's "no enforced minimum" decision), not an error.
+    """
+    known_years = set(load_years(session))
+    if trailing_end_year not in known_years:
+        raise HTTPException(404, f"Unknown fiscal year: {trailing_end_year}")
+    candidates = trailing_periods(trailing_end_year, trailing_end_month, window_length=12)
+    return [p for p in candidates if p[0] in known_years]
 
 
 @router.get("/api/vdt/tree")
 def get_vdt_tree(
     scope: str,
-    period: Optional[str] = None,
-    trailing_end: Optional[str] = Query(default=None, alias="trailingEnd"),
+    year: Optional[int] = None,
+    quarter: Optional[int] = Query(default=None, ge=1, le=4),
+    month: Optional[int] = Query(default=None, ge=1, le=12),
+    trailing_end_year: Optional[int] = Query(default=None, alias="trailingEndYear"),
+    trailing_end_period: Optional[int] = Query(default=None, alias="trailingEndPeriod", ge=1, le=12),
     session: Session = Depends(get_session),
 ):
-    """`period` (a Year/Quarter/Month code) is Financial Year mode, unchanged.
-    `trailingEnd` (a Month code) is Trailing mode — see docs/adr/0042: the
-    response's `months` field carries the resolved window (which can be
-    shorter than 12 if the anchor is close to the earliest seeded data), so
-    the frontend never has to re-derive it. The two are mutually exclusive in
-    practice (the frontend never sends both), but `trailingEnd` simply wins
-    if it somehow did, since Trailing mode is the more specific request.
+    """`year`/`quarter`/`month` is Financial Year mode, unchanged.
+    `trailingEndYear`/`trailingEndPeriod` (a Month anchor) is Trailing mode —
+    see docs/adr/0042, docs/adr/0051: the response's `months` field carries
+    the resolved window (which can be shorter than 12 if the anchor is close
+    to the earliest seeded data), so the frontend never has to re-derive it.
+    The two are mutually exclusive in practice (the frontend never sends
+    both), but `trailingEndYear` simply wins if it somehow did, since
+    Trailing mode is the more specific request.
     """
+    if quarter is not None and month is not None:
+        raise HTTPException(400, "quarter and month are mutually exclusive")
     if not _gl_seeded(session):
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
@@ -202,28 +238,33 @@ def get_vdt_tree(
     if resolved.get("notYetModelled"):
         return {"scope": scope, **_scope_meta(resolved), "notYetModelled": True, "nodes": {}}
 
-    if trailing_end is not None:
-        period_by_code, period_children = load_period_hierarchy(session)
-        window_codes = _resolve_trailing_window(period_by_code, period_children, trailing_end)
-        nodes = build_vdt_tree(session, resolved["companies"], month_codes=window_codes)
+    if trailing_end_year is not None:
+        if trailing_end_period is None:
+            raise HTTPException(400, "trailingEndPeriod is required with trailingEndYear")
+        window_periods = _resolve_trailing_window(session, trailing_end_year, trailing_end_period)
+        nodes = build_vdt_tree(session, resolved["companies"], explicit_periods=window_periods)
         return {
             "scope": scope,
             **_scope_meta(resolved),
             "notYetModelled": False,
-            "period": None,
-            "months": window_codes,
+            "year": None,
+            "quarter": None,
+            "month": None,
+            "months": [{"year": y, "period": p} for y, p in window_periods],
             "nodes": nodes,
         }
 
     try:
-        nodes = build_vdt_tree(session, resolved["companies"], period)
+        nodes = build_vdt_tree(session, resolved["companies"], year, quarter, month)
     except UnknownPeriod:
-        raise HTTPException(404, f"Unknown period: {period}")
+        raise HTTPException(404, f"Unknown period: year={year} quarter={quarter} month={month}")
     return {
         "scope": scope,
         **_scope_meta(resolved),
         "notYetModelled": False,
-        "period": period,
+        "year": year,
+        "quarter": quarter,
+        "month": month,
         "nodes": nodes,
     }
 
@@ -232,8 +273,12 @@ def _vdt_comparison_payload(
     session: Session,
     scope: str,
     node: str,
-    period_a: str,
-    period_b: str,
+    year_a: int,
+    quarter_a: Optional[int],
+    month_a: Optional[int],
+    year_b: int,
+    quarter_b: Optional[int],
+    month_b: Optional[int],
     ytd: bool,
 ) -> dict:
     """Shared by GET /api/vdt/comparison and POST /api/vdt/variance-analysis — both
@@ -247,18 +292,14 @@ def _vdt_comparison_payload(
     if resolved.get("notYetModelled"):
         return {"scope": scope, **_scope_meta(resolved), "notYetModelled": True, "nodes": {}}
 
-    period_by_code, _ = load_period_hierarchy(session)
-    period_a_row = period_by_code.get(period_a)
-    period_b_row = period_by_code.get(period_b)
-    if period_a_row is None:
-        raise HTTPException(404, f"Unknown period: {period_a}")
-    if period_b_row is None:
-        raise HTTPException(404, f"Unknown period: {period_b}")
-    if period_a_row.period_type != period_b_row.period_type:
+    if _grain(quarter_a, month_a) != _grain(quarter_b, month_b):
         raise HTTPException(400, "periodA and periodB must be the same grain (both Month, both Quarter, or both Year)")
 
-    tree_a = build_vdt_tree(session, resolved["companies"], period_a, ytd=ytd)
-    tree_b = build_vdt_tree(session, resolved["companies"], period_b, ytd=ytd)
+    try:
+        tree_a = build_vdt_tree(session, resolved["companies"], year_a, quarter_a, month_a, ytd=ytd)
+        tree_b = build_vdt_tree(session, resolved["companies"], year_b, quarter_b, month_b, ytd=ytd)
+    except UnknownPeriod:
+        raise HTTPException(404, "Unknown period")
 
     root = tree_a.get(node)
     if root is None:
@@ -271,8 +312,12 @@ def _vdt_comparison_payload(
         **_scope_meta(resolved),
         "notYetModelled": False,
         "node": node,
-        "periodA": period_a,
-        "periodB": period_b,
+        "yearA": year_a,
+        "quarterA": quarter_a,
+        "monthA": month_a,
+        "yearB": year_b,
+        "quarterB": quarter_b,
+        "monthB": month_b,
         "ytd": ytd,
         "nodes": diff_subtree(tree_a, tree_b, node),
     }
@@ -282,31 +327,41 @@ def _vdt_comparison_payload(
 def get_vdt_comparison(
     scope: str,
     node: str,
-    period_a: str = Query(alias="periodA"),
-    period_b: str = Query(alias="periodB"),
+    year_a: int = Query(alias="yearA"),
+    quarter_a: Optional[int] = Query(default=None, alias="quarterA", ge=1, le=4),
+    month_a: Optional[int] = Query(default=None, alias="monthA", ge=1, le=12),
+    year_b: int = Query(alias="yearB"),
+    quarter_b: Optional[int] = Query(default=None, alias="quarterB", ge=1, le=4),
+    month_b: Optional[int] = Query(default=None, alias="monthB", ge=1, le=12),
     ytd: bool = False,
     session: Session = Depends(get_session),
 ):
-    return _vdt_comparison_payload(session, scope, node, period_a, period_b, ytd)
+    return _vdt_comparison_payload(session, scope, node, year_a, quarter_a, month_a, year_b, quarter_b, month_b, ytd)
 
 
 @router.post("/api/vdt/variance-analysis")
 def post_vdt_variance_analysis(
     scope: str,
     node: str,
-    period_a: str = Query(alias="periodA"),
-    period_b: str = Query(alias="periodB"),
+    year_a: int = Query(alias="yearA"),
+    quarter_a: Optional[int] = Query(default=None, alias="quarterA", ge=1, le=4),
+    month_a: Optional[int] = Query(default=None, alias="monthA", ge=1, le=12),
+    year_b: int = Query(alias="yearB"),
+    quarter_b: Optional[int] = Query(default=None, alias="quarterB", ge=1, le=4),
+    month_b: Optional[int] = Query(default=None, alias="monthB", ge=1, le=12),
     ytd: bool = False,
     session: Session = Depends(get_session),
 ):
-    payload = _vdt_comparison_payload(session, scope, node, period_a, period_b, ytd)
+    payload = _vdt_comparison_payload(session, scope, node, year_a, quarter_a, month_a, year_b, quarter_b, month_b, ytd)
     if payload.get("notYetModelled"):
         raise HTTPException(404, "No VDT data modelled for the selected company yet")
 
-    cache_key = (scope, node, period_a, period_b, ytd)
+    period_a_label = _period_label(session, year_a, quarter_a, month_a)
+    period_b_label = _period_label(session, year_b, quarter_b, month_b)
+    cache_key = (scope, node, year_a, quarter_a, month_a, year_b, quarter_b, month_b, ytd)
     try:
         variance_analysis = generate_variance_analysis(
-            cache_key, node, payload["nodes"], period_a, period_b, currency=payload["currency"]
+            cache_key, node, payload["nodes"], period_a_label, period_b_label, currency=payload["currency"]
         )
     except VarianceAnalysisUnavailable as exc:
         raise HTTPException(503, str(exc))
@@ -316,23 +371,24 @@ def post_vdt_variance_analysis(
 @router.post("/api/vdt/trend-analysis")
 def post_vdt_trend_analysis(
     scope: str,
-    year: Optional[str] = None,
-    trailing_end: Optional[str] = Query(default=None, alias="trailingEnd"),
+    year: Optional[int] = None,
+    trailing_end_year: Optional[int] = Query(default=None, alias="trailingEndYear"),
+    trailing_end_period: Optional[int] = Query(default=None, alias="trailingEndPeriod", ge=1, le=12),
     source: str = "actual",
     session: Session = Depends(get_session),
 ):
     """Whole-window MoM Trend Analysis narrative for VDT Trends — see
-    docs/adr/0040 and docs/adr/0042. Always reads the fixed pilot anchor (SOC
-    Crew Cost) and the underlying non-cumulative monthly series, regardless of
-    the screen's Cumulative toggle — flagging needs monthly deltas, which a
-    cumulative series would make meaningless. Exactly one of `year`
-    (Financial Year mode) or `trailingEnd` (Trailing mode, a Month code
-    anchor) must be given.
+    docs/adr/0040, docs/adr/0042, docs/adr/0051. Always reads the fixed pilot
+    anchor (SOC Crew Cost) and the underlying non-cumulative monthly series,
+    regardless of the screen's Cumulative toggle — flagging needs monthly
+    deltas, which a cumulative series would make meaningless. Exactly one of
+    `year` (Financial Year mode) or `trailingEndYear`/`trailingEndPeriod`
+    (Trailing mode, a Month anchor) must be given.
     """
     if source not in ("actual", "budget"):
         raise HTTPException(400, "source must be 'actual' or 'budget'")
-    if (year is None) == (trailing_end is None):
-        raise HTTPException(400, "exactly one of year or trailingEnd must be provided")
+    if (year is None) == (trailing_end_year is None):
+        raise HTTPException(400, "exactly one of year or trailingEndYear must be provided")
 
     if not _gl_seeded(session):
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
@@ -341,29 +397,28 @@ def post_vdt_trend_analysis(
     if resolved.get("notYetModelled"):
         raise HTTPException(404, "No VDT data modelled for the selected company yet")
 
-    period_by_code, period_children = load_period_hierarchy(session)
+    periods = load_periods(session)
 
-    if trailing_end is not None:
-        window_codes = _resolve_trailing_window(period_by_code, period_children, trailing_end)
-        tree = build_vdt_tree(session, resolved["companies"], month_codes=window_codes)
-        month_labels = [calendar_month_label(period_by_code[c]) for c in window_codes]
-        window_label = f"the trailing {len(window_codes)} months ending {month_labels[-1]}"
+    if trailing_end_year is not None:
+        if trailing_end_period is None:
+            raise HTTPException(400, "trailingEndPeriod is required with trailingEndYear")
+        window_periods = _resolve_trailing_window(session, trailing_end_year, trailing_end_period)
+        tree = build_vdt_tree(session, resolved["companies"], explicit_periods=window_periods)
+        month_labels = [calendar_month_label(periods[p], y) for y, p in window_periods]
+        window_label = f"the trailing {len(window_periods)} months ending {month_labels[-1]}"
     else:
-        year_row = period_by_code.get(year)
-        if year_row is None:
-            raise HTTPException(404, f"Unknown period: {year}")
-        if year_row.period_type != PeriodType.YEAR:
-            raise HTTPException(400, f"{year} is not a fiscal-year period")
-        window_codes = ordered_month_codes_of_year(period_by_code, period_children, year)
+        if year not in set(load_years(session)):
+            raise HTTPException(404, f"Unknown fiscal year: {year}")
+        window_periods = periods_of_year(year)
         tree = build_vdt_tree(session, resolved["companies"], year)
-        month_labels = [period_by_code[c].label.split(" ")[0] for c in window_codes]
+        month_labels = [periods[p].label[:3] for _, p in window_periods]
         window_label = f"fiscal year {year}"
 
     # Keyed on the resolved window, not the request's own year/trailingEnd
     # identifier — a Financial Year request and a Trailing request that
     # happen to resolve to the same months share one cache entry (see
     # docs/adr/0042).
-    cache_key = (scope, tuple(window_codes), source)
+    cache_key = (scope, tuple(window_periods), source)
 
     if VDT_TRENDS_ANCHOR not in tree:
         raise HTTPException(404, f"Anchor {VDT_TRENDS_ANCHOR} missing from VDT tree")
@@ -377,7 +432,13 @@ def post_vdt_trend_analysis(
 
 @router.get("/api/vdt/reconciliation")
 def get_vdt_reconciliation(
-    scope: str, node: str, period: Optional[str] = None, ytd: bool = False, session: Session = Depends(get_session)
+    scope: str,
+    node: str,
+    year: Optional[int] = None,
+    quarter: Optional[int] = Query(default=None, ge=1, le=4),
+    month: Optional[int] = Query(default=None, ge=1, le=12),
+    ytd: bool = False,
+    session: Session = Depends(get_session),
 ):
     """VDT-hierarchy subtree at `node`, plus the Accounting nodes needed to
     show each VDT Account leaf's FA GL anchor alongside it — see
@@ -405,10 +466,10 @@ def get_vdt_reconciliation(
         }
 
     try:
-        accounting_tree = build_tree(session, resolved["companies"], period, ytd=ytd)
-        vdt_tree = build_vdt_tree(session, resolved["companies"], period, ytd=ytd)
+        accounting_tree = build_tree(session, resolved["companies"], year, quarter, month, ytd=ytd)
+        vdt_tree = build_vdt_tree(session, resolved["companies"], year, quarter, month, ytd=ytd)
     except UnknownPeriod:
-        raise HTTPException(404, f"Unknown period: {period}")
+        raise HTTPException(404, f"Unknown period: year={year} quarter={quarter} month={month}")
 
     root = vdt_tree.get(node)
     if root is None:
@@ -431,7 +492,9 @@ def get_vdt_reconciliation(
         **_scope_meta(resolved),
         "notYetModelled": False,
         "node": node,
-        "period": period,
+        "year": year,
+        "quarter": quarter,
+        "month": month,
         "ytd": ytd,
         "accounting": {"nodes": accounting_nodes},
         "vdt": {"nodes": vdt_nodes},
@@ -465,8 +528,9 @@ class SensitivityRequest(BaseModel):
     scopeNode: str  # VDT node code (frontend sends the resolved code; whole-book default = the Reporting Root)
     bumpPct: float  # 1..20 inclusive
     source: str = "actual"  # 'actual' | 'budget'
-    year: Optional[str] = None  # Financial Year mode (Year code)
-    trailingEnd: Optional[str] = None  # Trailing mode (anchor Month code)
+    year: Optional[int] = None  # Financial Year mode
+    trailingEndYear: Optional[int] = None  # Trailing mode (anchor Month year)
+    trailingEndPeriod: Optional[int] = None  # Trailing mode (anchor Month, 1-12)
 
 
 @router.post("/api/vdt/sensitivity")
@@ -481,8 +545,8 @@ def post_vdt_sensitivity(payload: SensitivityRequest, request: Request, session:
         raise HTTPException(422, "bump percent must be between 1 and 20")
     if payload.source not in ("actual", "budget"):
         raise HTTPException(400, "source must be 'actual' or 'budget'")
-    if (payload.year is None) == (payload.trailingEnd is None):
-        raise HTTPException(400, "exactly one of year or trailingEnd must be provided")
+    if (payload.year is None) == (payload.trailingEndYear is None):
+        raise HTTPException(400, "exactly one of year or trailingEndYear must be provided")
 
     if not _gl_seeded(session):
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
@@ -491,21 +555,20 @@ def post_vdt_sensitivity(payload: SensitivityRequest, request: Request, session:
     if resolved.get("notYetModelled"):
         raise HTTPException(404, "No VDT data modelled for the selected company yet")
 
-    period_by_code, period_children = load_period_hierarchy(session)
+    periods = load_periods(session)
 
-    if payload.trailingEnd is not None:
-        window_codes = _resolve_trailing_window(period_by_code, period_children, payload.trailingEnd)
-        month_labels = [calendar_month_label(period_by_code[c]) for c in window_codes]
-        window_label = f"trailing {len(window_codes)} months ending {month_labels[-1]}" if month_labels else "trailing window"
-        vdt_nodes = build_vdt_tree(session, resolved["companies"], month_codes=window_codes)
+    if payload.trailingEndYear is not None:
+        if payload.trailingEndPeriod is None:
+            raise HTTPException(400, "trailingEndPeriod is required with trailingEndYear")
+        window_periods = _resolve_trailing_window(session, payload.trailingEndYear, payload.trailingEndPeriod)
+        month_labels = [calendar_month_label(periods[p], y) for y, p in window_periods]
+        window_label = f"trailing {len(window_periods)} months ending {month_labels[-1]}" if month_labels else "trailing window"
+        vdt_nodes = build_vdt_tree(session, resolved["companies"], explicit_periods=window_periods)
     else:
-        year_row = period_by_code.get(payload.year)
-        if year_row is None:
-            raise HTTPException(404, f"Unknown period: {payload.year}")
-        if year_row.period_type != PeriodType.YEAR:
-            raise HTTPException(400, f"{payload.year} is not a fiscal-year period")
-        window_codes = ordered_month_codes_of_year(period_by_code, period_children, payload.year)
-        month_labels = [period_by_code[c].label.split(" ")[0] for c in window_codes]
+        if payload.year not in set(load_years(session)):
+            raise HTTPException(404, f"Unknown fiscal year: {payload.year}")
+        window_periods = periods_of_year(payload.year)
+        month_labels = [periods[p].label[:3] for _, p in window_periods]
         window_label = f"fiscal year {payload.year}"
         vdt_nodes = build_vdt_tree(session, resolved["companies"], payload.year)
 
@@ -521,7 +584,7 @@ def post_vdt_sensitivity(payload: SensitivityRequest, request: Request, session:
     # ONE baseline DriverEngine, reused read-only for candidate discovery and
     # baseline driver values (see docs/adr/0043) — every bumped rerun below
     # still builds its OWN fresh engine via compute_npat_with_overrides.
-    engine = DriverEngine(session, resolved["companies"], window_codes)
+    engine = DriverEngine(session, resolved["companies"], window_periods)
     candidates = terminal_driver_candidates(engine, payload.scopeNode, vdt_nodes)
 
     total = len(candidates) * 2
@@ -529,7 +592,7 @@ def post_vdt_sensitivity(payload: SensitivityRequest, request: Request, session:
         raise HTTPException(422, f"sensitivity run too large: {total} cycles, cap {SENSITIVITY_MAX_CYCLES}")
 
     generator = compute_sensitivity(
-        session, company, payload.source, window_codes, root_code, candidates, payload.bumpPct, engine, total
+        session, company, payload.source, window_periods, root_code, candidates, payload.bumpPct, engine, total
     )
 
     def augment_result(event: dict) -> dict:

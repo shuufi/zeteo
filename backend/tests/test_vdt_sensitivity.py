@@ -32,7 +32,7 @@ from backend.models import (
     VdtAccount,
     VdtHierarchy,
 )
-from backend.calendar.periods import load_period_hierarchy, ordered_month_codes_of_year
+from backend.accounting.tree import periods_of_year
 from backend.diagnostics.sensitivity import (
     DriverOverride,
     SENSITIVITY_MAX_CYCLES,
@@ -46,8 +46,7 @@ from conftest import fixture_graph  # noqa: E402
 
 
 def _window(session, codes, n=2):
-    period_by_code, period_children = load_period_hierarchy(session)
-    return ordered_month_codes_of_year(period_by_code, period_children, codes["year"])[:n]
+    return periods_of_year(codes["year"])[:n]
 
 
 def _client(session) -> TestClient:
@@ -62,7 +61,7 @@ def test_override_primitive_recomputes_npat_and_never_mutates_driver_fact(sessio
     codes = fixture_graph(session)
     window = _window(session, codes, 12)
 
-    before = sorted((r.code, r.period_code, r.source, r.amount) for r in session.exec(select(DriverFact)).all())
+    before = sorted((r.code, r.year, r.period, r.source, r.amount) for r in session.exec(select(DriverFact)).all())
 
     result = compute_npat_with_overrides(
         session,
@@ -73,7 +72,7 @@ def test_override_primitive_recomputes_npat_and_never_mutates_driver_fact(sessio
         codes["root"],
     )
 
-    after = sorted((r.code, r.period_code, r.source, r.amount) for r in session.exec(select(DriverFact)).all())
+    after = sorted((r.code, r.year, r.period, r.source, r.amount) for r in session.exec(select(DriverFact)).all())
     assert before == after  # overrides never leak into the persisted row
 
     # Overriding headcount to 99 must move NPAT away from the un-overridden baseline.
@@ -181,7 +180,7 @@ def test_elasticity_both_directions_kept_and_cost_driver_bump_is_adverse(session
     codes = fixture_graph(session)
     window = _window(session, codes, 2)
     engine = DriverEngine(session, [codes["company"]], window)
-    vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
+    vdt_nodes = build_vdt_tree(session, [codes["company"]], explicit_periods=window)
     candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
     total = len(candidates) * 2
 
@@ -218,7 +217,7 @@ def test_candidate_events_stream_in_order_and_match_final_candidates(session):
     codes = fixture_graph(session)
     window = _window(session, codes, 2)
     engine = DriverEngine(session, [codes["company"]], window)
-    vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
+    vdt_nodes = build_vdt_tree(session, [codes["company"]], explicit_periods=window)
     candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
     total = len(candidates) * 2
 
@@ -276,7 +275,7 @@ def test_shared_driver_outside_scope_measured_to_npat_in_full(session):
     session.commit()
 
     engine_before = DriverEngine(session, [codes["company"]], window)
-    vdt_before = build_vdt_tree(session, [codes["company"]], month_codes=window)
+    vdt_before = build_vdt_tree(session, [codes["company"]], explicit_periods=window)
     # scope=ACT-TOP still discovers headcount (via VA-1) even though VA-3 (also
     # using headcount) sits entirely outside ACT-TOP's subtree.
     candidates = terminal_driver_candidates(engine_before, codes["act_top"], vdt_before)
@@ -307,7 +306,7 @@ def test_shared_driver_outside_scope_measured_to_npat_in_full(session):
     with Session(plain_engine) as plain_session:
         session2_codes = fixture_graph(plain_session)
         plain_driver_engine = DriverEngine(plain_session, [session2_codes["company"]], window)
-        plain_vdt = build_vdt_tree(plain_session, [session2_codes["company"]], month_codes=window)
+        plain_vdt = build_vdt_tree(plain_session, [session2_codes["company"]], explicit_periods=window)
         plain_candidates = terminal_driver_candidates(plain_driver_engine, session2_codes["act_top"], plain_vdt)
         plain_total = len(plain_candidates) * 2
         without_va3_result = next(
@@ -346,7 +345,7 @@ def test_baseline_npat_near_zero_flags_all_na_but_keeps_dollar_impact(session):
     session.commit()
 
     engine = DriverEngine(session, [codes["company"]], window)
-    vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
+    vdt_nodes = build_vdt_tree(session, [codes["company"]], explicit_periods=window)
     candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
     total = len(candidates) * 2
 
@@ -380,7 +379,7 @@ def test_baseline_driver_zero_flags_na(session):
     session.commit()
 
     engine = DriverEngine(session, [codes["company"]], window)
-    vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
+    vdt_nodes = build_vdt_tree(session, [codes["company"]], explicit_periods=window)
     candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
     total = len(candidates) * 2
 
@@ -414,7 +413,7 @@ def test_skip_compute_na_candidate_still_yields_candidate_event(session):
     session.commit()
 
     engine = DriverEngine(session, [codes["company"]], window)
-    vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
+    vdt_nodes = build_vdt_tree(session, [codes["company"]], explicit_periods=window)
     candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
     total = len(candidates) * 2
 
@@ -448,14 +447,14 @@ def test_divide_by_zero_site_flags_candidate_feeding_it(session):
         )
     )
     facts = []
-    for i, month_code in enumerate(window):
+    for i, (year, period) in enumerate(window):
         amount = Decimal("0") if i == 5 else Decimal("5")
-        facts.append(DriverFact(code="DRV-ZERO-DIVISOR", company=codes["company"], period_code=month_code, source=Source.ACTUAL, amount=amount))
+        facts.append(DriverFact(code="DRV-ZERO-DIVISOR", company=codes["company"], year=year, period=period, source=Source.ACTUAL, amount=amount))
     session.add_all(facts)
     session.commit()
 
     engine = DriverEngine(session, [codes["company"]], window)
-    vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
+    vdt_nodes = build_vdt_tree(session, [codes["company"]], explicit_periods=window)
     candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
     assert "DRV-ZERO-DIVISOR" in candidates
     total = len(candidates) * 2
@@ -476,7 +475,7 @@ def test_empty_scope_returns_no_terminal_drivers_reason(session):
     codes = fixture_graph(session)
     window = _window(session, codes, 2)
     engine = DriverEngine(session, [codes["company"]], window)
-    vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
+    vdt_nodes = build_vdt_tree(session, [codes["company"]], explicit_periods=window)
 
     candidates = terminal_driver_candidates(engine, codes["rev"], vdt_nodes)
     assert candidates == []
@@ -503,7 +502,7 @@ def test_partial_trailing_window_batches_reruns_independent_of_width(session):
     codes = fixture_graph(session)
     window = _window(session, codes, 3)  # a short "partial window" stand-in
     engine = DriverEngine(session, [codes["company"]], window)
-    vdt_nodes = build_vdt_tree(session, [codes["company"]], month_codes=window)
+    vdt_nodes = build_vdt_tree(session, [codes["company"]], explicit_periods=window)
     candidates = terminal_driver_candidates(engine, codes["root"], vdt_nodes)
     total = len(candidates) * 2
     assert total == len(candidates) * 2  # width-independent, unlike pre-batching
@@ -514,7 +513,7 @@ def test_partial_trailing_window_batches_reruns_independent_of_width(session):
     progress = [e for e in events if e["type"] == "progress"]
     assert len(progress) == total
     result = next(e for e in events if e["type"] == "result")
-    assert result["months"] == window
+    assert result["months"] == [{"year": y, "period": p} for y, p in window]
 
 
 # --- endpoint -----------------------------------------------------------------
@@ -577,17 +576,17 @@ def test_sensitivity_endpoint_rejects_bump_pct_out_of_range(session):
 
 def test_sensitivity_endpoint_trailing_window_resolves_and_streams(session):
     """Coverage gap: every other endpoint test drives the Financial Year
-    (`year=`) branch only — `trailingEnd` is otherwise exercised solely by
-    the "both provided -> 400" rejection test, which never reaches
-    `_resolve_trailing_window`. `fixture_graph` seeds a single fiscal year
-    (FY24 only, see conftest.py), so this can't be a genuine cross-fiscal-year
-    trailing window without extending the fixture, but anchoring mid-year
-    (FY24-M06) with only one year of history seeded still exercises the real
-    partial-window behaviour `trailing_month_codes()` documents ("fewer than
-    window_length codes if history runs out before the window is full") and
-    walks the endpoint's `trailingEnd` branch end-to-end: window resolution,
-    `calendar_month_label` month labels, and the "trailing N months ending..."
-    windowLabel format."""
+    (`year=`) branch only — `trailingEndYear`/`trailingEndPeriod` is otherwise
+    exercised solely by the "both provided -> 400" rejection test, which never
+    reaches `_resolve_trailing_window`. `fixture_graph` seeds a single fiscal
+    year (2024 only, see conftest.py), so this can't be a genuine cross-
+    fiscal-year trailing window without extending the fixture, but anchoring
+    mid-year (2024-06) with only one year of history seeded still exercises
+    the real partial-window behaviour `trailing_periods()`/`_resolve_trailing_window`
+    document ("fewer than window_length pairs if history runs out before the
+    window is full") and walks the endpoint's trailing-mode branch end-to-end:
+    window resolution, `calendar_month_label` month labels, and the "trailing
+    N months ending..." windowLabel format."""
     codes = fixture_graph(session)
     client = _client(session)
 
@@ -596,16 +595,16 @@ def test_sensitivity_endpoint_trailing_window_resolves_and_streams(session):
         "/api/vdt/sensitivity",
         json={
             "scope": codes["company"], "scopeNode": codes["root"], "bumpPct": 10.0,
-            "source": "actual", "trailingEnd": f"{codes['year']}-M06",
+            "source": "actual", "trailingEndYear": codes["year"], "trailingEndPeriod": 6,
         },
     ) as resp:
         assert resp.status_code == 200
         events = _read_sse_events(resp)
 
     result = next(e for e in events if e["type"] == "result")
-    # History runs out at FY24-M01, so the 12-month-wide window request is
-    # truncated to the 6 months actually available (M01..M06 inclusive).
-    assert result["months"] == [f"{codes['year']}-M{m:02d}" for m in range(1, 7)]
+    # History runs out at 2024-01, so the 12-month-wide window request is
+    # truncated to the 6 months actually available (01..06 inclusive).
+    assert result["months"] == [{"year": codes["year"], "period": m} for m in range(1, 7)]
     assert len(result["monthLabels"]) == 6
     assert result["monthLabels"][-1] == "Jun '24"
     assert result["windowLabel"] == "trailing 6 months ending Jun '24"
@@ -633,7 +632,7 @@ def test_sensitivity_endpoint_requires_exactly_one_of_year_or_trailing_end(sessi
         "/api/vdt/sensitivity",
         json={
             "scope": codes["company"], "scopeNode": codes["root"], "bumpPct": 10.0,
-            "year": codes["year"], "trailingEnd": f"{codes['year']}-M06",
+            "year": codes["year"], "trailingEndYear": codes["year"], "trailingEndPeriod": 6,
         },
     )
     assert resp.status_code == 400
@@ -656,7 +655,7 @@ def test_sensitivity_endpoint_rejects_not_yet_modelled_company(session):
 
     resp = client.post(
         "/api/vdt/sensitivity",
-        json={"scope": "NOT-REAL", "scopeNode": "NPAT", "bumpPct": 10.0, "year": "FY24"},
+        json={"scope": "NOT-REAL", "scopeNode": "NPAT", "bumpPct": 10.0, "year": 2024},
     )
     assert resp.status_code == 404
 

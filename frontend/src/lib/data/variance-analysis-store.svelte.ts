@@ -1,3 +1,5 @@
+import { periodParams } from './period-store.svelte';
+
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 
 let status = $state<Status>('idle');
@@ -46,7 +48,13 @@ export async function generateVarianceAnalysis(scope: string, node: string, peri
   status = 'loading';
   error = '';
   try {
-    const params = new URLSearchParams({ scope, node, periodA, periodB, ytd: String(ytd) });
+    const a = periodParams(periodA);
+    const b = periodParams(periodB);
+    const params = new URLSearchParams({ scope, node, yearA: String(a.year), yearB: String(b.year), ytd: String(ytd) });
+    if (a.quarter != null) params.set('quarterA', String(a.quarter));
+    if (a.month != null) params.set('monthA', String(a.month));
+    if (b.quarter != null) params.set('quarterB', String(b.quarter));
+    if (b.month != null) params.set('monthB', String(b.month));
     const res = await fetch(`/api/vdt/variance-analysis?${params}`, { method: 'POST' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
