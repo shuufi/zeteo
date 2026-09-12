@@ -4,10 +4,10 @@ Structurally mirrors gl_tree.build_tree(): identical period/company scoping
 (load_monthly/scoped_sum/DriverEngine), identical bottom-up compute shape,
 directly sharing compute_gl_leaf()/sum_children_entry() with it rather than
 duplicating them. What's VDT-specific is the adjacency: a VDT Hierarchy Node's
-`parent_code` can point at an existing general_ledger.code (e.g. PNL-0011
+`parent_code` can point at an existing gl_hierarchy.code (e.g. PNL-0011
 Cost of Revenue) — wherever that happens, this tree's children at that code
 are REPLACED WHOLESALE by the VDT Hierarchy Node(s), not unioned with the GL
-code's ordinary Reporting-Node children (never mutating general_ledger
+code's ordinary Reporting-Node children (never mutating gl_hierarchy
 itself — this is a VDT-only view of the adjacency). Everywhere else, GL
 children pass through unmodified. A direct consequence: any GL subtree that
 was hanging off a now-overridden parent (e.g. the old Manpower Cost branch
@@ -28,7 +28,9 @@ from diagnostic_content import DIAGNOSTIC_CONTENT
 from driver_engine import DriverEngine
 from gl_tree import (
     _direction,
+    _load_gl_hierarchy,
     _money_json,
+    _node_type,
     _prior_year_code,
     _stitch_driver_nodes,
     _year_of,
@@ -38,7 +40,7 @@ from gl_tree import (
     sum_children_entry,
     ZERO,
 )
-from models import GLNode, NodeType, NormalBalance, PeriodType, VdtAccount, VdtHierarchy
+from models import GLAccount, GLHierarchy, NormalBalance, PeriodType, VdtAccount, VdtHierarchy
 from periods import load_period_hierarchy, month_indices_for, ordered_month_codes_of_year, ytd_month_indices_for
 
 logger = logging.getLogger(__name__)
@@ -51,7 +53,7 @@ def _compute_vdt_account(
     code: str,
     account: VdtAccount,
     engine: DriverEngine,
-    gl_by_code: dict[str, GLNode],
+    gl_by_code: dict[str, GLHierarchy | GLAccount],
     scope_indices: Optional[set[int]],
     width: int,
 ) -> dict:
@@ -108,18 +110,14 @@ def build_vdt_tree(
     preserves today's behaviour exactly — a fresh engine built from
     `companies`/`month_codes` as before.
     """
-    gl_nodes = session.exec(select(GLNode)).all()
-    gl_by_code = {n.code: n for n in gl_nodes}
+    gl_by_code, children_by_parent, gl_leaf_codes = _load_gl_hierarchy(session)
     vdt_hierarchy_nodes = session.exec(select(VdtHierarchy)).all()
     vdt_hierarchy_by_code = {n.code: n for n in vdt_hierarchy_nodes}
     vdt_accounts = session.exec(select(VdtAccount)).all()
     vdt_account_by_code = {n.code: n for n in vdt_accounts}
 
-    # --- adjacency ---
-    children_by_parent: dict[str, list[str]] = defaultdict(list)
-    for n in gl_nodes:
-        if n.parent_code:
-            children_by_parent[n.parent_code].append(n.code)
+    # --- adjacency (gl_by_code/children_by_parent above already cover GL's
+    # own hierarchy+account adjacency — see docs/adr/0048) ---
 
     # Top-level VDT Hierarchy Nodes group by the GL code they attach to.
     vdt_hierarchy_roots_by_gl_parent: dict[str, list[str]] = defaultdict(list)
@@ -187,7 +185,7 @@ def build_vdt_tree(
 
         if code in vdt_account_by_code:
             entry = _compute_vdt_account(code, vdt_account_by_code[code], engine, gl_by_code, scope_indices, width)
-        elif code in gl_by_code and gl_by_code[code].node_type == NodeType.POSTING_GL_ACCOUNT:
+        elif code in gl_leaf_codes:
             entry = compute_gl_leaf(gl_by_code[code], engine, monthly, prior_monthly, scope_indices, width)
         else:
             # GL Reporting Root/Node (unmodified or GL-passthrough) or VDT
@@ -199,7 +197,7 @@ def build_vdt_tree(
         return entry
 
     for code, node in gl_by_code.items():
-        if node.node_type == NodeType.REPORTING_ROOT:
+        if code not in gl_leaf_codes and node.parent_code is None:
             compute(code)
 
     # Only codes actually reached from a Reporting Root are real in this tree
@@ -215,7 +213,7 @@ def build_vdt_tree(
                 "name": node.description,
                 "parentId": node.parent_code,
                 "childIds": list(children_by_parent.get(code, [])),
-                "nodeType": node.node_type.value,
+                "nodeType": _node_type(code, node, gl_leaf_codes),
                 "unit": "money",
                 "actual": _money_json(entry["actual"]),
                 "budget": _money_json(entry["budget"]),
@@ -227,7 +225,7 @@ def build_vdt_tree(
                 "hasFullData": full_data is not None,
                 **(full_data or {}),
             }
-            if node.node_type == NodeType.POSTING_GL_ACCOUNT and engine.is_driven(code):
+            if code in gl_leaf_codes and engine.is_driven(code):
                 extra_nodes, formula_ids = _stitch_driver_nodes(engine, code, code, scoped_sum_local, period_len)
                 result[code]["childIds"] = result[code]["childIds"] + formula_ids
                 result.update(extra_nodes)

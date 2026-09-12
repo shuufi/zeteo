@@ -16,6 +16,11 @@ venv/
 
 # Seeded/generated DB (rebuild with backend/seed.py)
 backend/data/*.db
+.fuse_hidden*
+
+# Dev server logs
+.logs/
+/logs/
 
 # Env
 .env
