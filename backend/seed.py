@@ -1,12 +1,13 @@
 """Rebuild backend/data/zeteo.db from the real GL/FSI hierarchy plus fabricated
 facts for one focus company, across three real fiscal years.
 
-Source of truth for the hierarchy is docs/anaplan_is_master_data.csv (a real
-SAP GL/FSI export). Fact amounts are fabricated with a fixed RNG seed so the
-dataset is reproducible — designed (stable per-leaf cost/revenue structure,
-category-level YoY growth, seasonality) rather than independently random per
-row, so the P&L reads as one coherent business rather than noise. See
-docs/adr/0022, 0023, 0024, 0032.
+Source of truth for the hierarchy is backend/seeds/master/gl_hierarchy.csv
+(interior nodes) and gl_account.csv (leaves) — split from a real SAP GL/FSI
+export, see docs/adr/0048. Fact amounts are fabricated with a fixed RNG seed
+so the dataset is reproducible — designed (stable per-leaf cost/revenue
+structure, category-level YoY growth, seasonality) rather than independently
+random per row, so the P&L reads as one coherent business rather than noise.
+See docs/adr/0022, 0023, 0024, 0032.
 
 Run with: python backend/seed.py
 """
@@ -27,9 +28,9 @@ from models import (
     DriverFormula,
     DriverFormulaTerm,
     Financial,
-    GLNode,
+    GLAccount,
+    GLHierarchy,
     HierarchyKind,
-    NodeType,
     NormalBalance,
     Period,
     PeriodType,
@@ -40,7 +41,8 @@ from models import (
 from seed_vdt import build_crew_mix_seed, build_pending_account_seed, load_vdt_hierarchy
 
 REPO_ROOT = Path(__file__).parent.parent
-CSV_PATH = REPO_ROOT / "docs" / "anaplan_is_master_data.csv"
+GL_HIERARCHY_CSV_PATH = REPO_ROOT / "backend" / "seeds" / "master" / "gl_hierarchy.csv"
+GL_ACCOUNT_CSV_PATH = REPO_ROOT / "backend" / "seeds" / "master" / "gl_account.csv"
 COMPANIES_CSV_PATH = REPO_ROOT / "docs" / "misc_companies.csv"
 BU_HIERARCHY_CSV_PATH = REPO_ROOT / "backend" / "seeds" / "master" / "bu_hierarchy_mapping.csv"
 
@@ -167,12 +169,6 @@ NORMAL_BALANCE_BY_PREFIX = {
     "8": NormalBalance.DEBIT,
 }
 
-NODE_TYPE_BY_CSV_VALUE = {
-    "Reporting Root": NodeType.REPORTING_ROOT,
-    "Reporting Node": NodeType.REPORTING_NODE,
-    "Posting GL Account": NodeType.POSTING_GL_ACCOUNT,
-}
-
 # The one node that keeps full Driver Diagnostic depth (trend/drivers/
 # benchmark/root-cause) — see docs/adr/0022.
 FULLY_MODELLED_NODE = "PNL-0024"
@@ -213,42 +209,91 @@ CATEGORY_YOY_GROWTH = {
 LEAF_WEIGHT_RANGE = (0.7, 1.3)
 
 
-def load_hierarchy_nodes() -> list[GLNode]:
-    rows = list(csv.DictReader(CSV_PATH.open(encoding="utf-8-sig")))
-    by_code = {r["Code"]: r for r in rows}
-    children: dict[str, list[str]] = {}
-    for r in rows:
-        if r["Parent Code"]:
-            children.setdefault(r["Parent Code"], []).append(r["Code"])
+def load_gl_hierarchy() -> list[GLHierarchy]:
+    rows = list(csv.DictReader(GL_HIERARCHY_CSV_PATH.open(encoding="utf-8-sig")))
+    return [
+        GLHierarchy(code=r["code"], description=r["label"], parent_code=r["parent_code"] or None)
+        for r in rows
+    ]
 
-    def leaf_normal_balances(code: str) -> set[NormalBalance]:
-        r = by_code[code]
-        if r["Node Type"] == "Posting GL Account":
-            return {NORMAL_BALANCE_BY_PREFIX[code[0]]}
-        result: set[NormalBalance] = set()
-        for child in children.get(code, []):
-            result |= leaf_normal_balances(child)
-        return result
 
-    nodes = []
-    for r in rows:
-        node_type = NODE_TYPE_BY_CSV_VALUE[r["Node Type"]]
-        if node_type == NodeType.POSTING_GL_ACCOUNT:
-            normal_balance = NORMAL_BALANCE_BY_PREFIX[r["Code"][0]]
-        else:
-            balances = leaf_normal_balances(r["Code"])
-            normal_balance = balances.pop() if len(balances) == 1 else None
-        nodes.append(
-            GLNode(
-                code=r["Code"],
-                description=r["Description"],
-                parent_code=r["Parent Code"] or None,
-                node_type=node_type,
-                level=int(r["Hierarchy Level"]),
-                normal_balance=normal_balance,
-            )
+def load_gl_accounts() -> list[GLAccount]:
+    rows = list(csv.DictReader(GL_ACCOUNT_CSV_PATH.open(encoding="utf-8-sig")))
+    return [
+        GLAccount(
+            code=r["code"],
+            description=r["label"],
+            parent_code=r["parent_code"],
+            normal_balance=NORMAL_BALANCE_BY_PREFIX[r["code"][0]],
         )
-    return nodes
+        for r in rows
+    ]
+
+
+def validate_gl_data(hierarchy: list[GLHierarchy], accounts: list[GLAccount]) -> None:
+    """Invariants the old combined GLNode table enforced structurally
+    (one shared code space, one node_type per row) that the split across
+    gl_hierarchy.csv/gl_account.csv can now only violate by seed-data error —
+    see docs/adr/0048's seed-time integrity checks."""
+    hierarchy_codes = {n.code for n in hierarchy}
+    account_codes = {n.code for n in accounts}
+
+    overlap = hierarchy_codes & account_codes
+    if overlap:
+        raise ValueError(f"Duplicate codes in both gl_hierarchy.csv and gl_account.csv: {overlap}")
+
+    roots = [n for n in hierarchy if n.parent_code is None]
+    if len(roots) != 1:
+        raise ValueError(f"Expected exactly one GL hierarchy root (null parent_code), found {[n.code for n in roots]}")
+
+    for n in accounts:
+        if n.parent_code not in hierarchy_codes:
+            raise ValueError(f"gl_account {n.code}'s parent_code {n.parent_code!r} isn't a gl_hierarchy code (a leaf can never parent another row)")
+
+    parent_by_code = {n.code: n.parent_code for n in hierarchy}
+    for n in hierarchy:
+        if n.parent_code is not None and n.parent_code not in hierarchy_codes:
+            raise ValueError(f"gl_hierarchy {n.code}'s parent_code {n.parent_code!r} isn't another gl_hierarchy code")
+        seen: set[str] = set()
+        cur = n.code
+        while cur is not None:
+            if cur in seen:
+                raise ValueError(f"Cycle detected in gl_hierarchy starting at {n.code}")
+            seen.add(cur)
+            cur = parent_by_code.get(cur)
+
+    root_code = roots[0].code
+    children_by_parent: dict[str, list[str]] = {}
+    for n in hierarchy:
+        if n.parent_code is not None:
+            children_by_parent.setdefault(n.parent_code, []).append(n.code)
+    reachable: set[str] = set()
+    stack = [root_code]
+    while stack:
+        cur = stack.pop()
+        if cur in reachable:
+            continue
+        reachable.add(cur)
+        stack.extend(children_by_parent.get(cur, []))
+    unreachable = hierarchy_codes - reachable
+    if unreachable:
+        raise ValueError(f"gl_hierarchy rows disconnected from root {root_code!r}: {unreachable}")
+
+
+def gl_hierarchy_levels(hierarchy: list[GLHierarchy]) -> dict[str, int]:
+    """Depth of each gl_hierarchy node from the root, computed by walking
+    parent_code — not stored (see docs/adr/0048), needed only as the base
+    case for seed_vdt.py's Activity Node level_of()."""
+    parent_by_code = {n.code: n.parent_code for n in hierarchy}
+    level_cache: dict[str, int] = {}
+
+    def level_of(code: str) -> int:
+        if code not in level_cache:
+            parent = parent_by_code[code]
+            level_cache[code] = 0 if parent is None else level_of(parent) + 1
+        return level_cache[code]
+
+    return {code: level_of(code) for code in parent_by_code}
 
 
 MONEY_QUANTUM = Decimal("0.01")
@@ -278,7 +323,7 @@ def prorate(monthly_actual: list[Decimal], scaled_total: float) -> list[Decimal]
     return values
 
 
-def generate_gl_facts(rng: random.Random, leaves: list[GLNode], company: str) -> list[Financial]:
+def generate_gl_facts(rng: random.Random, leaves: list[GLAccount], company: str) -> list[Financial]:
     leaf_count_by_prefix = {prefix: sum(1 for leaf in leaves if leaf.code[0] == prefix) for prefix in CATEGORY_ANNUAL_TARGET_FY24}
     leaf_mean_by_prefix = {prefix: CATEGORY_ANNUAL_TARGET_FY24[prefix] / count for prefix, count in leaf_count_by_prefix.items()}
     # Drawn once per leaf so its share of the category stays stable across
@@ -305,21 +350,25 @@ def generate_gl_facts(rng: random.Random, leaves: list[GLNode], company: str) ->
 def main() -> None:
     rng = random.Random(SEED)
 
-    hierarchy = load_hierarchy_nodes()
+    gl_hierarchy = load_gl_hierarchy()
+    gl_accounts = load_gl_accounts()
+    validate_gl_data(gl_hierarchy, gl_accounts)
     periods = build_periods()
     company_hierarchy = build_company_hierarchy()
     bu_node_codes = {n.code for n in company_hierarchy if n.hierarchy_kind == HierarchyKind.BU}
     company_nodes = build_company_nodes(bu_node_codes)
 
-    leaves = [n for n in hierarchy if n.node_type == NodeType.POSTING_GL_ACCOUNT]
-    facts = generate_gl_facts(rng, leaves, FOCUS_COMPANY_CODE)
+    facts = generate_gl_facts(rng, gl_accounts, FOCUS_COMPANY_CODE)
 
     # VDT hierarchy pilot — see docs/adr/0033. Structure comes from
     # backend/seeds/master/vdt_hierarchy_crew_cost.csv; `gl_level_by_code`
     # lets its VDT Hierarchy Nodes compute their own `level` from the parent
-    # chain without a Hierarchy Level CSV column of their own.
-    gl_level_by_code = {n.code: n.level for n in hierarchy}
-    vdt_hierarchy_nodes, accounts = load_vdt_hierarchy(gl_level_by_code)
+    # chain without a Hierarchy Level CSV column of their own (gl_hierarchy
+    # itself doesn't store level either, see docs/adr/0048 — both compute it
+    # fresh).
+    gl_level_by_code = gl_hierarchy_levels(gl_hierarchy)
+    gl_account_codes = {n.code for n in gl_accounts}
+    vdt_hierarchy_nodes, accounts = load_vdt_hierarchy(gl_level_by_code, gl_account_codes)
     vdt_drivers, vdt_formulas, vdt_terms, vdt_facts = build_crew_mix_seed(FOCUS_COMPANY_CODE, FISCAL_YEARS)
     pending_drivers, pending_formulas, pending_terms, pending_facts = build_pending_account_seed(FOCUS_COMPANY_CODE, FISCAL_YEARS)
     vdt_drivers += pending_drivers
@@ -339,7 +388,8 @@ def main() -> None:
         # Financial value) — now actually repopulated, targeting the new VDT
         # hierarchy's VDT Accounts rather than GL leaves, so
         # that risk doesn't apply here.
-        session.add_all(hierarchy)
+        session.add_all(gl_hierarchy)
+        session.add_all(gl_accounts)
         session.add_all(periods)
         session.add_all(company_hierarchy)
         session.add_all(company_nodes)
@@ -354,7 +404,7 @@ def main() -> None:
         session.add_all(vdt_facts)
         session.commit()
 
-    print(f"Seeded {len(hierarchy)} GL/FSI nodes")
+    print(f"Seeded {len(gl_hierarchy)} GL hierarchy nodes and {len(gl_accounts)} GL accounts")
     print(f"Seeded {len(periods)} periods across {len(FISCAL_YEARS)} fiscal years ({', '.join(FISCAL_YEARS)})")
     print(f"Seeded {len(company_hierarchy)} BU hierarchy nodes and {len(company_nodes)} companies (1 sampled: {FOCUS_COMPANY_CODE})")
     print(f"Seeded {len(facts)} GL facts for {FOCUS_COMPANY_CODE} across {len(FISCAL_YEARS)} years")

@@ -40,14 +40,18 @@ CSV_PATH = REPO_ROOT / "backend" / "seeds" / "master" / "vdt_hierarchy_crew_cost
 SEED = 4300
 
 
-def load_vdt_hierarchy(gl_level_by_code: dict[str, int]) -> tuple[list[VdtHierarchy], list[VdtAccount]]:
+def load_vdt_hierarchy(
+    gl_level_by_code: dict[str, int], gl_account_codes: set[str]
+) -> tuple[list[VdtHierarchy], list[VdtAccount]]:
     """Reads backend/seeds/master/vdt_hierarchy_crew_cost.csv, splitting rows by Node Type.
 
-    `level` isn't a CSV column here (unlike anaplan_is_master_data.csv) — computed
-    from the parent chain, terminating either at a known GL code's own level
-    or recursing into another VDT Hierarchy Node row. Every `FA GL` value must
-    resolve to an already-seeded general_ledger code — fail loud on a typo
-    rather than silently seeding an orphaned anchor.
+    `level` isn't a CSV column here (unlike the GL hierarchy CSVs) — computed
+    from the parent chain, terminating either at a known gl_hierarchy code's
+    own level (`gl_level_by_code`, interior nodes only — every real attachment
+    point is interior, see docs/adr/0048) or recursing into another VDT
+    Hierarchy Node row. Every `FA GL` value must resolve to an already-seeded
+    gl_account (leaf) code, checked separately against `gl_account_codes` —
+    fail loud on a typo rather than silently seeding an orphaned anchor.
     """
     rows = list(csv.DictReader(CSV_PATH.open(encoding="utf-8-sig")))
     by_code = {r["Code"]: r for r in rows}
@@ -72,8 +76,8 @@ def load_vdt_hierarchy(gl_level_by_code: dict[str, int]) -> tuple[list[VdtHierar
             vdt_hierarchy_nodes.append(VdtHierarchy(code=code, description=r["Description"], parent_code=r["Parent Code"], level=level_of(code)))
         elif node_type == "VDT Account":
             fa_gl_code = r["FA GL"]
-            if fa_gl_code not in gl_level_by_code:
-                raise ValueError(f"{code}'s FA GL {fa_gl_code!r} doesn't match any seeded general_ledger code")
+            if fa_gl_code not in gl_account_codes:
+                raise ValueError(f"{code}'s FA GL {fa_gl_code!r} doesn't match any seeded gl_account code")
             accounts.append(VdtAccount(code=code, description=r["Description"], parent_code=r["Parent Code"], fa_gl_code=fa_gl_code))
         else:
             raise ValueError(f"Unknown Node Type {node_type!r} for {code}")

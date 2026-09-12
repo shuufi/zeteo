@@ -20,7 +20,7 @@ from company_tree import (
 from db import get_session
 from driver_engine import DriverEngine
 from gl_tree import build_gl_master_tree, build_tree, diff_subtree, subtree
-from models import GLNode, HierarchyKind, PeriodType
+from models import GLAccount, GLHierarchy, HierarchyKind, PeriodType
 from variance_analysis import VarianceAnalysisUnavailable, generate_variance_analysis
 from periods import (
     UnknownPeriod,
@@ -38,6 +38,16 @@ VDT_COMPARISON_ROOT_TYPES = ("Reporting Root", "Reporting Node", "VDT Hierarchy 
 VDT_TRENDS_ANCHOR = "V201000000"  # SOC Crew Cost, same fixed pilot anchor as VDT Variance Analysis/Reconciliation
 
 app = FastAPI(title="Zeteo API")
+
+
+def _gl_seeded(session: Session) -> bool:
+    """GL is now two tables (docs/adr/0048) seeded atomically together by
+    seed.py's single commit — checking only one would still be correct today,
+    but checking both keeps this guard's own claim ("GL data is seeded")
+    true independent of that assumption holding forever."""
+    return bool(session.exec(select(GLHierarchy).limit(1)).first()) and bool(
+        session.exec(select(GLAccount).limit(1)).first()
+    )
 
 
 def _resolve_monetary_scope(session: Session, scope: str) -> dict:
@@ -83,7 +93,7 @@ def get_gl_master_tree(session: Session = Depends(get_session)):
 
 @app.get("/api/financial/tree")
 def get_financial_tree(scope: str, period: Optional[str] = None, session: Session = Depends(get_session)):
-    if not session.exec(select(GLNode).limit(1)).first():
+    if not _gl_seeded(session):
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
     resolved = _resolve_monetary_scope(session, scope)
@@ -112,7 +122,7 @@ def get_financial_comparison(
     period_b: str = Query(alias="periodB"),
     session: Session = Depends(get_session),
 ):
-    if not session.exec(select(GLNode).limit(1)).first():
+    if not _gl_seeded(session):
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
     resolved = _resolve_monetary_scope(session, scope)
@@ -182,7 +192,7 @@ def get_vdt_tree(
     practice (the frontend never sends both), but `trailingEnd` simply wins
     if it somehow did, since Trailing mode is the more specific request.
     """
-    if not session.exec(select(GLNode).limit(1)).first():
+    if not _gl_seeded(session):
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
     resolved = _resolve_monetary_scope(session, scope)
@@ -227,7 +237,7 @@ def _vdt_comparison_payload(
     """Shared by GET /api/vdt/comparison and POST /api/vdt/variance-analysis — both
     need the same resolved-scope, period-validated, diffed VDT subtree (see
     docs/adr/0034). Raises HTTPException on any resolution failure."""
-    if not session.exec(select(GLNode).limit(1)).first():
+    if not _gl_seeded(session):
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
     resolved = _resolve_monetary_scope(session, scope)
@@ -322,7 +332,7 @@ def post_vdt_trend_analysis(
     if (year is None) == (trailing_end is None):
         raise HTTPException(400, "exactly one of year or trailingEnd must be provided")
 
-    if not session.exec(select(GLNode).limit(1)).first():
+    if not _gl_seeded(session):
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
     resolved = _resolve_monetary_scope(session, scope)
@@ -377,7 +387,7 @@ def get_vdt_reconciliation(
     hierarchies are independent estimates that aren't required to reconcile —
     the gap between them is the point, not something to score.
     """
-    if not session.exec(select(GLNode).limit(1)).first():
+    if not _gl_seeded(session):
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
     resolved = _resolve_monetary_scope(session, scope)
@@ -472,7 +482,7 @@ def post_vdt_sensitivity(payload: SensitivityRequest, request: Request, session:
     if (payload.year is None) == (payload.trailingEnd is None):
         raise HTTPException(400, "exactly one of year or trailingEnd must be provided")
 
-    if not session.exec(select(GLNode).limit(1)).first():
+    if not _gl_seeded(session):
         raise HTTPException(500, "GL data not seeded — run `python backend/seed.py` first")
 
     resolved = _resolve_monetary_scope(session, payload.scope)

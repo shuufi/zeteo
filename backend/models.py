@@ -6,12 +6,6 @@ from sqlalchemy import Column, ForeignKeyConstraint, Numeric, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 
-class NodeType(str, Enum):
-    REPORTING_ROOT = "Reporting Root"
-    REPORTING_NODE = "Reporting Node"
-    POSTING_GL_ACCOUNT = "Posting GL Account"
-
-
 class NormalBalance(str, Enum):
     DEBIT = "D"
     CREDIT = "C"
@@ -48,20 +42,46 @@ class FormulaOperator(str, Enum):
     DIVIDE = "÷"
 
 
-class GLNode(SQLModel, table=True):
-    """A position in the SAP GL/FSI hierarchy — see docs/adr/0022 and 0023."""
+class GLHierarchy(SQLModel, table=True):
+    """The SAP GL/FSI hierarchy's interior structure — see docs/adr/0022,
+    0023, and 0048 (splits this out of the former combined `GLNode`/
+    `general_ledger` table, alongside leaf-only GLAccount).
 
-    __tablename__ = "general_ledger"
+    Every row is either the single Reporting Root (`NPAT`, the only row with
+    a null `parent_code`) or a Reporting Node. No `node_type`/`level` columns:
+    `nodeType` ("Reporting Root" vs "Reporting Node") is derived at
+    tree-build time from `parent_code IS NULL`, and real leaf depth is
+    confirmed uneven (2 to 5 hops across branches) so a fixed `level` int
+    would misrepresent the shape, the same reasoning docs/adr/0045 used to
+    drop `level` from CompanyHierarchy. No stored `normal_balance` either —
+    an interior node's balance (union of its leaves', `None` if mixed, e.g.
+    Gross Profit) is computed at tree-build time, not persisted.
+    """
+
+    __tablename__ = "gl_hierarchy"
 
     code: str = Field(primary_key=True)
     description: str
-    parent_code: Optional[str] = Field(default=None, foreign_key="general_ledger.code")
-    node_type: NodeType
-    level: int
-    # Only meaningful for Posting GL Account leaves (derived from the account
-    # code's first digit) and for Reporting Nodes whose entire leaf subtree is
-    # uniformly one category. Null for mixed subtotals (e.g. Gross Profit).
-    normal_balance: Optional[NormalBalance] = None
+    parent_code: Optional[str] = Field(default=None, foreign_key="gl_hierarchy.code")
+
+
+class GLAccount(SQLModel, table=True):
+    """A Posting GL Account leaf — see docs/adr/0022, 0023, and 0048.
+
+    Every row here is definitionally a Posting GL Account (no `node_type`
+    column — that string is synthesized at tree-build time), and always
+    parents into a GLHierarchy node, never another GLAccount.
+    `normal_balance` is derived from the account code's first digit
+    (seed.py's NORMAL_BALANCE_BY_PREFIX) and always set — unlike the former
+    combined table, a leaf's balance is never ambiguous.
+    """
+
+    __tablename__ = "gl_account"
+
+    code: str = Field(primary_key=True)
+    description: str
+    parent_code: str = Field(foreign_key="gl_hierarchy.code")
+    normal_balance: NormalBalance
 
 
 class Period(SQLModel, table=True):
@@ -69,7 +89,7 @@ class Period(SQLModel, table=True):
 
     Only Month rows are postable (carry gl_fact rows); Year and Quarter exist
     purely to roll postable Month figures up, the same relationship Reporting
-    Nodes have to Posting GL Accounts in GLNode. `order` is 1-based position
+    Nodes have to Posting GL Accounts in GLHierarchy/GLAccount. `order` is 1-based position
     among siblings (Month: 1-12, Quarter: 1-4, Year: always 1) — used to index
     a node's monthly-array position without parsing the code string.
     """
@@ -132,14 +152,14 @@ class Company(SQLModel, table=True):
 
 
 class Financial(SQLModel, table=True):
-    """An actual/budget/prior-year amount for one node, company and Month period.
+    """An actual/budget/prior-year amount for one GL account, company and Month period.
     Renamed from `GLFact` — see docs/adr/0046.
     """
 
     __tablename__ = "financial"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    code: str = Field(foreign_key="general_ledger.code", index=True)
+    code: str = Field(foreign_key="gl_account.code", index=True)
     company: str = Field(foreign_key="company.code", index=True)
     period_code: str = Field(foreign_key="period.code", index=True)
     source: Source
@@ -163,7 +183,7 @@ class Driver(SQLModel, table=True):
     code: str = Field(primary_key=True)
     description: str
     unit: OperationalUnit
-    displayed_under: Optional[str] = Field(default=None, foreign_key="general_ledger.code")
+    displayed_under: Optional[str] = Field(default=None, foreign_key="gl_account.code")
 
 
 class DriverFact(SQLModel, table=True):
@@ -188,7 +208,7 @@ class DriverFact(SQLModel, table=True):
 class DriverFormula(SQLModel, table=True):
     """A named sum-of-products expression computing exactly one target — see docs/adr/0030.
 
-    `target_code` is either a GL Posting Account leaf (`general_ledger.code`)
+    `target_code` is either a GL Posting Account leaf (`gl_account.code`)
     or another Driver (`driver.code`) — no single-table FK is possible since
     it's polymorphic, but the two code spaces never collide (SAP GL codes vs
     `DRV-`/`OPD-` codes). Multiple formulas may share a target; the target's
@@ -226,14 +246,14 @@ class VdtHierarchy(SQLModel, table=True):
     """A position in the VDT hierarchy's mid-tier — see docs/adr/0033.
     Renamed from `ActivityNode` — see docs/adr/0047.
 
-    Own table rather than a new GLNode.node_type value, for the same reason
-    Driver got its own table in ADR-0030: general_ledger's existing consumers
+    Own table rather than folding into GLHierarchy, for the same reason
+    Driver got its own table in ADR-0030: gl_account's existing consumers
     (e.g. seed.py's NORMAL_BALANCE_BY_PREFIX, keyed on SAP code shape) assume
-    a closed, numeric-or-PNL-/NPAT code space that V-prefixed codes would break.
+    a closed, numeric code space that V-prefixed codes would break.
 
     `parent_code` is deliberately NOT a declared foreign_key: it points at
     either another VdtHierarchy.code (interior nesting) or a
-    general_ledger.code (the top-level attachment point, e.g. PNL-0011) — a
+    gl_hierarchy.code (the top-level attachment point, e.g. PNL-0011) — a
     single column can't FK two tables. Resolved by call-site convention only,
     the same move ADR-0030 already made for DriverFormula.target_code; safe
     here too since this SQLite database never enables FK enforcement (db.py).
@@ -259,7 +279,10 @@ class VdtAccount(SQLModel, table=True):
     anchor to the real GL account it's conceptually explaining — many-to-one
     allowed, and deliberately NOT required to reconcile to that account's
     real Financial total; the gap between them is what the Reconciliation report
-    surfaces, not an error to close.
+    surfaces, not an error to close. `fa_gl_code` is always a leaf
+    (`gl_account.code`), never an interior `gl_hierarchy` node — verified
+    empirically (docs/adr/0048) that every FA GL value in seed data is a
+    Posting GL Account.
     """
 
     __tablename__ = "vdt_account"
@@ -267,4 +290,4 @@ class VdtAccount(SQLModel, table=True):
     code: str = Field(primary_key=True)
     description: str
     parent_code: str = Field(foreign_key="vdt_hierarchy.code")
-    fa_gl_code: str = Field(foreign_key="general_ledger.code")
+    fa_gl_code: str = Field(foreign_key="gl_account.code")

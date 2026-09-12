@@ -35,9 +35,9 @@ from models import (  # noqa: E402
     DriverFormulaTerm,
     Financial,
     FormulaOperator,
-    GLNode,
+    GLAccount,
+    GLHierarchy,
     HierarchyKind,
-    NodeType,
     NormalBalance,
     OperationalUnit,
     Period,
@@ -101,33 +101,30 @@ def fixture_graph(session: Session) -> dict[str, str]:
         "group": "GROUP1",
     }
 
-    gl_nodes = [
-        GLNode(code=codes["root"], description="Net Profit After Tax", parent_code=None, node_type=NodeType.REPORTING_ROOT, level=0),
-        GLNode(code=codes["rev"], description="Revenue", parent_code=codes["root"], node_type=NodeType.REPORTING_NODE, level=1),
-        GLNode(
+    gl_hierarchy_nodes = [
+        GLHierarchy(code=codes["root"], description="Net Profit After Tax", parent_code=None),
+        GLHierarchy(code=codes["rev"], description="Revenue", parent_code=codes["root"]),
+        GLHierarchy(code=codes["cor"], description="Cost of Revenue", parent_code=codes["root"]),
+        GLHierarchy(code=codes["gl_old_node"], description="Old Reporting Node", parent_code=codes["cor"]),
+    ]
+
+    gl_accounts = [
+        GLAccount(
             code=codes["gl_leaf_rev"],
             description="Revenue Leaf",
             parent_code=codes["rev"],
-            node_type=NodeType.POSTING_GL_ACCOUNT,
-            level=2,
             normal_balance=NormalBalance.CREDIT,
         ),
-        GLNode(code=codes["cor"], description="Cost of Revenue", parent_code=codes["root"], node_type=NodeType.REPORTING_NODE, level=1),
-        GLNode(code=codes["gl_old_node"], description="Old Reporting Node", parent_code=codes["cor"], node_type=NodeType.REPORTING_NODE, level=2),
-        GLNode(
+        GLAccount(
             code=codes["gl_old_leaf"],
             description="Old GL Leaf",
             parent_code=codes["gl_old_node"],
-            node_type=NodeType.POSTING_GL_ACCOUNT,
-            level=3,
             normal_balance=NormalBalance.DEBIT,
         ),
-        GLNode(
+        GLAccount(
             code=codes["gl_anchor_leaf"],
             description="Anchor GL Leaf",
             parent_code=codes["cor"],
-            node_type=NodeType.POSTING_GL_ACCOUNT,
-            level=2,
             normal_balance=NormalBalance.DEBIT,
         ),
     ]
@@ -206,7 +203,8 @@ def fixture_graph(session: Session) -> dict[str, str]:
         driver_facts.append(DriverFact(code=codes["driver_base_rate"], company=COMPANY, period_code=period_code, source=Source.ACTUAL, amount=2.0))
         driver_facts.append(DriverFact(code=codes["driver_base_rate"], company=COMPANY, period_code=period_code, source=Source.BUDGET, amount=2.0))
 
-    session.add_all(gl_nodes)
+    session.add_all(gl_hierarchy_nodes)
+    session.add_all(gl_accounts)
     session.add_all(vdt_hierarchy_nodes)
     session.add_all(accounts)
     session.add_all(drivers)

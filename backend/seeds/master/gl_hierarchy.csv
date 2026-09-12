@@ -1,0 +1,100 @@
+code,label,parent_code
+NPAT,Net Profit After Tax (NPAT),
+PNL-0001,Gross Profit,NPAT
+PNL-0002,Revenue,PNL-0001
+PNL-0003,Operating Lease - Charter Income,PNL-0002
+PNL-0004,Finance Lease,PNL-0002
+PNL-0005,Voyage and Lightering,PNL-0002
+PNL-0006,Other Shipping Revenue,PNL-0002
+PNL-0007,Construction Revenue,PNL-0002
+PNL-0008,Fleet Management Revenue,PNL-0002
+PNL-0009,Management Of Ports & Terminals,PNL-0002
+PNL-0010,Maritime Education,PNL-0002
+PNL-0011,Cost of Revenue,PNL-0001
+PNL-0012,Commission,PNL-0011
+PNL-0013,Freight Tax,PNL-0011
+PNL-0014,Insurance,PNL-0011
+PNL-0015,Port & Canal,PNL-0011
+PNL-0016,Other Voyage Cost,PNL-0011
+PNL-0017,Other Ship Operating Cost,PNL-0011
+PNL-0018,Construction Cost,PNL-0011
+PNL-0019,Charter Hire/ Rental,PNL-0011
+PNL-0020,Cos Depreciation & Impairment,PNL-0011
+PNL-0021,Manpower Cost,PNL-0011
+PNL-0088,Crew Costs (Payroll & Statutory),PNL-0021
+PNL-0089,Crew Recruitment & Training,PNL-0021
+PNL-0090,Crew Relocation & Travel,PNL-0021
+PNL-0091,"Shore Staff Salary, Wages & Bonus",PNL-0021
+PNL-0092,Shore Staff Allowances,PNL-0021
+PNL-0093,Statutory Contributions,PNL-0021
+PNL-0094,Staff Training & Development,PNL-0021
+PNL-0095,Staff Medical & Welfare,PNL-0021
+PNL-0096,"Staff Recruitment, Subscriptions & Clubs",PNL-0021
+PNL-0097,Gratuity & Separation,PNL-0021
+PNL-0098,Contract & Subcontract Labour,PNL-0021
+PNL-0022,Materials And Supplies,PNL-0011
+PNL-0023,Professional And Purchased Services,PNL-0011
+PNL-0024,Repairs And Maintenance,PNL-0011
+PNL-0025,Cos Of Freight Forwarding,PNL-0011
+PNL-0026,Business Travel,PNL-0011
+PNL-0027,Utilities,PNL-0011
+PNL-0028,Tax,PNL-0011
+PNL-0029,Other Cos,PNL-0011
+PNL-0030,G&A Expenses,NPAT
+PNL-0031,Manpower Cost,PNL-0030
+PNL-0032,Depreciation & Amortization,PNL-0030
+PNL-0033,Rental / Lease,PNL-0030
+PNL-0034,Business Travel,PNL-0030
+PNL-0035,Public & Communication Relation,PNL-0030
+PNL-0036,Motor Vehicle & Running Expenses,PNL-0030
+PNL-0037,Repairs And Maintenance,PNL-0030
+PNL-0038,IT & Cyber Securities,PNL-0030
+PNL-0039,Insurances,PNL-0030
+PNL-0040,Duties & Taxes,PNL-0030
+PNL-0041,Licence & Permit Fees,PNL-0030
+PNL-0042,Utilities,PNL-0030
+PNL-0043,Materials And Supplies,PNL-0030
+PNL-0044,Professional And Purchased Services,PNL-0030
+PNL-0045,Audit & Accounting,PNL-0044
+PNL-0046,"Advertising, Marketing & Promotion",PNL-0030
+PNL-0047,Financial Charges,PNL-0030
+PNL-0048,Corporate Contribution & Subscriptions,PNL-0030
+PNL-0049,Office Expense,PNL-0030
+PNL-0050,Entertainment,PNL-0030
+PNL-0051,Penalties,PNL-0030
+PNL-0052,Cost Allocation,PNL-0030
+PNL-0053,Other Operating Expenses,PNL-0030
+PNL-0054,Other Income & Expenses,NPAT
+PNL-0055,Other Operating Income,PNL-0054
+PNL-0056,Rental Income,PNL-0055
+PNL-0057,Finance Income,PNL-0055
+PNL-0058,Changes in FV Of Hedging Derivatives,PNL-0055
+PNL-0059,Dividend Income,PNL-0055
+PNL-0060,Other Income,PNL-0055
+PNL-0061,Net Exchange Realised Forex  (Gain)/Loss,PNL-0055
+PNL-0062,Net Unrealised Forex (Gain)/Loss,PNL-0055
+PNL-0063,Sale Of Fixed Assets & Inv. (Gain)/Loss,PNL-0055
+PNL-0064,Gain On Investment Disposal,PNL-0055
+PNL-0065,Other Operating Expenses,PNL-0054
+PNL-0066,Impairment Losses on Investments,PNL-0065
+PNL-0067,Impairment Losses on Loans,PNL-0065
+PNL-0068,Expected Credit Loss,PNL-0065
+PNL-0069,Other Expenses,PNL-0065
+PNL-0070,Fixed Asset Expense Off,PNL-0065
+PNL-0071,Adjustment & Write Off,PNL-0065
+PNL-0072,Appropriation Of Dividend,PNL-0065
+PNL-0073,Appropriation of Dividend,PNL-0072
+PNL-0074,Impairment Losses on Receivables,PNL-0065
+PNL-0075,Finance Costs,PNL-0054
+PNL-0076,Redeemeble Preference Shares,PNL-0075
+PNL-0077,Unwinding of Discount on Provisions,PNL-0075
+PNL-0078,Borrowings,PNL-0075
+PNL-0079,Lease Liability,PNL-0075
+PNL-0080,Trade Interests,PNL-0075
+PNL-0081,Non-Trade Interest,PNL-0075
+PNL-0082,Amortization & Upfront Fees,PNL-0075
+PNL-0083,Clearing,PNL-0054
+PNL-0084,Adjustment for Consolidation,PNL-0083
+PNL-0085,Intercompany Allocation,PNL-0083
+PNL-0086,Secondary Cost Elements,NPAT
+PNL-0087,Taxation,NPAT
