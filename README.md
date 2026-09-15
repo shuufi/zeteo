@@ -3,6 +3,28 @@
 Zeteo is a financial-performance diagnostic POC. It combines Accounting,
 Value Driver Tree (VDT), and Driver data to explain financial movement.
 
+## Start here
+
+This repository documents the current Zeteo POC. It is separate from the
+approved [URS](docs/URS_Zeteo_v2.2.md), which records target programme and
+governance requirements, and from [ADRs](docs/adr/), which record the history
+and rationale behind individual decisions.
+
+Choose a path:
+
+| If you want to… | Read… |
+| --- | --- |
+| Understand Zeteo, its reports, and its POC limits | [Product guide](docs/product-guide.md) |
+| Understand the domain language | [Glossary](CONTEXT.md) |
+| Work on the application and data flows | [Architecture](docs/architecture.md) |
+| Understand every persisted entity and field | [Data catalogue](docs/data-catalog.md) |
+| Integrate with the backend | [API reference](docs/api-reference.md) |
+
+The POC has one SQLite application-serving model. It is a provisional logical
+Gold candidate, not a physical Bronze/Silver/Gold implementation. Company and
+Accounting reference data are ERP-owned imports; Calendar, VDT, Drivers, and
+their formula configuration are Zeteo-owned.
+
 ## Run locally
 
 Install the backend dependencies, seed the local SQLite database, then start
