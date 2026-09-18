@@ -39,3 +39,9 @@ Thumbs.db
 
 # Dev server logs
 .logs/
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+
+# Per-user Claude Code permissions, not shared config
+.claude/settings.local.json
